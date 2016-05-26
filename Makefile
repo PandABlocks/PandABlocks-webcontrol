@@ -22,7 +22,7 @@ webserver: clean
 	cp src/index.html $(WEBSERVER)
 	cp -rf $(MALCOLMJS)/bundle.js $(JS)
 	cp -rf $(MALCOLMJS)/js/theGraphDiamondCustomEvents.js $(JS)
-	cp -rf $(MALCOLMJS)/dropdownMenuLessStylesheet $(CSS)/dropdownMenuLessStylesheet.css
+	cp -rf $(MALCOLMJS)/js/views/dropdownMenuLessStylesheet $(CSS)/dropdownMenuLessStylesheet.css
 	cp -rf $(MALCOLMJS)/index.css $(CSS)
 	cp -rf font-awesome-4.6.1 $(WEBSERVER)
 	cp -rf $(MALCOLMJS)/js/views/treeview.css $(CSS)
