@@ -1,0 +1,20 @@
+# A checked out version of:
+# https://github.com/dls-controls/pymalcolm
+#
+# It doesn't need to be built, we just copy python files out of it
+#
+PYMALCOLM = $(HOME)/common/python/pymalcolm
+
+# A checked out version of:
+# https://github.com/PandABlocks/PandABlocks-rootfs
+#
+# It is used for the zpkg building tools
+#
+PANDA_ROOTFS = $(HOME)/targetOS/PandABlocks-rootfs
+
+# A built version of the rootfs above
+#
+# It is used for a matching version of Python to byte compile the server
+#
+PANDA_ROOT = /scratch/tmp/PandA-rootfs
+

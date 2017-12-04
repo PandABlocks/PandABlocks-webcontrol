@@ -1,0 +1,15 @@
+d bin
+t bin src/panda-webcontrol.py
+d etc/init.d
+t etc/init.d etc/panda-webcontrol
+d etc/rc.d
+l etc/rc.d/S400panda-webcontrol ../init.d/panda-webcontrol
+l etc/rc.d/K100panda-webcontrol ../init.d/panda-webcontrol
+d lib/python2.7/site-packages
+r lib/python2.7/site-packages malcolm
+d etc/www
+t etc/www etc/panda-webcontrol.index.html
+t etc/www etc/panda-webcontrol.nav.html
+d share/panda-webcontrol/templates
+r share/panda-webcontrol templates
+d share/panda-webcontrol/designs

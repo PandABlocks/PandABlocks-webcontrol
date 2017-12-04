@@ -1,4 +1,21 @@
-cd $(dirname $0)/build/webserver
-PYTHONPATH=../lib/python2.7/site-packages:/dls_sw/prod/tools/RHEL6-x86_64/numpy/1-7-0/prefix/lib/python2.7/site-packages/numpy-1.7.0-py2.7-linux-x86_64.egg:/dls_sw/prod/common/python/RHEL6-x86_64/cothread/2-13/prefix/lib/python2.7/site-packages/cothread-2.13-py2.7-linux-x86_64.egg:/dls_sw/work/tools/RHEL6-x86_64/ws4py/prefix/lib/python2.7/site-packages/ws4py-0.3.4-py2.7.egg dls-python zebra2-webserver.py --port=8080
+#!/usr/bin/env bash
+HERE="$(dirname "$(readlink -fn "$0")")"
 
+PROD=/dls_sw/prod/common/python/RHEL6-x86_64
+TOOLS=/dls_sw/prod/tools/RHEL6-x86_64
+SITE_PACKAGES=lib/python2.7/site-packages
 
+COTHREAD=(${PROD}/cothread/2-14/prefix/${SITE_PACKAGES}/*.egg)
+NUMPY=(${TOOLS}/numpy/1-11-1/prefix/${SITE_PACKAGES}/*.egg)
+TORNADO=(${TOOLS}/tornado/4-3/prefix/${SITE_PACKAGES}/*.egg)
+SD=(${TOOLS}/singledispatch/3-4-0-3/prefix/${SITE_PACKAGES}/*.egg)
+ABC=(${TOOLS}/backports_abc/0-4/prefix/${SITE_PACKAGES}/*.egg)
+CERTIFI=(${TOOLS}/certifi/2015-11-20/prefix/${SITE_PACKAGES}/*.egg)
+SSL=(${TOOLS}/backports.ssl_match_hostname/3-4-0-2/prefix/${SITE_PACKAGES}/*.egg)
+
+export PYTHONPATH=${HERE}/build:$COTHREAD:$NUMPY:$TORNADO:$SD:$ABC:$CERTIFI:$SSL
+
+dls-python ${HERE}/src/panda-webcontrol.py --hostname=172.23.252.201 \
+    --templatedir=${HERE}/build/templates --etcdir=${HERE}/etc \
+    --admindir=${HOME}/targetOS/PandABlocks-rootfs/rootfs/web-admin/templates \
+    --configdir=/tmp

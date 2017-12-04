@@ -1,0 +1,21 @@
+#!/bin/sh
+
+. /etc/init.d/functions
+
+pidfile=/var/run/panda-webcontrol.pid
+
+do_start()
+{
+    procServ -n panda-webcontrol -p $pidfile -L \
+        /var/log/panda-webcontrol-console.log 8023 \
+        /usr/bin/python /opt/bin/panda-webcontrol.py \
+        --logfile=/var/log/panda-webcontrol.log
+}
+
+do_stop()
+{
+    kill $(cat /var/run/panda-webcontrol.pid)
+    sleep 5
+}
+
+do_start_stop "$1" panda-webcontrol
