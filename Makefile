@@ -76,3 +76,5 @@ rebuild:
 
 .PHONY: clean zpkg rebuild
 
+print_admin_dir:
+	echo $(PANDA_ROOTFS)/rootfs/web-admin/templates

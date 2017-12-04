@@ -2,8 +2,8 @@ import logging.handlers
 import code
 import argparse
 
-from tornado.template import Loader
 from tornado.web import RequestHandler
+from tornado.template import Loader
 
 # Parse arguments
 parser = argparse.ArgumentParser()
