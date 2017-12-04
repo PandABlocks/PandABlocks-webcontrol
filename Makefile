@@ -50,6 +50,7 @@ $(MALCOLM_BUILD): $(MALCOLM_SOURCES)
 	cp -rf $(PYMALCOLM)/malcolm/modules/web $@/modules
 	rm -rf $@/modules/web/blocks $@/modules/builtin/docs
 	rm $@/modules/web/www/index.html
+	cp $(PANDA_ROOTFS)/rootfs/web-admin/static/favicon.ico $@/modules/web/www
 	cp $(PYMALCOLM)/malcolm/*.py $@
 	find $@ -name '*.pyc' -delete
 	$(PYTHON) -m compileall $@
