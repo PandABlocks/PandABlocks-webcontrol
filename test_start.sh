@@ -15,7 +15,7 @@ SSL=(${TOOLS}/backports.ssl_match_hostname/3-4-0-2/prefix/${SITE_PACKAGES}/*.egg
 
 export PYTHONPATH=${HERE}/build:$COTHREAD:$NUMPY:$TORNADO:$SD:$ABC:$CERTIFI:$SSL
 
-dls-python ${HERE}/src/panda-webcontrol.py --hostname=172.23.252.201 \
+dls-python ${HERE}/src/panda-webcontrol.py --hostname=localhost \
     --templatedir=${HERE}/build/templates --etcdir=${HERE}/etc \
-    --admindir=$(cd $HERE && make -s print_admin_dir) \
+    --admindir=${HERE}/../PandABlocks-rootfs/rootfs/web-admin \
     --configdir=/tmp
