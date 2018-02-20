@@ -3,6 +3,7 @@
 TOP := $(CURDIR)
 
 # Build defaults that can be overwritten by the CONFIG file if present
+ANNOTYPES = $(error Define ANNOTYPES in CONFIG file)
 PYMALCOLM = $(error Define PYMALCOLM in CONFIG file)
 PANDA_ROOTFS = $(error Define PANDA_ROOTFS in CONFIG file)
 PANDA_ROOT = $(error Define PANDA_ROOT in CONFIG file)
@@ -23,6 +24,7 @@ ZPKG_LIST = $(TOP)/etc/panda-webcontrol.list
 
 # The cut down malcolm package we build
 MALCOLM_BUILD = $(BUILD_DIR)/malcolm
+ANNOTYPES_BUILD = $(BUILD_DIR)/annotypes
 
 # A tag for our zpkg suffix
 export GIT_VERSION := $(shell git describe --abbrev=7 --dirty --always --tags)
@@ -32,6 +34,7 @@ WEBSERVER_ZPKG = $(BUILD_DIR)/panda-webcontrol@$(GIT_VERSION).zpg
 
 # The .py files we depend on to build our cut down distribution
 MALCOLM_SOURCES := $(shell find $(PYMALCOLM)/malcolm -name \*.py)
+ANNOTYPES_SOURCES := $(shell find $(ANNOTYPES)/annotypes -name \*.py)
 
 # The other sources
 SOURCES = $(wildcard $(TOP)/etc/*) $(wildcard $(TOP)/src/*)
@@ -55,14 +58,20 @@ $(MALCOLM_BUILD): $(MALCOLM_SOURCES)
 	find $@ -name '*.pyc' -delete
 	$(PYTHON) -m compileall $@
 
-$(TEMPLATES): $(MALCOLM_BUILD) $(MALCOLM_SOURCES)
+$(ANNOTYPES_BUILD): $(ANNOTYPES_SOURCES)
+	rm -rf $@
+	mkdir -p $@
+	cp $(ANNOTYPES)/annotypes/*.py $@
+	$(PYTHON) -m compileall $@
+
+$(TEMPLATES): $(MALCOLM_BUILD) $(ANNOTYPES_BUILD)
 	rm -rf $@
 	mkdir -p $@
 	cp $(PYMALCOLM)/malcolm/modules/web/www/index.html $@/withoutnav.html
 	./add_nav.sh $@/withoutnav.html > $@/index.html
 	cp $(TOP)/src/panda-webcontrol.html $@
 
-$(WEBSERVER_ZPKG): $(ZPKG_LIST) $(SOURCES) $(TEMPLATES) $(MALCOLM_BUILD)
+$(WEBSERVER_ZPKG): $(ZPKG_LIST) $(SOURCES) $(TEMPLATES)
 	rm -f $(BUILD_DIR)/*.zpg
 	$(MAKE_ZPKG) -t $(TOP) -b $(BUILD_DIR) -d $(BUILD_DIR) $< $(GIT_VERSION)
 

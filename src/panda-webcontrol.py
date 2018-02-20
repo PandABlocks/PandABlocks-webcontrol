@@ -54,12 +54,8 @@ else:
 logging.info("Importing malcolm")
 
 # Import the right things
-from malcolm.core import Process, call_with_params, method_takes, Part
-from malcolm.modules.web.controllers import HTTPServerComms
-from malcolm.modules.web.infos import HandlerInfo
-from malcolm.modules.web.parts import WebsocketServerPart, FileServerPart
-from malcolm.modules.pandablocks.controllers import PandABlocksManagerController
-from malcolm.modules.builtin.parts import TitlePart
+from malcolm.core import Process, Part, Hook
+from malcolm.modules import builtin, pandablocks, web
 
 
 # Make a template handler
@@ -78,38 +74,37 @@ class TemplateHandler(RequestHandler):
 
 
 class TemplateHandlerPart(Part):
-    def __init__(self, name="TEMPLATES"):
-        super(TemplateHandlerPart, self).__init__(name)
+    def on_hook(self, hook):
+        # type: (Hook) -> None
+        if isinstance(hook, web.hooks.ReportHandlersHook):
+            hook(self.report_handlers)
 
-    @HTTPServerComms.ReportHandlers
-    def report_handlers(self, context, loop):
-        return [HandlerInfo(r"/(|.*\.html)", TemplateHandler)]
+    def report_handlers(self):
+        return [web.infos.HandlerInfo(r"/(|.*\.html)", TemplateHandler)]
 
 
 # Make the top level process
 process = Process("Process")
 
 # Add the websocket server
-parts = [call_with_params(WebsocketServerPart),
-         TemplateHandlerPart(),
-         call_with_params(FileServerPart)]
-controller = call_with_params(
-    HTTPServerComms, process, parts, port=args.wsport, mri="WS")
-process.add_controller("WS", controller)
+controller = web.controllers.HTTPServerComms(port=args.wsport, mri="WS")
+controller.add_part(web.parts.WebsocketServerPart())
+controller.add_part(TemplateHandlerPart(name="TEMPLATES"))
+controller.add_part(web.parts.FileServerPart())
+process.add_controller(controller)
 
 # Add the PandABox
-label = call_with_params(TitlePart, initialValue="PandABox")
-controller = call_with_params(
-    PandABlocksManagerController, process, [label],
-    configDir=args.configdir, hostname=args.hostname,
-    port=args.port, mri=args.mri, useGit=False)
-process.add_controller(args.mri, controller)
+controller = pandablocks.controllers.PandABlocksManagerController(
+    config_dir=args.configdir, hostname=args.hostname,
+    port=args.port, mri=args.mri, use_git=False)
+controller.add_part(builtin.parts.TitlePart(value="PandABox"))
+process.add_controller(controller)
 
 # Start the server
 process.start()
 
 # Wait for completion
-header = "Welcome to PandABox"
+header = "Welcome to PandA"
 code.interact(header, local=locals())
 
 # If we stop with CTRL-D then do an orderly shutdown

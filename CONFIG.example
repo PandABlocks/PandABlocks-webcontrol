@@ -1,4 +1,11 @@
 # A checked out version of:
+# https://github.com/dls-controls/annotypes
+#
+# It doesn't need to be built, we just copy python files out of it
+#
+ANNOTYPES = $(HOME)/common/python/annotypes
+
+# A checked out version of:
 # https://github.com/dls-controls/pymalcolm
 #
 # It doesn't need to be built, we just copy python files out of it

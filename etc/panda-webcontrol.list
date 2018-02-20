@@ -7,6 +7,7 @@ l etc/rc.d/S400panda-webcontrol ../init.d/panda-webcontrol
 l etc/rc.d/K100panda-webcontrol ../init.d/panda-webcontrol
 d lib/python2.7/site-packages
 r lib/python2.7/site-packages malcolm
+r lib/python2.7/site-packages annotypes
 d etc/www
 t etc/www etc/panda-webcontrol.index.html
 t etc/www etc/panda-webcontrol.nav.html
