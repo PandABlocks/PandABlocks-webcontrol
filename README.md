@@ -1,2 +1,3 @@
-# zebra2-webserver
+# PandABlocks-webcontrol
+
 Web server config, startup, and zpg creation tools
