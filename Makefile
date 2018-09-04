@@ -69,7 +69,6 @@ $(TEMPLATES): $(MALCOLM_BUILD) $(ANNOTYPES_BUILD)
 	mkdir -p $@
 	cp $(PYMALCOLM)/malcolm/modules/web/www/index.html $@/withoutnav.html
 	./add_nav.sh $@/withoutnav.html > $@/index.html
-	cp $(TOP)/src/panda-webcontrol.html $@
 
 $(WEBSERVER_ZPKG): $(ZPKG_LIST) $(SOURCES) $(TEMPLATES)
 	rm -f $(BUILD_DIR)/*.zpg

@@ -29,7 +29,7 @@ parser.add_argument(
     "--etcdir", default="/opt/etc/www",
     help="Directory to get nav elements from")
 parser.add_argument(
-    "--mri", default="PANDABOX",
+    "--mri", default="PANDA",
     help="MRI of the base PandA Block that the webserver hosts")
 parser.add_argument(
     "--logfile", default="",
@@ -63,24 +63,28 @@ class TemplateHandler(RequestHandler):
     etc_loader = Loader(args.etcdir)
     admin_loader = Loader(args.admindir)
 
+    def initialize(self, path=None):
+        # GuiServerPart passes this in, so handle it
+        pass
+
     def get_template_path(self):
+        # Return the directory we put our templated index.html in
         return args.templatedir
 
     def get(self, path):
-        if not path:
-            path = "index.html"
-        self.render(path, etc_loader=self.etc_loader,
-                    admin_loader=self.admin_loader)
+        if path == "details":
+            # /details/... shouldn't have bottom nav
+            self.render("withoutnav.html")
+        else:
+            # /gui/... should have index.html, templated with nav
+            self.render("index.html", etc_loader=self.etc_loader,
+                        admin_loader=self.admin_loader)
 
 
-class TemplateHandlerPart(Part):
-    def on_hook(self, hook):
-        # type: (Hook) -> None
-        if isinstance(hook, web.hooks.ReportHandlersHook):
-            hook(self.report_handlers)
-
-    def report_handlers(self):
-        return [web.infos.HandlerInfo(r"/(|.*\.html)", TemplateHandler)]
+class TemplatedGuiPart(web.parts.GuiServerPart):
+    # Override the things that returns the GUI html to use
+    # a templated version
+    GuiHandler = TemplateHandler
 
 
 # Make the top level process
@@ -89,22 +93,21 @@ process = Process("Process")
 # Add the websocket server
 controller = web.controllers.HTTPServerComms(port=args.wsport, mri="WS")
 controller.add_part(web.parts.WebsocketServerPart())
-controller.add_part(TemplateHandlerPart(name="TEMPLATES"))
-controller.add_part(web.parts.FileServerPart())
+controller.add_part(TemplatedGuiPart())
 process.add_controller(controller)
 
 # Add the PandABox
 controller = pandablocks.controllers.PandABlocksManagerController(
     config_dir=args.configdir, hostname=args.hostname,
     port=args.port, mri=args.mri, use_git=False)
-controller.add_part(builtin.parts.TitlePart(value="PandABox"))
+controller.add_part(builtin.parts.TitlePart(value="PandA"))
 process.add_controller(controller)
 
 # Start the server
 process.start()
 
 # Wait for completion
-header = "Welcome to PandA"
+header = "Welcome to PandA web control"
 code.interact(header, local=locals())
 
 # If we stop with CTRL-D then do an orderly shutdown

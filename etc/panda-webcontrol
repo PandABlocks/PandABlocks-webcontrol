@@ -15,7 +15,6 @@ do_start()
 do_stop()
 {
     kill $(cat /var/run/panda-webcontrol.pid)
-    sleep 5
 }
 
 do_start_stop "$1" panda-webcontrol
