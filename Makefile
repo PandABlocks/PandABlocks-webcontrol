@@ -69,6 +69,7 @@ $(TEMPLATES): $(MALCOLM_BUILD) $(ANNOTYPES_BUILD)
 	mkdir -p $@
 	cp $(PYMALCOLM)/malcolm/modules/web/www/index.html $@/withoutnav.html
 	./add_nav.sh $@/withoutnav.html > $@/index.html
+	./make_settings.py "$(GIT_VERSION)" > $@/settings.json
 
 $(WEBSERVER_ZPKG): $(ZPKG_LIST) $(SOURCES) $(TEMPLATES)
 	rm -f $(BUILD_DIR)/*.zpg
