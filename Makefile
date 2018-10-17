@@ -54,6 +54,7 @@ $(MALCOLM_BUILD): $(MALCOLM_SOURCES)
 	rm -rf $@/modules/web/blocks $@/modules/builtin/docs
 	rm $@/modules/web/www/index.html
 	cp $(PANDA_ROOTFS)/rootfs/web-admin/static/favicon.ico $@/modules/web/www
+	./make_settings.py "$(GIT_VERSION)" > $@/modules/web/www/settings.json
 	cp $(PYMALCOLM)/malcolm/*.py $@
 	find $@ -name '*.pyc' -delete
 	$(PYTHON) -m compileall $@
@@ -69,7 +70,6 @@ $(TEMPLATES): $(MALCOLM_BUILD) $(ANNOTYPES_BUILD)
 	mkdir -p $@
 	cp $(PYMALCOLM)/malcolm/modules/web/www/index.html $@/withoutnav.html
 	./add_nav.sh $@/withoutnav.html > $@/index.html
-	./make_settings.py "$(GIT_VERSION)" > $@/settings.json
 
 $(WEBSERVER_ZPKG): $(ZPKG_LIST) $(SOURCES) $(TEMPLATES)
 	rm -f $(BUILD_DIR)/*.zpg
