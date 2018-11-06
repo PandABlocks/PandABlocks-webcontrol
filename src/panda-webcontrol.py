@@ -55,6 +55,7 @@ logging.info("Importing malcolm")
 
 # Import the right things
 from malcolm.core import Process, Part, Hook
+from malcolm.profiler import Profiler
 from malcolm.modules import builtin, pandablocks, web
 
 
@@ -87,6 +88,9 @@ class TemplatedGuiPart(web.parts.GuiServerPart):
     GuiHandler = TemplateHandler
 
 
+# Make a profiler
+profiler = Profiler()
+
 # Make the top level process
 process = Process("Process")
 
@@ -100,7 +104,6 @@ process.add_controller(controller)
 controller = pandablocks.controllers.PandABlocksManagerController(
     config_dir=args.configdir, hostname=args.hostname,
     port=args.port, mri=args.mri, use_git=False)
-controller.add_part(builtin.parts.TitlePart(value="PandA"))
 process.add_controller(controller)
 
 # Start the server
