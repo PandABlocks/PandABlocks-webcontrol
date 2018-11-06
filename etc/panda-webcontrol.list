@@ -1,3 +1,4 @@
+d share/www
 d bin
 t bin src/panda-webcontrol.py
 d etc/init.d
@@ -11,6 +12,8 @@ r lib/python2.7/site-packages annotypes
 d etc/www
 t etc/www etc/panda-webcontrol.index.html
 t etc/www etc/panda-webcontrol.nav.html
+t etc/www etc/panda-webcontrol.docs.html
 d share/panda-webcontrol/templates
 r share/panda-webcontrol templates
 d share/panda-webcontrol/designs
+r share/www/panda-webcontrol malcolmjs_docs/html

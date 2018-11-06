@@ -25,6 +25,10 @@ ZPKG_LIST = $(TOP)/etc/panda-webcontrol.list
 # The cut down malcolm package we build
 MALCOLM_BUILD = $(BUILD_DIR)/malcolm
 ANNOTYPES_BUILD = $(BUILD_DIR)/annotypes
+MALCOLMJS_BUILD = $(BUILD_DIR)/malcolmjs_docs
+
+# Where we find static html files
+WEB_ADMIN = $(PANDA_ROOTFS)/rootfs/web-admin
 
 # A tag for our zpkg suffix
 export GIT_VERSION := $(shell git describe --abbrev=7 --dirty --always --tags)
@@ -35,6 +39,7 @@ WEBSERVER_ZPKG = $(BUILD_DIR)/panda-webcontrol@$(GIT_VERSION).zpg
 # The .py files we depend on to build our cut down distribution
 MALCOLM_SOURCES := $(shell find $(PYMALCOLM)/malcolm -name \*.py)
 ANNOTYPES_SOURCES := $(shell find $(ANNOTYPES)/annotypes -name \*.py)
+MALCOLMJS_SOURCES := $(shell find $(MALCOLMJS)/docs/source)
 
 # The other sources
 SOURCES = $(wildcard $(TOP)/etc/*) $(wildcard $(TOP)/src/*)
@@ -53,7 +58,7 @@ $(MALCOLM_BUILD): $(MALCOLM_SOURCES)
 	cp -rf $(PYMALCOLM)/malcolm/modules/web $@/modules
 	rm -rf $@/modules/web/blocks $@/modules/builtin/docs
 	rm $@/modules/web/www/index.html
-	cp $(PANDA_ROOTFS)/rootfs/web-admin/static/favicon.ico $@/modules/web/www
+	cp $(WEB_ADMIN)/static/favicon.ico $@/modules/web/www
 	./make_settings.py "$(GIT_VERSION)" > $@/modules/web/www/settings.json
 	cp $(PYMALCOLM)/malcolm/*.py $@
 	find $@ -name '*.pyc' -delete
@@ -65,7 +70,20 @@ $(ANNOTYPES_BUILD): $(ANNOTYPES_SOURCES)
 	cp $(ANNOTYPES)/annotypes/*.py $@
 	$(PYTHON) -m compileall $@
 
-$(TEMPLATES): $(MALCOLM_BUILD) $(ANNOTYPES_BUILD)
+$(MALCOLMJS_BUILD): $(MALCOLMJS_SOURCES)
+	rm -rf $@
+	cp -rf $(MALCOLMJS)/docs/source $@
+	rm -rf $@/SMG $@/userguide/getting_started.rst
+	cp $(TOP)/src/docs_contents.rst $@/contents.rst
+	cp $(TOP)/src/docs_index.rst $@/index.rst
+	cp $(WEB_ADMIN)/static/favicon.ico $@
+	cp $(WEB_ADMIN)/static/PandA-logo-for-black-background.svg $@
+	./change_theme.sh $@/conf.py $@/_static/theme_overrides.css
+	sphinx-build -b html $@ $@/html
+	sed -i 's|<a href="genindex.html">Index</a>||' \
+	    $@/html/*.html $@/html/*/*.html
+
+$(TEMPLATES): $(MALCOLM_BUILD) $(ANNOTYPES_BUILD) $(MALCOLMJS_BUILD)
 	rm -rf $@
 	mkdir -p $@
 	cp $(PYMALCOLM)/malcolm/modules/web/www/index.html $@/withoutnav.html
@@ -87,4 +105,4 @@ rebuild:
 .PHONY: clean zpkg rebuild
 
 print_admin_dir:
-	echo $(PANDA_ROOTFS)/rootfs/web-admin/templates
+	echo $(WEB_ADMIN)/templates
