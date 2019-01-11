@@ -3,14 +3,21 @@
 #
 # It doesn't need to be built, we just copy python files out of it
 #
-ANNOTYPES = $(HOME)/common/python/annotypes
+ANNOTYPES = /dls_sw/prod/common/python/RHEL6-x86_64/annotypes/0-10
 
 # A checked out version of:
 # https://github.com/dls-controls/pymalcolm
 #
 # It doesn't need to be built, we just copy python files out of it
 #
-PYMALCOLM = $(HOME)/common/python/pymalcolm
+# PYMALCOLM = /dls_sw/prod/common/python/RHEL6-x86_64/pymalcolm/3-0a5
+PYMALCOLM = /home/tmc43/common/python/pymalcolm
+
+# A checked out version of
+# https://github.com/dls-controls/malcolmjs
+#
+# It doesn't need to be built, we just copy docs out of it
+MALCOLMJS = /home/tmc43/common/malcolmjs
 
 # A checked out version of:
 # https://github.com/PandABlocks/PandABlocks-rootfs

@@ -17,7 +17,7 @@ parser.add_argument(
     "--wsport", default=8008, type=int,
     help="Websocket port to run the webserver on")
 parser.add_argument(
-    "--configdir", default="/opt/share/panda-webcontrol/designs",
+    "--configdir", default="/opt/share/designs",
     help="Config directory to save and load designs")
 parser.add_argument(
     "--templatedir", default="/opt/share/panda-webcontrol/templates",
@@ -103,7 +103,8 @@ process.add_controller(controller)
 # Add the PandABox
 controller = pandablocks.controllers.PandABlocksManagerController(
     config_dir=args.configdir, hostname=args.hostname,
-    port=args.port, mri=args.mri, use_git=False)
+    port=args.port, mri=args.mri, use_git=False,
+    doc_url_base="/fpga_docs/", poll_period=0.25)
 process.add_controller(controller)
 
 # Start the server

@@ -1,19 +1,29 @@
+# Directories
 d share/www
 d bin
-t bin src/panda-webcontrol.py
 d etc/init.d
-t etc/init.d etc/panda-webcontrol
 d etc/rc.d
-l etc/rc.d/S400panda-webcontrol ../init.d/panda-webcontrol
-l etc/rc.d/K100panda-webcontrol ../init.d/panda-webcontrol
 d lib/python2.7/site-packages
+d lib/python2.7/site-packages/malcolm/modules/web/www
+d etc/www
+d share/panda-webcontrol/templates
+
+# Python libs
 r lib/python2.7/site-packages malcolm
 r lib/python2.7/site-packages annotypes
-d etc/www
+l lib/python2.7/site-packages/malcolm/modules/web/www/fpga_docs /opt/share/www/panda-fpga
+
+# Startup
+t bin src/panda-webcontrol.py
+t etc/init.d etc/panda-webcontrol
+l etc/rc.d/S400panda-webcontrol ../init.d/panda-webcontrol
+l etc/rc.d/K100panda-webcontrol ../init.d/panda-webcontrol
+
+# Templates
 t etc/www etc/panda-webcontrol.index.html
 t etc/www etc/panda-webcontrol.nav.html
-t etc/www etc/panda-webcontrol.docs.html
-d share/panda-webcontrol/templates
 r share/panda-webcontrol templates
-d share/panda-webcontrol/designs
+
+# Docs
+t etc/www etc/panda-webcontrol.docs.html
 r share/www/panda-webcontrol malcolmjs_docs/html
