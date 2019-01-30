@@ -8,6 +8,7 @@ PYMALCOLM = $(error Define PYMALCOLM in CONFIG file)
 PANDA_ROOTFS = $(error Define PANDA_ROOTFS in CONFIG file)
 PANDA_ROOT = $(error Define PANDA_ROOT in CONFIG file)
 MAKE_ZPKG = $(PANDA_ROOTFS)/make-zpkg
+MAKE_GITHUB_RELEASE = $(PANDA_ROOTFS)/make-github-release.py
 PYTHON = $(PANDA_ROOT)/targets/rootfs/toolkit/bin/python2
 BUILD_DIR = $(TOP)/build
 
@@ -95,6 +96,10 @@ $(WEBSERVER_ZPKG): $(ZPKG_LIST) $(SOURCES) $(TEMPLATES)
 
 zpkg: $(WEBSERVER_ZPKG)
 
+# Push a github release
+github-release: $(WEBSERVER_ZPKG)
+	$(MAKE_GITHUB_RELEASE) PandABlocks-webcontrol $(GIT_VERSION) $(WEBSERVER_ZPKG)
+
 clean:
 	rm -rf $(BUILD_DIR)
 
@@ -102,7 +107,7 @@ rebuild:
 	make clean
 	make default
 
-.PHONY: clean zpkg rebuild
+.PHONY: clean zpkg rebuild github-release
 
 print_admin_dir:
 	echo $(WEB_ADMIN)/templates
