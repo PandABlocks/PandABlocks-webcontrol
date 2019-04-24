@@ -1,0 +1,4 @@
+d share/panda-webcontrol/options
+
+# Add a magic file
+t share/panda-webcontrol/options/no-subnet-validation src/no-subnet-validation

@@ -1,0 +1,3 @@
+# Presence of this file means that the websocket server will
+# allow any client to Put/Post, rather than restricting to those
+# client ips in the same subnet as the host

@@ -1,6 +1,7 @@
 import logging.handlers
 import code
 import argparse
+import os
 
 from tornado.web import RequestHandler
 from tornado.template import Loader
@@ -22,6 +23,10 @@ parser.add_argument(
 parser.add_argument(
     "--templatedir", default="/opt/share/panda-webcontrol/templates",
     help="Directory to get templated html files from")
+parser.add_argument(
+    "--optionsdir", default="/opt/share/panda-webcontrol/options",
+    help="Directory of options that can optionally be installed like"
+         "no-subnet-check")
 parser.add_argument(
     "--admindir", default="/usr/share/web-admin/templates",
     help="Directory to get web-admin templates like nav.template from")
@@ -88,6 +93,12 @@ class TemplatedGuiPart(web.parts.GuiServerPart):
     GuiHandler = TemplateHandler
 
 
+# Check the options
+if os.path.exists(args.optionsdir):
+    options = sorted(os.listdir(args.optionsdir))
+else:
+    options = []
+
 # Make a profiler
 profiler = Profiler()
 
@@ -96,7 +107,9 @@ process = Process("Process")
 
 # Add the websocket server
 controller = web.controllers.HTTPServerComms(port=args.wsport, mri="WS")
-controller.add_part(web.parts.WebsocketServerPart())
+controller.add_part(web.parts.WebsocketServerPart(
+    subnet_validation="no-subnet-validation" not in options
+))
 controller.add_part(TemplatedGuiPart())
 process.add_controller(controller)
 

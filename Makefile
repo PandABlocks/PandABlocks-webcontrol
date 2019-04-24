@@ -20,9 +20,6 @@ include CONFIG
 
 default: $(DEFAULT_TARGETS)
 
-# This is the generated zpkg list file
-ZPKG_LIST = $(TOP)/etc/panda-webcontrol.list
-
 # The cut down malcolm package we build
 MALCOLM_BUILD = $(BUILD_DIR)/malcolm
 ANNOTYPES_BUILD = $(BUILD_DIR)/annotypes
@@ -33,9 +30,6 @@ WEB_ADMIN = $(PANDA_ROOTFS)/rootfs/web-admin
 
 # A tag for our zpkg suffix
 export GIT_VERSION := $(shell git describe --abbrev=7 --dirty --always --tags)
-
-# The zpkg file that will be built
-WEBSERVER_ZPKG = $(BUILD_DIR)/panda-webcontrol@$(GIT_VERSION).zpg
 
 # The .py files we depend on to build our cut down distribution
 MALCOLM_SOURCES := $(shell find $(PYMALCOLM)/malcolm -name \*.py)
@@ -90,15 +84,16 @@ $(TEMPLATES): $(MALCOLM_BUILD) $(ANNOTYPES_BUILD) $(MALCOLMJS_BUILD)
 	cp $(PYMALCOLM)/malcolm/modules/web/www/index.html $@/withoutnav.html
 	./add_nav.sh $@/withoutnav.html > $@/index.html
 
-$(WEBSERVER_ZPKG): $(ZPKG_LIST) $(SOURCES) $(TEMPLATES)
+zpkg: $(SOURCES) $(TEMPLATES)
 	rm -f $(BUILD_DIR)/*.zpg
-	$(MAKE_ZPKG) -t $(TOP) -b $(BUILD_DIR) -d $(BUILD_DIR) $< $(GIT_VERSION)
-
-zpkg: $(WEBSERVER_ZPKG)
+	$(MAKE_ZPKG) -t $(TOP) -b $(BUILD_DIR) -d $(BUILD_DIR) \
+		$(TOP)/etc/panda-webcontrol.list $(GIT_VERSION)
+	$(MAKE_ZPKG) -t $(TOP) -b $(BUILD_DIR) -d $(BUILD_DIR) \
+		$(TOP)/etc/panda-webcontrol-no-subnet-validation.list $(GIT_VERSION)
 
 # Push a github release
-github-release: $(WEBSERVER_ZPKG)
-	$(MAKE_GITHUB_RELEASE) PandABlocks-webcontrol $(GIT_VERSION) $(WEBSERVER_ZPKG)
+github-release: $(BUILD_DIR)/*.zpg
+	$(MAKE_GITHUB_RELEASE) PandABlocks-webcontrol $(GIT_VERSION) $^
 
 clean:
 	rm -rf $(BUILD_DIR)
