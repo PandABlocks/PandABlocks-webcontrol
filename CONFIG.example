@@ -3,14 +3,14 @@
 #
 # It doesn't need to be built, we just copy python files out of it
 #
-ANNOTYPES = /dls_sw/prod/common/python/RHEL6-x86_64/annotypes/0-10
+ANNOTYPES = /dls_sw/prod/common/python/RHEL7-x86_64/annotypes/0-17
 
 # A checked out version of:
 # https://github.com/dls-controls/pymalcolm
 #
 # It doesn't need to be built, we just copy python files out of it
 #
-PYMALCOLM = /dls_sw/prod/common/python/RHEL6-x86_64/pymalcolm/3-2
+PYMALCOLM = /dls_sw/prod/common/python/RHEL7-x86_64/pymalcolm/4-0b1
 
 # A checked out version of
 # https://github.com/dls-controls/malcolmjs

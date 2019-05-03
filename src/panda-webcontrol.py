@@ -114,10 +114,10 @@ controller.add_part(TemplatedGuiPart())
 process.add_controller(controller)
 
 # Add the PandABox
-controller = pandablocks.controllers.PandABlocksManagerController(
+controller = pandablocks.controllers.PandAManagerController(
     config_dir=args.configdir, hostname=args.hostname,
     port=args.port, mri=args.mri, use_git=False,
-    doc_url_base="/fpga_docs/", poll_period=0.25)
+    doc_url_base="/fpga_docs/", poll_period=0.1)
 process.add_controller(controller)
 
 # Start the server
