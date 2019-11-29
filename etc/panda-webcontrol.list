@@ -3,15 +3,15 @@ d share/www
 d bin
 d etc/init.d
 d etc/rc.d
-d lib/python2.7/site-packages
-d lib/python2.7/site-packages/malcolm/modules/web/www
+d lib/python/site-packages
+d lib/python/site-packages/malcolm/modules/web/www
 d etc/www
 d share/panda-webcontrol/templates
 
 # Python libs
-r lib/python2.7/site-packages malcolm
-r lib/python2.7/site-packages annotypes
-l lib/python2.7/site-packages/malcolm/modules/web/www/fpga_docs /opt/share/www/panda-fpga
+B lib/python/site-packages malcolm
+B lib/python/site-packages annotypes
+l lib/python/site-packages/malcolm/modules/web/www/fpga_docs /opt/share/www/panda-fpga
 
 # Startup
 t bin src/panda-webcontrol.py
@@ -22,8 +22,8 @@ l etc/rc.d/K100panda-webcontrol ../init.d/panda-webcontrol
 # Templates
 t etc/www etc/panda-webcontrol.index.html
 t etc/www etc/panda-webcontrol.nav.html
-r share/panda-webcontrol templates
+B share/panda-webcontrol templates
 
 # Docs
 t etc/www etc/panda-webcontrol.docs.html
-r share/www/panda-webcontrol malcolmjs_docs/html
+B share/www/panda-webcontrol malcolmjs_docs/html
