@@ -9,7 +9,7 @@ PANDA_ROOTFS = $(error Define PANDA_ROOTFS in CONFIG file)
 PANDA_ROOT = $(error Define PANDA_ROOT in CONFIG file)
 MAKE_ZPKG = $(PANDA_ROOTFS)/make-zpkg
 MAKE_GITHUB_RELEASE = $(PANDA_ROOTFS)/make-github-release.py
-PYTHON = $(PANDA_ROOT)/targets/rootfs/toolkit/bin/python2
+PYTHON = python
 BUILD_DIR = $(TOP)/build
 
 DEFAULT_TARGETS = zpkg
@@ -59,14 +59,11 @@ $(MALCOLM_BUILD): $(MALCOLM_SOURCES)
 	cp $(WEB_ADMIN)/static/favicon.ico $@/modules/web/www
 	./make_settings.py "$(GIT_VERSION)" > $@/modules/web/www/settings.json
 	cp $(PYMALCOLM)/malcolm/*.py $@
-	find $@ -name '*.pyc' -delete
-	$(PYTHON) -m compileall $@
 
 $(ANNOTYPES_BUILD): $(ANNOTYPES_SOURCES)
 	rm -rf $@
 	mkdir -p $@
 	cp $(ANNOTYPES)/annotypes/*.py $@
-	$(PYTHON) -m compileall $@
 
 $(MALCOLMJS_BUILD): $(MALCOLMJS_SOURCES)
 	rm -rf $@

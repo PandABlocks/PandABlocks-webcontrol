@@ -1,4 +1,6 @@
 #!/bin/env python
+from __future__ import print_function
+
 import json
 import sys
 
@@ -7,5 +9,5 @@ s = json.dumps(dict(
     title="PandA Web Control",
     footerHeight=45), indent=2)
 
-print s
+print(s)
 
