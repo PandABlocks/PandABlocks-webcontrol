@@ -18,5 +18,5 @@ export PYTHONPATH=${HERE}/build:$COTHREAD:$NUMPY:$TORNADO:$SD:$ABC:$CERTIFI:$SSL
 
 dls-python ${HERE}/src/panda-webcontrol.py --hostname=localhost \
     --templatedir=${HERE}/build/templates --etcdir=${HERE}/etc \
-    --admindir=${HERE}/../PandABlocks-rootfs/rootfs/web-admin \
+    --admindir=${HERE}/../PandABlocks-rootfs/rootfs/web-admin/templates \
     --configdir=/tmp

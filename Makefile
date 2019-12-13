@@ -9,7 +9,6 @@ PANDA_ROOTFS = $(error Define PANDA_ROOTFS in CONFIG file)
 PANDA_ROOT = $(error Define PANDA_ROOT in CONFIG file)
 MAKE_ZPKG = $(PANDA_ROOTFS)/make-zpkg
 MAKE_GITHUB_RELEASE = $(PANDA_ROOTFS)/make-github-release.py
-PYTHON = python
 BUILD_DIR = $(TOP)/build
 
 DEFAULT_TARGETS = zpkg

@@ -2,15 +2,13 @@
 # https://github.com/dls-controls/annotypes
 #
 # It doesn't need to be built, we just copy python files out of it
-#
-ANNOTYPES = /dls_sw/prod/common/python/RHEL7-x86_64/annotypes/0-17
+ANNOTYPES = /dls_sw/prod/common/python/RHEL7-x86_64/annotypes/0-21
 
 # A checked out version of:
 # https://github.com/dls-controls/pymalcolm
 #
 # It doesn't need to be built, we just copy python files out of it
-#
-PYMALCOLM = /dls_sw/prod/common/python/RHEL7-x86_64/pymalcolm/4-0b1
+PYMALCOLM = /dls_sw/prod/common/python/RHEL7-x86_64/pymalcolm/4-2b4
 
 # A checked out version of
 # https://github.com/dls-controls/malcolmjs
@@ -21,13 +19,6 @@ MALCOLMJS = /home/tmc43/common/malcolmjs
 # A checked out version of:
 # https://github.com/PandABlocks/PandABlocks-rootfs
 #
-# It is used for the zpkg building tools
-#
+# It doesn't need to be build, it is just used for the zpkg building tools
 PANDA_ROOTFS = $(HOME)/targetOS/PandABlocks-rootfs
-
-# A built version of the rootfs above
-#
-# It is used for a matching version of Python to byte compile the server
-#
-PANDA_ROOT = /scratch/tmp/PandA-rootfs
 
