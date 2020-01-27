@@ -1,5 +1,6 @@
 # Directories
 d share/www
+d share/designs
 d bin
 d etc/init.d
 d etc/rc.d

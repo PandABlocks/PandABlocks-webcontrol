@@ -21,6 +21,9 @@ parser.add_argument(
     "--configdir", default="/opt/share/designs",
     help="Config directory to save and load designs")
 parser.add_argument(
+    "--templatedesigns", default="/opt/share/template_designs",
+    help="Directory to get template designs for tutorials")
+parser.add_argument(
     "--templatedir", default="/opt/share/panda-webcontrol/templates",
     help="Directory to get templated html files from")
 parser.add_argument(
@@ -116,8 +119,8 @@ process.add_controller(controller)
 # Add the PandABox
 controller = pandablocks.controllers.PandAManagerController(
     config_dir=args.configdir, hostname=args.hostname,
-    port=args.port, mri=args.mri, use_git=False,
-    doc_url_base="/fpga_docs/", poll_period=0.1)
+    template_designs=args.templatedesigns, port=args.port, mri=args.mri,
+    use_git=False, doc_url_base="/fpga_docs/", poll_period=0.1)
 process.add_controller(controller)
 
 # Start the server
