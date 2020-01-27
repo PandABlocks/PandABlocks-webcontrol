@@ -58,6 +58,7 @@ $(MALCOLM_BUILD): $(MALCOLM_SOURCES)
 	cp $(WEB_ADMIN)/static/favicon.ico $@/modules/web/www
 	./make_settings.py "$(GIT_VERSION)" > $@/modules/web/www/settings.json
 	cp $(PYMALCOLM)/malcolm/*.py $@
+	find $@ -iname '*.pyc' -delete
 
 $(ANNOTYPES_BUILD): $(ANNOTYPES_SOURCES)
 	rm -rf $@
