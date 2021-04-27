@@ -9,7 +9,7 @@ ANNOTYPES = /dls_sw/prod/common/python/RHEL7-x86_64/annotypes/0-21
 #
 # It doesn't need to be built, we just copy python files out of it
 #
-PYMALCOLM = /dls_sw/prod/common/python/RHEL7-x86_64/pymalcolm/4-2b5
+PYMALCOLM = /dls_sw/prod/python3/RHEL7-x86_64/pymalcolm/4.5
 
 # A checked out version of
 # https://github.com/dls-controls/malcolmjs
