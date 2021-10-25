@@ -93,6 +93,8 @@ $(WEBSERVER_ZPKG): $(SOURCES) $(TEMPLATES)
 
 zpkg: $(WEBSERVER_ZPKG)
 
+docs: $(TEMPLATES)
+
 # Push a github release
 github-release: $(BUILD_DIR)/*.zpg
 	$(MAKE_GITHUB_RELEASE) PandABlocks-webcontrol $(GIT_VERSION) $^

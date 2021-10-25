@@ -1,0 +1,69 @@
+name: Code CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  make_zpkg:
+
+    runs-on: ubuntu-latest
+    steps:
+      # Git repositories
+      - name: Checkout Source
+        uses: actions/checkout@v2
+        with:
+          path: PandABlocks-webcontrol
+          # require history to get back to last tag for version number of branches
+          fetch-depth: 0
+
+      - name: Checkout annotypes
+        uses: actions/checkout@v2
+        with:
+          repository: dls-controls/annotypes
+          path: annotypes
+
+      - name: Checkout pymalcolm
+        uses: actions/checkout@v2
+        with:
+          repository: dls-controls/pymalcolm
+          path: pymalcolm
+
+      - name: Checkout malcolmjs
+        uses: actions/checkout@v2
+        with:
+          repository: dls-controls/malcolmjs
+          path: malcolmjs
+
+      - name: Checkout PandABlocks-rootfs
+        uses: actions/checkout@v2
+        with:
+          repository: PandABlocks/PandABlocks-rootfs
+          path: PandABlocks-rootfs
+
+      # Build
+      - name: Make
+        run: |
+          cd PandABlocks-webcontrol
+          make zpkg
+
+  release:
+    needs: [make_zpkg]
+    runs-on: ubuntu-latest
+    # make a release on every tag
+    if: github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags')
+    steps:
+      - uses: actions/download-artifact@v2
+        with:
+          name: zpkg
+          path: zpkg
+
+      - name: Github Release
+        # We pin to the SHA, not the tag, for security reasons.
+        # https://docs.github.com/en/actions/learn-github-actions/security-hardening-for-github-actions#using-third-party-actions
+        uses: softprops/action-gh-release@2d72d869af3bf23602f9593a1e3fd739b80ac1eb  # v0.1.12
+        with:
+          files: zpkg/*
+          body: See [Changelog](CHANGELOG.rst) for more details
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
