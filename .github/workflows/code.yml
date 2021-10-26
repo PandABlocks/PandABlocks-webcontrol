@@ -48,7 +48,7 @@ jobs:
           sudo pip install sphinx sphinx-rtd-theme docutils==0.16
 
       # CONFIG file
-      - name: Generate fpga CONFIG file
+      - name: Generate CONFIG file
         run: |
           bash PandABlocks-webcontrol/.github/scripts/config-file-webcontrol.sh
           cat PandABlocks-webcontrol/CONFIG

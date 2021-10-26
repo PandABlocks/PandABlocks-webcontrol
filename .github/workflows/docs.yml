@@ -40,6 +40,12 @@ jobs:
           repository: dls-controls/malcolmjs
           path: malcolmjs
 
+      - name: Checkout PandABlocks-rootfs
+        uses: actions/checkout@v2
+        with:
+          repository: PandABlocks/PandABlocks-rootfs
+          path: PandABlocks-rootfs
+
       # CONFIG files
       - name: Generate CONFIG files
         run: |
