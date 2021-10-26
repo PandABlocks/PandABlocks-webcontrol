@@ -41,6 +41,12 @@ jobs:
           repository: PandABlocks/PandABlocks-rootfs
           path: PandABlocks-rootfs
 
+            # System dependencies
+      - name: Install system dependencies
+        run: |
+          sudo apt-get install -y libncurses5-dev expat
+          sudo pip install sphinx sphinx-rtd-theme docutils==0.16
+
       # CONFIG file
       - name: Generate fpga CONFIG file
         run: |
