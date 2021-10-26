@@ -41,6 +41,12 @@ jobs:
           repository: PandABlocks/PandABlocks-rootfs
           path: PandABlocks-rootfs
 
+      # CONFIG file
+      - name: Generate fpga CONFIG file
+        run: |
+          bash PandABlocks-webcontrol/.github/scripts/config-file-webcontrol.sh
+          cat PandABlocks-webcontrol/CONFIG
+
       # Build
       - name: Make
         run: |
