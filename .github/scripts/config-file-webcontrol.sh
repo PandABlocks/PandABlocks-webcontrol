@@ -6,5 +6,6 @@ cat >> PandABlocks-webcontrol/CONFIG << 'EOL'
 PYMALCOLM = $(GITHUB_WORKSPACE)/pymalcolm
 ANNOTYPES = $(GITHUB_WORKSPACE)/annotypes
 PANDA_ROOTFS = $(GITHUB_WORKSPACE)/PandABlocks-rootfs
+MALCOLMJS =  $(GITHUB_WORKSPACE)/malcolmjs
 
 EOL
