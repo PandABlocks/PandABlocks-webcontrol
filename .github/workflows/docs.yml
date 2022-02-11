@@ -22,12 +22,6 @@ jobs:
         run: |
           sudo pip install sphinx sphinx-rtd-theme --upgrade docutils==0.16
 
-      - name: Checkout annotypes
-        uses: actions/checkout@v2
-        with:
-          repository: dls-controls/annotypes
-          path: annotypes
-
       - name: Checkout pymalcolm
         uses: actions/checkout@v2
         with:
