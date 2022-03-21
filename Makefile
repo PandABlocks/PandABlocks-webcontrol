@@ -67,7 +67,8 @@ $(ANNOTYPES_BUILD): $(ANNOTYPES_SOURCES)
 
 $(MALCOLMJS_BUILD): $(MALCOLMJS_SOURCES)
 	rm -rf $@
-	cp -rf $(MALCOLMJS)/docs/source $@
+	mkdir -p $@
+	cp -rf $(MALCOLMJS)/docs/source/* $@
 	rm -rf $@/SMG $@/userguide/getting_started.rst
 	cp $(TOP)/src/docs_contents.rst $@/contents.rst
 	cp $(TOP)/src/docs_index.rst $@/index.rst
@@ -78,13 +79,13 @@ $(MALCOLMJS_BUILD): $(MALCOLMJS_SOURCES)
 	sed -i 's|<a href="genindex.html">Index</a>||' \
 	    $@/html/*.html $@/html/*/*.html
 
-$(TEMPLATES): $(MALCOLM_BUILD) $(ANNOTYPES_BUILD) $(MALCOLMJS_BUILD)
+$(TEMPLATES): $(MALCOLMJS_BUILD)
 	rm -rf $@
 	mkdir -p $@
 	cp $(PYMALCOLM)/malcolm/modules/web/www/index.html $@/withoutnav.html
 	./add_nav.sh $@/withoutnav.html > $@/index.html
 
-$(WEBSERVER_ZPKG): $(SOURCES) $(TEMPLATES)
+$(WEBSERVER_ZPKG): $(SOURCES) $(TEMPLATES) $(MALCOLM_BUILD) $(ANNOTYPES_BUILD)
 	rm -f $(BUILD_DIR)/*.zpg
 	$(MAKE_ZPKG) -t $(TOP) -b $(BUILD_DIR) -d $(BUILD_DIR) \
 		$(TOP)/etc/panda-webcontrol.list $(GIT_VERSION)
@@ -92,6 +93,8 @@ $(WEBSERVER_ZPKG): $(SOURCES) $(TEMPLATES)
 		$(TOP)/etc/panda-webcontrol-no-subnet-validation.list $(GIT_VERSION)
 
 zpkg: $(WEBSERVER_ZPKG)
+
+docs: $(TEMPLATES)
 
 # Push a github release
 github-release: $(BUILD_DIR)/*.zpg
