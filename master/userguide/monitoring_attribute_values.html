@@ -1,60 +1,116 @@
 <!-- https://stackoverflow.com/a/37843854 -->
 
-
 <!DOCTYPE html>
-
-<html>
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Monitoring Attribute Values &#8212; PandABlocks-webcontrol 2.1-3-gf1a51e1
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Monitoring Attribute Values &mdash; PandABlocks-webcontrol 2.1-3-gf5c3114
  documentation</title>
-    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/classic.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
-    <link rel="stylesheet" href="../_static/theme_overrides.css" type="text/css" />
-    
-    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
-    <script src="../_static/jquery.js"></script>
-    <script src="../_static/underscore.js"></script>
-    <script src="../_static/doctools.js"></script>
-    
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/graphviz.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/theme_overrides.css" type="text/css" />
     <link rel="shortcut icon" href="../_static/favicon.ico"/>
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+    <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Understanding Attribute State" href="understanding_attribute_state.html" />
     <link rel="prev" title="Working With a Design" href="working_with_a_design.html" /> 
-  </head><body>
-    <div class="related" role="navigation" aria-label="related navigation">
-      <h3>Navigation</h3>
-      <ul>
-        <li class="right" style="margin-right: 10px">
-          <a href="../genindex.html" title="General Index"
-             accesskey="I">index</a></li>
-        <li class="right" >
-          <a href="understanding_attribute_state.html" title="Understanding Attribute State"
-             accesskey="N">next</a> |</li>
-        <li class="right" >
-          <a href="working_with_a_design.html" title="Working With a Design"
-             accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../contents.html">PandABlocks-webcontrol 2.1-3-gf1a51e1
- documentation</a> &#187;</li>
-        <li class="nav-item nav-item-this"><a href="">Monitoring Attribute Values</a></li> 
-      </ul>
-    </div>  
+</head>
 
-    <div class="document">
-      <div class="documentwrapper">
-        <div class="bodywrapper">
-          <div class="body" role="main">
-            
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../contents.html" class="icon icon-home"> PandABlocks-webcontrol
+            <img src="../_static/PandA-logo-for-black-background.svg" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                2.1-3-gf5c3114
+
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+    
+              <p class="caption" role="heading"><span class="caption-text">Overview</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Introduction</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">User Guide</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="quick-start.html">Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="user_interface_overview.html">User Interface Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="working_with_a_design.html">Working With a Design</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Monitoring Attribute Values</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#working-with-charts">Working With Charts</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#interactive-chart-functionality">Interactive Chart Functionality</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#enhanced-chart-interactivity">Enhanced Chart Interactivity</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#exporting-a-chart-for-external-presentation">Exporting a Chart For External Presentation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#data-retrieval-and-chart-update-frequency">Data Retrieval and Chart Update Frequency</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#working-with-numerical-tables">Working with Numerical Tables</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#data-retrieval-and-table-update-frequency">Data Retrieval and Table Update Frequency</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="understanding_attribute_state.html">Understanding Attribute State</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="glossary.html">Glossary</a></li>
+</ul>
+
+    
+  
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../contents.html">PandABlocks-webcontrol</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../contents.html" class="icon icon-home"></a> &raquo;</li>
+      <li>Monitoring Attribute Values</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/userguide/monitoring_attribute_values.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
   <div class="section" id="monitoring-attribute-values">
-<h1>Monitoring Attribute Values<a class="headerlink" href="#monitoring-attribute-values" title="Permalink to this headline">¶</a></h1>
+<h1>Monitoring Attribute Values<a class="headerlink" href="#monitoring-attribute-values" title="Permalink to this headline"></a></h1>
 <p>The user interface provides a near-realtime graphical representation of values
 associated with an <code class="xref any docutils literal notranslate"><span class="pre">attribute</span></code> against time.  Attribute values can be
 represented graphically as a <em>chart</em> or numerically as a <em>table</em>.</p>
 <div class="section" id="working-with-charts">
-<h2>Working With Charts<a class="headerlink" href="#working-with-charts" title="Permalink to this headline">¶</a></h2>
+<h2>Working With Charts<a class="headerlink" href="#working-with-charts" title="Permalink to this headline"></a></h2>
 <p>Plotting data in a chart begins at the time the Attribute is selected (via the
 ‘information’ icon associated with it in its <code class="xref any docutils literal notranslate"><span class="pre">block</span></code>).  The data displayed is a
 ‘for information only’ representation of the Attribute’s characteristics for the
@@ -88,13 +144,13 @@ represents the on or off setting.</p></td>
 </tbody>
 </table>
 <div class="section" id="interactive-chart-functionality">
-<h3>Interactive Chart Functionality<a class="headerlink" href="#interactive-chart-functionality" title="Permalink to this headline">¶</a></h3>
+<h3>Interactive Chart Functionality<a class="headerlink" href="#interactive-chart-functionality" title="Permalink to this headline"></a></h3>
 <p>Once displayed you have a number of tools at your disposal to support
 interaction with the chart.  Hovering the mouse pointer over the chart displays
 the chart menu bar:</p>
 <div class="figure align-center" id="id1">
 <img alt="../_images/chart_options.png" src="../_images/chart_options.png" />
-<p class="caption"><span class="caption-text">Chart options bar</span><a class="headerlink" href="#id1" title="Permalink to this image">¶</a></p>
+<p class="caption"><span class="caption-text">Chart options bar</span><a class="headerlink" href="#id1" title="Permalink to this image"></a></p>
 </div>
 <p>The following options are available:</p>
 <table class="colwidths-given docutils align-center">
@@ -161,7 +217,7 @@ cursor position (see notes on
 </table>
 </div>
 <div class="section" id="enhanced-chart-interactivity">
-<h3>Enhanced Chart Interactivity<a class="headerlink" href="#enhanced-chart-interactivity" title="Permalink to this headline">¶</a></h3>
+<h3>Enhanced Chart Interactivity<a class="headerlink" href="#enhanced-chart-interactivity" title="Permalink to this headline"></a></h3>
 <p>While the chart interface provides basic interactive exploration capabilities it
 is largely limited to panning and zooming.  Further interactive capabilities are
 directly available via the ‘<strong>Edit in Chart Studio</strong>’ option in the chart menu
@@ -176,14 +232,14 @@ for this tool is not the responsibility of the MalcolmJS team.</p>
 </div>
 </div>
 <div class="section" id="exporting-a-chart-for-external-presentation">
-<h3>Exporting a Chart For External Presentation<a class="headerlink" href="#exporting-a-chart-for-external-presentation" title="Permalink to this headline">¶</a></h3>
+<h3>Exporting a Chart For External Presentation<a class="headerlink" href="#exporting-a-chart-for-external-presentation" title="Permalink to this headline"></a></h3>
 <p>A snapshot of a chart can be taken at any time via the ‘<strong>Download Plot as
 PNG</strong>’ option in the chart menu bar.  The snapshot, representing the content
 displayed on screen at the time of selection, is automatically saved to the
 ‘Downloads’ folder of your local storage device.</p>
 </div>
 <div class="section" id="data-retrieval-and-chart-update-frequency">
-<h3>Data Retrieval and Chart Update Frequency<a class="headerlink" href="#data-retrieval-and-chart-update-frequency" title="Permalink to this headline">¶</a></h3>
+<h3>Data Retrieval and Chart Update Frequency<a class="headerlink" href="#data-retrieval-and-chart-update-frequency" title="Permalink to this headline"></a></h3>
 <ol class="arabic simple">
 <li><p>Data is supplied to the chart interface at a frequency of up to 20Hz.</p></li>
 <li><p>On screen graphics update at a pre-defined temporal frequency of 1 second and
@@ -196,7 +252,7 @@ default view state.</p></li>
 </div>
 </div>
 <div class="section" id="working-with-numerical-tables">
-<h2>Working with Numerical Tables<a class="headerlink" href="#working-with-numerical-tables" title="Permalink to this headline">¶</a></h2>
+<h2>Working with Numerical Tables<a class="headerlink" href="#working-with-numerical-tables" title="Permalink to this headline"></a></h2>
 <p>A table present Attribute values in numerical form.  Each row in the table
 represents a change in value, with each row presenting:</p>
 <blockquote>
@@ -209,12 +265,12 @@ represents a change in value, with each row presenting:</p>
 <p>For example:</p>
 <div class="figure align-center" id="id2">
 <img alt="../_images/attribute_value_table.png" src="../_images/attribute_value_table.png" />
-<p class="caption"><span class="caption-text">Attribute values presented in tabular formal</span><a class="headerlink" href="#id2" title="Permalink to this image">¶</a></p>
+<p class="caption"><span class="caption-text">Attribute values presented in tabular formal</span><a class="headerlink" href="#id2" title="Permalink to this image"></a></p>
 </div>
 <p>The data displayed is a ‘for information only’ representation of the Attribute’s
 characteristics for the duration over which the table remains open.</p>
 <div class="section" id="data-retrieval-and-table-update-frequency">
-<h3>Data Retrieval and Table Update Frequency<a class="headerlink" href="#data-retrieval-and-table-update-frequency" title="Permalink to this headline">¶</a></h3>
+<h3>Data Retrieval and Table Update Frequency<a class="headerlink" href="#data-retrieval-and-table-update-frequency" title="Permalink to this headline"></a></h3>
 <ol class="arabic simple">
 <li><p>Data is supplied to the table at a frequency of up to 20Hz.</p></li>
 <li><p>On screen updates are set to a pre-defined temporal frequency of 1 second.</p></li>
@@ -227,83 +283,31 @@ the preceeding second.</p></li>
 </div>
 
 
-            <div class="clearer"></div>
+           </div>
           </div>
-        </div>
-      </div>
-      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
-        <div class="sphinxsidebarwrapper">
-            <p class="logo"><a href="../contents.html">
-              <img class="logo" src="../_static/PandA-logo-for-black-background.svg" alt="Logo"/>
-            </a></p>
-  <div>
-    <h3><a href="../contents.html">Table of Contents</a></h3>
-    <ul>
-<li><a class="reference internal" href="#">Monitoring Attribute Values</a><ul>
-<li><a class="reference internal" href="#working-with-charts">Working With Charts</a><ul>
-<li><a class="reference internal" href="#interactive-chart-functionality">Interactive Chart Functionality</a></li>
-<li><a class="reference internal" href="#enhanced-chart-interactivity">Enhanced Chart Interactivity</a></li>
-<li><a class="reference internal" href="#exporting-a-chart-for-external-presentation">Exporting a Chart For External Presentation</a></li>
-<li><a class="reference internal" href="#data-retrieval-and-chart-update-frequency">Data Retrieval and Chart Update Frequency</a></li>
-</ul>
-</li>
-<li><a class="reference internal" href="#working-with-numerical-tables">Working with Numerical Tables</a><ul>
-<li><a class="reference internal" href="#data-retrieval-and-table-update-frequency">Data Retrieval and Table Update Frequency</a></li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="working_with_a_design.html" class="btn btn-neutral float-left" title="Working With a Design" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="understanding_attribute_state.html" class="btn btn-neutral float-right" title="Understanding Attribute State" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
 
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2018, Diamond Light Source.</p>
   </div>
-  <div>
-    <h4>Previous topic</h4>
-    <p class="topless"><a href="working_with_a_design.html"
-                          title="previous chapter">Working With a Design</a></p>
-  </div>
-  <div>
-    <h4>Next topic</h4>
-    <p class="topless"><a href="understanding_attribute_state.html"
-                          title="next chapter">Understanding Attribute State</a></p>
-  </div>
-  <div role="note" aria-label="source link">
-    <h3>This Page</h3>
-    <ul class="this-page-menu">
-      <li><a href="../_sources/userguide/monitoring_attribute_values.rst.txt"
-            rel="nofollow">Show Source</a></li>
-    </ul>
-   </div>
-<div id="searchbox" style="display: none" role="search">
-  <h3 id="searchlabel">Quick search</h3>
-    <div class="searchformwrapper">
-    <form class="search" action="../search.html" method="get">
-      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
-      <input type="submit" value="Go" />
-    </form>
-    </div>
-</div>
-<script>$('#searchbox').show(0);</script>
+
+   
+
+</footer>
         </div>
       </div>
-      <div class="clearer"></div>
-    </div>
-    <div class="related" role="navigation" aria-label="related navigation">
-      <h3>Navigation</h3>
-      <ul>
-        <li class="right" style="margin-right: 10px">
-          <a href="../genindex.html" title="General Index"
-             >index</a></li>
-        <li class="right" >
-          <a href="understanding_attribute_state.html" title="Understanding Attribute State"
-             >next</a> |</li>
-        <li class="right" >
-          <a href="working_with_a_design.html" title="Working With a Design"
-             >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../contents.html">PandABlocks-webcontrol 2.1-3-gf1a51e1
- documentation</a> &#187;</li>
-        <li class="nav-item nav-item-this"><a href="">Monitoring Attribute Values</a></li> 
-      </ul>
-    </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
  <script type="text/javascript">
     $(document).ready(function() {
         $(".toggle > *").hide();
@@ -315,5 +319,6 @@ the preceeding second.</p></li>
     });
 </script>
 
-  </body>
+
+</body>
 </html>
