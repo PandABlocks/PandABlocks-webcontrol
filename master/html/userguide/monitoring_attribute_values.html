@@ -1,0 +1,321 @@
+<!-- https://stackoverflow.com/a/37843854 -->
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Monitoring Attribute Values &mdash; PandABlocks-webcontrol 2.1-2-g74b7626
+ documentation</title>
+      <link rel="stylesheet" href="../_static/theme_overrides.css" type="text/css" />
+    <link rel="shortcut icon" href="../_static/favicon.ico"/>
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Understanding Attribute State" href="understanding_attribute_state.html" />
+    <link rel="prev" title="Working With a Design" href="working_with_a_design.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../contents.html" class="icon icon-home"> PandABlocks-webcontrol
+            <img src="../_static/PandA-logo-for-black-background.svg" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                2.1-2-g74b7626
+
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+    
+              <p class="caption" role="heading"><span class="caption-text">Overview</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Introduction</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">User Guide</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="quick-start.html">Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="user_interface_overview.html">User Interface Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="working_with_a_design.html">Working With a Design</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Monitoring Attribute Values</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#working-with-charts">Working With Charts</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#interactive-chart-functionality">Interactive Chart Functionality</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#enhanced-chart-interactivity">Enhanced Chart Interactivity</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#exporting-a-chart-for-external-presentation">Exporting a Chart For External Presentation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#data-retrieval-and-chart-update-frequency">Data Retrieval and Chart Update Frequency</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#working-with-numerical-tables">Working with Numerical Tables</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#data-retrieval-and-table-update-frequency">Data Retrieval and Table Update Frequency</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="understanding_attribute_state.html">Understanding Attribute State</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="glossary.html">Glossary</a></li>
+</ul>
+
+    
+  
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../contents.html">PandABlocks-webcontrol</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../contents.html" class="icon icon-home"></a> &raquo;</li>
+      <li>Monitoring Attribute Values</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/userguide/monitoring_attribute_values.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <div class="section" id="monitoring-attribute-values">
+<h1>Monitoring Attribute Values<a class="headerlink" href="#monitoring-attribute-values" title="Permalink to this headline">¶</a></h1>
+<p>The user interface provides a near-realtime graphical representation of values
+associated with an <code class="xref any docutils literal notranslate"><span class="pre">attribute</span></code> against time.  Attribute values can be
+represented graphically as a <em>chart</em> or numerically as a <em>table</em>.</p>
+<div class="section" id="working-with-charts">
+<h2>Working With Charts<a class="headerlink" href="#working-with-charts" title="Permalink to this headline">¶</a></h2>
+<p>Plotting data in a chart begins at the time the Attribute is selected (via the
+‘information’ icon associated with it in its <code class="xref any docutils literal notranslate"><span class="pre">block</span></code>).  The data displayed is a
+‘for information only’ representation of the Attribute’s characteristics for the
+duration over which the plot remains open.</p>
+<p>The User Interface renders every attribute as a chart.  In doing so it handles
+the different Attribute formats available in different ways.  In all cases the X
+axis represents time.</p>
+<table class="colwidths-given docutils align-center">
+<colgroup>
+<col style="width: 30%" />
+<col style="width: 70%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Attribute Format</p></th>
+<th class="head"><p>Plot Type</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Numerical data</p></td>
+<td><p>Continuously recorded data is displayed as a traditional scatter plot
+with Attribute values on the Y axis.</p></td>
+</tr>
+<tr class="row-odd"><td><p>Text data</p></td>
+<td><p>Displayed in a similar way to discrete numberical data but in this case
+the Y axis representing each unique text string specified.</p></td>
+</tr>
+<tr class="row-even"><td><p>Boolean data</p></td>
+<td><p>Representing on/off states within Attribute settings.  The Y-axis
+represents the on or off setting.</p></td>
+</tr>
+</tbody>
+</table>
+<div class="section" id="interactive-chart-functionality">
+<h3>Interactive Chart Functionality<a class="headerlink" href="#interactive-chart-functionality" title="Permalink to this headline">¶</a></h3>
+<p>Once displayed you have a number of tools at your disposal to support
+interaction with the chart.  Hovering the mouse pointer over the chart displays
+the chart menu bar:</p>
+<div class="figure align-center" id="id1">
+<img alt="../_images/chart_options.png" src="../_images/chart_options.png" />
+<p class="caption"><span class="caption-text">Chart options bar</span><a class="headerlink" href="#id1" title="Permalink to this image">¶</a></p>
+</div>
+<p>The following options are available:</p>
+<table class="colwidths-given docutils align-center">
+<colgroup>
+<col style="width: 30%" />
+<col style="width: 70%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Option</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Download Plot as PNG</p></td>
+<td><p>Provides the ability to download a snapshot of the chart for use outside
+the user interface.</p></td>
+</tr>
+<tr class="row-odd"><td><p>Edit in Chart Studio</p></td>
+<td><p>Generates a snapshot of the data behind the plot and exports it to the
+online Chart Studio tool.</p></td>
+</tr>
+<tr class="row-even"><td><p>Zoom</p></td>
+<td><p>Allows you to select a rectangular bounding box around a feature of
+interest and zoom in on it.  The level of zoom dynamically adjusts
+according to the size of the bounding box (smaller box = higher zoom)
+with X and Y axes dynamically scaling to reflect the granularity of the
+resulting plot.  Note that while zoomed updates to the selected area
+pause, instead presenting a snapshot at the time of zoom.</p></td>
+</tr>
+<tr class="row-odd"><td><p>Pan</p></td>
+<td><p>Provides the ability to pan the chart through horizontal and vertical
+axes.  Note that unlike <strong>Zoom</strong> options panning does not pause
+automatic updates, thus when panning back through time the plot may
+appear blank.</p></td>
+</tr>
+<tr class="row-even"><td><p>Zoom in/out</p></td>
+<td><p>similar to the manual <strong>Zoom</strong> option described above but automatically
+focussed on most recent data.  As noted above zooming pauses automatic
+chart updates, presenting the area of zoom only.</p></td>
+</tr>
+<tr class="row-odd"><td><p>Autoscale</p></td>
+<td><p>Automatically scales the plot to include all data available since the
+Attribute was originally selected.</p></td>
+</tr>
+<tr class="row-even"><td><p>Home (Reset Axes)</p></td>
+<td><p>Resets the chart back to its default scale after <strong>Zoom</strong> and <strong>Pan</strong>
+actions, restarting automatic updates of the chart as it does so.</p></td>
+</tr>
+<tr class="row-odd"><td><p>Toggle Spike Lines</p></td>
+<td><p>Click this option once to overlay vertical and horizontal guide lines
+when hovering over a data value.  Click a second time to disable
+overlay.</p></td>
+</tr>
+<tr class="row-even"><td><p>Show closest data to hover</p></td>
+<td><p>Displays the Attribute value for the closest data point to the current
+cursor location.</p></td>
+</tr>
+<tr class="row-odd"><td><p>Compare data on hover</p></td>
+<td><p>Displays <em>all</em> Attribute values at the time point represented by the
+cursor position (see notes on
+<a class="reference internal" href="#data-retrieval-and-chart-update-frequency"><span class="std std-ref">Data Retrieval and Chart Update Frequency</span></a> below).</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="enhanced-chart-interactivity">
+<h3>Enhanced Chart Interactivity<a class="headerlink" href="#enhanced-chart-interactivity" title="Permalink to this headline">¶</a></h3>
+<p>While the chart interface provides basic interactive exploration capabilities it
+is largely limited to panning and zooming.  Further interactive capabilities are
+directly available via the ‘<strong>Edit in Chart Studio</strong>’ option in the chart menu
+bar.  Selecting this option automatically exports the data associated with the
+current on-screen chart and opens it in the online <a class="reference external" href="https://plot.ly/online-chart-maker/">Chart Studio</a> tool.  Further information on the use of
+Chart Studio is available in its own <a class="reference external" href="https://help.plot.ly/">online documentation</a>.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The external charting tool provided through the ‘<strong>Edit in Chart Studio</strong>’
+option is provided by a third party organisation.  Functionality and support
+for this tool is not the responsibility of the MalcolmJS team.</p>
+</div>
+</div>
+<div class="section" id="exporting-a-chart-for-external-presentation">
+<h3>Exporting a Chart For External Presentation<a class="headerlink" href="#exporting-a-chart-for-external-presentation" title="Permalink to this headline">¶</a></h3>
+<p>A snapshot of a chart can be taken at any time via the ‘<strong>Download Plot as
+PNG</strong>’ option in the chart menu bar.  The snapshot, representing the content
+displayed on screen at the time of selection, is automatically saved to the
+‘Downloads’ folder of your local storage device.</p>
+</div>
+<div class="section" id="data-retrieval-and-chart-update-frequency">
+<h3>Data Retrieval and Chart Update Frequency<a class="headerlink" href="#data-retrieval-and-chart-update-frequency" title="Permalink to this headline">¶</a></h3>
+<ol class="arabic simple">
+<li><p>Data is supplied to the chart interface at a frequency of up to 20Hz.</p></li>
+<li><p>On screen graphics update at a pre-defined temporal frequency of 1 second and
+cannot therefore be regarded as a true realtime display.  Each 1 second
+update plots <em>all</em> data supplied at 20Hz frequency during preceeding second.</p></li>
+<li><p>On zooming into a plot the plot update process is paused to enable inspection
+of the area of interest.  Automatic updates resume on returning to the
+default view state.</p></li>
+</ol>
+</div>
+</div>
+<div class="section" id="working-with-numerical-tables">
+<h2>Working with Numerical Tables<a class="headerlink" href="#working-with-numerical-tables" title="Permalink to this headline">¶</a></h2>
+<p>A table present Attribute values in numerical form.  Each row in the table
+represents a change in value, with each row presenting:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>The time at which the Attribute value changed.</p></li>
+<li><p>The value of the Attribute after the change.</p></li>
+<li><p>The status of the Attribute against parameterised alarm states.</p></li>
+</ul>
+</div></blockquote>
+<p>For example:</p>
+<div class="figure align-center" id="id2">
+<img alt="../_images/attribute_value_table.png" src="../_images/attribute_value_table.png" />
+<p class="caption"><span class="caption-text">Attribute values presented in tabular formal</span><a class="headerlink" href="#id2" title="Permalink to this image">¶</a></p>
+</div>
+<p>The data displayed is a ‘for information only’ representation of the Attribute’s
+characteristics for the duration over which the table remains open.</p>
+<div class="section" id="data-retrieval-and-table-update-frequency">
+<h3>Data Retrieval and Table Update Frequency<a class="headerlink" href="#data-retrieval-and-table-update-frequency" title="Permalink to this headline">¶</a></h3>
+<ol class="arabic simple">
+<li><p>Data is supplied to the table at a frequency of up to 20Hz.</p></li>
+<li><p>On screen updates are set to a pre-defined temporal frequency of 1 second.</p></li>
+<li><p>Each 1 second update includes <em>all</em> data supplied at 20Hz frequency during
+the preceeding second.</p></li>
+<li><p>Newest data is presented at the <em>bottom</em> of the table.</p></li>
+</ol>
+</div>
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="working_with_a_design.html" class="btn btn-neutral float-left" title="Working With a Design" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="understanding_attribute_state.html" class="btn btn-neutral float-right" title="Understanding Attribute State" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2018, Diamond Light Source.</p>
+  </div>
+
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+ <script type="text/javascript">
+    $(document).ready(function() {
+        $(".toggle > *").hide();
+        $(".toggle .header").show();
+        $(".toggle .header").click(function() {
+            $(this).parent().children().not(".header").toggle(400);
+            $(this).parent().children(".header").toggleClass("open");
+        })
+    });
+</script>
+
+
+</body>
+</html>
