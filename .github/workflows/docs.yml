@@ -53,7 +53,7 @@ jobs:
 
       - name: Move to versioned directory
         # e.g. master or 0.1.2
-        run: mv PandABlocks-webcontrol/build/templates "PandABlocks-webcontrol/.github/pages/${GITHUB_REF##*/}"
+        run: mv PandABlocks-webcontrol/build/malcolmjs_docs/html "PandABlocks-webcontrol/.github/pages/${GITHUB_REF##*/}"
 
       - name: Publish Docs to gh-pages
         # Only master and tags are published
