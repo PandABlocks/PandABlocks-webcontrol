@@ -8,32 +8,25 @@ jobs:
   make_zpkg:
 
     runs-on: ubuntu-latest
+
+    # Use container from ghcr
+    container: 
+      image: ghcr.io/pandablocks/pandablocks-dev-container:latest
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+      volumes: 
+        - ${{ github.workspace }}:/repos
+        - ${{ github.workspace }}/build:/build
+
     steps:
       # Git repositories
       - name: Checkout Source
         uses: actions/checkout@v2
         with:
           path: PandABlocks-webcontrol
-          # require history to get back to last tag for version number of branches
+          # Require history to get back to last tag for version number of branches
           fetch-depth: 0
-
-      - name: Checkout annotypes
-        uses: actions/checkout@v2
-        with:
-          repository: dls-controls/annotypes
-          path: annotypes
-
-      - name: Checkout pymalcolm
-        uses: actions/checkout@v2
-        with:
-          repository: dls-controls/pymalcolm
-          path: pymalcolm
-
-      - name: Checkout malcolmjs
-        uses: actions/checkout@v2
-        with:
-          repository: dls-controls/malcolmjs
-          path: malcolmjs
 
       - name: Checkout PandABlocks-rootfs
         uses: actions/checkout@v2
@@ -41,27 +34,23 @@ jobs:
           repository: PandABlocks/PandABlocks-rootfs
           path: PandABlocks-rootfs
 
-            # System dependencies
-      - name: Install system dependencies
-        run: |
-          sudo pip install sphinx sphinx-rtd-theme docutils==0.16
-
-      # CONFIG file
-      - name: Generate CONFIG file
-        run: |
-          bash PandABlocks-webcontrol/.github/scripts/config-file-webcontrol.sh
-          cat PandABlocks-webcontrol/CONFIG
-
       # Build
       - name: Make
         run: |
           cd PandABlocks-webcontrol
           make zpkg
+      
+      # Artifact
+      - name: Upload zpkg
+        uses: actions/upload-artifact@v2
+        with:
+          name: zpkg
+          path: PandABlocks-webcontrol/build/panda-webcontrol@*.zpg
 
   release:
     needs: [make_zpkg]
     runs-on: ubuntu-latest
-    # make a release on every tag
+    # Make a release on every tag
     if: github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags')
     steps:
       - uses: actions/download-artifact@v2
