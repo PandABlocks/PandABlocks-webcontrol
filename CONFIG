@@ -1,0 +1,28 @@
+# A checked out version of:
+# https://github.com/dls-controls/annotypes
+#
+# It doesn't need to be built, we just copy python files out of it
+ANNOTYPES = /annotypes
+
+# A checked out version of:
+# https://github.com/dls-controls/pymalcolm
+#
+# It doesn't need to be built, we just copy python files out of it
+#
+PYMALCOLM = /pymalcolm
+
+# A checked out version of
+# https://github.com/dls-controls/malcolmjs
+#
+# It doesn't need to be built, we just copy docs out of it
+MALCOLMJS = /malcolmjs
+
+# A checked out version of:
+# https://github.com/PandABlocks/PandABlocks-rootfs
+#
+# It doesn't need to be build, it is just used for the zpkg building tools
+PANDA_ROOTFS = /repos/PandABlocks-rootfs
+
+
+#BUILD_DIR = /build/PandA-webcontrol
+
