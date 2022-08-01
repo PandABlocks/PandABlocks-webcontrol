@@ -38,6 +38,7 @@ jobs:
       - name: Make
         run: |
           cd PandABlocks-webcontrol
+          ln -s CONFIG.example CONFIG
           make zpkg
       
       # Artifact

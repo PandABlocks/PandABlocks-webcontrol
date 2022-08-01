@@ -37,6 +37,7 @@ jobs:
       - name: Build Docs
         run: |
           cd PandABlocks-webcontrol
+          ln -s CONFIG.example CONFIG
           make docs
 
       - name: Move to versioned directory
