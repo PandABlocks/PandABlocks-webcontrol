@@ -9,16 +9,6 @@ jobs:
 
     runs-on: ubuntu-latest
 
-    # Use container from ghcr
-    container: 
-      image: ghcr.io/pandablocks/pandablocks-dev-container:latest
-      credentials:
-        username: ${{ github.actor }}
-        password: ${{ secrets.GITHUB_TOKEN }}
-      volumes: 
-        - ${{ github.workspace }}:/repos
-        - ${{ github.workspace }}/build:/build
-
     steps:
       # Git repositories
       - name: Checkout Source
@@ -34,19 +24,31 @@ jobs:
           repository: PandABlocks/PandABlocks-rootfs
           path: PandABlocks-rootfs
 
+      # Login into ghcr
+      - name: login to ghcr
+        uses: docker/login-action@v1
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN  }}
+
       # Build
       - name: Make
         run: |
-          cd PandABlocks-webcontrol
-          ln -s CONFIG.example CONFIG
-          make zpkg
+          docker pull ghcr.io/pandablocks/pandablocks-dev-container:latest
+          docker run \
+            -v "${{ github.workspace }}:/repos" \
+            -v "${{ github.workspace }}/build:/build" \
+            ghcr.io/pandablocks/pandablocks-dev-container:latest\
+            /bin/bash -c \
+            "cd PandABlocks-webcontrol && ln -s CONFIG.example CONFIG && make zpkg"
       
       # Artifact
       - name: Upload zpkg
         uses: actions/upload-artifact@v2
         with:
           name: zpkg
-          path: PandABlocks-webcontrol/build/panda-webcontrol@*.zpg
+          path: ./PandABlocks-webcontrol/build/panda-webcontrol@*.zpg
 
   release:
     needs: [make_zpkg]
