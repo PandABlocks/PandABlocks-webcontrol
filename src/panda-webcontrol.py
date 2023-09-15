@@ -120,7 +120,7 @@ process.add_controller(controller)
 controller = pandablocks.controllers.PandAManagerController(
     config_dir=args.configdir, hostname=args.hostname,
     template_designs=args.templatedesigns, port=args.port, mri=args.mri,
-    use_git=False, doc_url_base="/fpga_docs/", poll_period=0.1)
+    doc_url_base="/fpga_docs/", poll_period=0.1)
 process.add_controller(controller)
 
 # Start the server
