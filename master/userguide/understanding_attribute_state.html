@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Understanding Attribute State &mdash; PandABlocks-webcontrol 2.1-3-gf5c3114
+  <title>Understanding Attribute State &mdash; PandABlocks-webcontrol 2.1-4-g6a756ec
  documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
@@ -19,7 +19,9 @@
         <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
         <script src="../_static/jquery.js"></script>
         <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -32,16 +34,20 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-            <a href="../contents.html" class="icon icon-home"> PandABlocks-webcontrol
-            <img src="../_static/PandA-logo-for-black-background.svg" class="logo" alt="Logo"/>
+
+          
+          
+          <a href="../contents.html" class="icon icon-home">
+            PandABlocks-webcontrol
+              <img src="../_static/PandA-logo-for-black-background.svg" class="logo" alt="Logo"/>
           </a>
               <div class="version">
-                2.1-3-gf5c3114
+                2.1-4-g6a756ec
 
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -91,8 +97,8 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../contents.html" class="icon icon-home"></a> &raquo;</li>
-      <li>Understanding Attribute State</li>
+      <li><a href="../contents.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Understanding Attribute State</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../_sources/userguide/understanding_attribute_state.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -103,7 +109,7 @@
            <div itemprop="articleBody">
              
   <div class="section" id="understanding-attribute-state">
-<h1>Understanding Attribute State<a class="headerlink" href="#understanding-attribute-state" title="Permalink to this headline"></a></h1>
+<h1>Understanding Attribute State<a class="headerlink" href="#understanding-attribute-state" title="Permalink to this heading"></a></h1>
 <p>At any given time an Attribute can be in one of several states.  State is
 dependent upon a range of factors including:</p>
 <blockquote>
@@ -118,7 +124,7 @@ specification of the Attribute.</p></li>
 <p>State information is presented in the user interface as a symbol displayed to
 the left of the Attribute name, with the following states represented:</p>
 <div class="section" id="normal-state">
-<h2>Normal State<a class="headerlink" href="#normal-state" title="Permalink to this headline"></a></h2>
+<h2>Normal State<a class="headerlink" href="#normal-state" title="Permalink to this heading"></a></h2>
 <p>Data associated with the Attribute is within an acceptable operating theshold or
 range.  For a <code class="xref any docutils literal notranslate"><span class="pre">Parameter</span> <span class="pre">Attribute</span></code> this also means the value has been
 successfully <a class="reference internal" href="working_with_a_design.html#attribute-change-lifecycle"><span class="std std-ref">put</span></a> onto the underlying server.</p>
@@ -127,14 +133,14 @@ successfully <a class="reference internal" href="working_with_a_design.html#attr
 </div>
 </div>
 <div class="section" id="processing-state">
-<h2>Processing State<a class="headerlink" href="#processing-state" title="Permalink to this headline"></a></h2>
+<h2>Processing State<a class="headerlink" href="#processing-state" title="Permalink to this heading"></a></h2>
 <p>Data has been submitted to the underlying server or a request has been made to
 retrieve information from the underlying server.  In both cases a process has
 been triggered and a response is a awaited.</p>
 <p><em>GET IMAGE</em></p>
 </div>
 <div class="section" id="locally-edited-state">
-<h2>Locally Edited State<a class="headerlink" href="#locally-edited-state" title="Permalink to this headline"></a></h2>
+<h2>Locally Edited State<a class="headerlink" href="#locally-edited-state" title="Permalink to this heading"></a></h2>
 <p>Data within the user interface has been changed but not yet <a class="reference internal" href="working_with_a_design.html#attribute-change-lifecycle"><span class="std std-ref">put</span></a> to the underlying server.  Consequently the local
 edit will have no effect on execution of the system and will not be saved as
 part of the <code class="xref any docutils literal notranslate"><span class="pre">Design</span></code>.</p>
@@ -143,7 +149,7 @@ part of the <code class="xref any docutils literal notranslate"><span class="pre
 </div>
 </div>
 <div class="section" id="update-error-state">
-<h2>Update Error State<a class="headerlink" href="#update-error-state" title="Permalink to this headline"></a></h2>
+<h2>Update Error State<a class="headerlink" href="#update-error-state" title="Permalink to this heading"></a></h2>
 <p>The Attribute value <a class="reference internal" href="working_with_a_design.html#attribute-change-lifecycle"><span class="std std-ref">put</span></a> to the underlying server
 has not been accepted.  This typically occurs because the value has failed the
 validation test associated with the Attibute as defined in its Block
@@ -151,7 +157,7 @@ specification.</p>
 <p><em>GET IMAGE</em></p>
 </div>
 <div class="section" id="warning-state">
-<h2>Warning State<a class="headerlink" href="#warning-state" title="Permalink to this headline"></a></h2>
+<h2>Warning State<a class="headerlink" href="#warning-state" title="Permalink to this heading"></a></h2>
 <p>An issue has been detected and requires investigation.  This state is typically
 triggered when an <code class="xref any docutils literal notranslate"><span class="pre">Input</span> <span class="pre">Attribute</span></code>, <code class="xref any docutils literal notranslate"><span class="pre">Output</span> <span class="pre">Attribute</span></code> or
 <code class="xref any docutils literal notranslate"><span class="pre">Readback</span> <span class="pre">Attribute</span></code> data is deemed to be outside normal operating parameters
@@ -161,7 +167,7 @@ but is still considered acceptable.</p>
 </div>
 </div>
 <div class="section" id="error-state">
-<h2>Error State<a class="headerlink" href="#error-state" title="Permalink to this headline"></a></h2>
+<h2>Error State<a class="headerlink" href="#error-state" title="Permalink to this heading"></a></h2>
 <p>An issue has been detected resulting in an error being reported by the
 underlying server.  This state is typically triggered when <code class="xref any docutils literal notranslate"><span class="pre">Input</span> <span class="pre">Attribute</span></code>,
 <code class="xref any docutils literal notranslate"><span class="pre">Output</span> <span class="pre">Attribute</span></code> or <code class="xref any docutils literal notranslate"><span class="pre">Readback</span> <span class="pre">Attribute</span></code> data is deemed to be outside
@@ -171,7 +177,7 @@ acceptable operating conditions and immediate action is recommended.</p>
 </div>
 </div>
 <div class="section" id="invalid-state">
-<h2>Invalid State<a class="headerlink" href="#invalid-state" title="Permalink to this headline"></a></h2>
+<h2>Invalid State<a class="headerlink" href="#invalid-state" title="Permalink to this heading"></a></h2>
 <p>The overall Block context has changed since the user interface was last
 accessed.  Data displayed may no longer be accurate or consistent with the
 current <code class="xref any docutils literal notranslate"><span class="pre">design</span></code></p>
@@ -180,7 +186,7 @@ current <code class="xref any docutils literal notranslate"><span class="pre">de
 </div>
 </div>
 <div class="section" id="disconnected-state">
-<h2>Disconnected State<a class="headerlink" href="#disconnected-state" title="Permalink to this headline"></a></h2>
+<h2>Disconnected State<a class="headerlink" href="#disconnected-state" title="Permalink to this heading"></a></h2>
 <p>Communication with the Block hosting the Attribute has been lost by the
 underlying server.  Immediate investigation is recommended.</p>
 <p><em>GET IMAGE</em></p>
@@ -194,7 +200,7 @@ information.</p>
 </div>
 </div>
 <div class="section" id="presenting-status-information">
-<h2>Presenting Status Information<a class="headerlink" href="#presenting-status-information" title="Permalink to this headline"></a></h2>
+<h2>Presenting Status Information<a class="headerlink" href="#presenting-status-information" title="Permalink to this heading"></a></h2>
 <p>Within Block Information Panels (presented in either the left-hand or right-hand
 panels) status information is displayed to the left of each Attribute via the
 corresponding state icon (see table above).</p>

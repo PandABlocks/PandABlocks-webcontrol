@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Working With a Design &mdash; PandABlocks-webcontrol 2.1-3-gf5c3114
+  <title>Working With a Design &mdash; PandABlocks-webcontrol 2.1-4-g6a756ec
  documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
@@ -19,7 +19,9 @@
         <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
         <script src="../_static/jquery.js"></script>
         <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -32,16 +34,20 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-            <a href="../contents.html" class="icon icon-home"> PandABlocks-webcontrol
-            <img src="../_static/PandA-logo-for-black-background.svg" class="logo" alt="Logo"/>
+
+          
+          
+          <a href="../contents.html" class="icon icon-home">
+            PandABlocks-webcontrol
+              <img src="../_static/PandA-logo-for-black-background.svg" class="logo" alt="Logo"/>
           </a>
               <div class="version">
-                2.1-3-gf5c3114
+                2.1-4-g6a756ec
 
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -118,8 +124,8 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../contents.html" class="icon icon-home"></a> &raquo;</li>
-      <li>Working With a Design</li>
+      <li><a href="../contents.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Working With a Design</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../_sources/userguide/working_with_a_design.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -130,7 +136,7 @@
            <div itemprop="articleBody">
              
   <div class="section" id="working-with-a-design">
-<h1>Working With a Design<a class="headerlink" href="#working-with-a-design" title="Permalink to this headline"></a></h1>
+<h1>Working With a Design<a class="headerlink" href="#working-with-a-design" title="Permalink to this heading"></a></h1>
 <p>A <code class="xref any docutils literal notranslate"><span class="pre">design</span></code> forms the heart of your system implementation.  It provides an
 interactive graphical representation of your system, helping you build and
 manage:</p>
@@ -143,7 +149,7 @@ output (source) ports.</p></li>
 </ul>
 <p>A Design is created in the user interface <a class="reference internal" href="user_interface_overview.html#layout-view"><span class="std std-ref">Layout View</span></a>.</p>
 <div class="section" id="adding-a-block-to-a-design">
-<h2>Adding a Block to a Design<a class="headerlink" href="#adding-a-block-to-a-design" title="Permalink to this headline"></a></h2>
+<h2>Adding a Block to a Design<a class="headerlink" href="#adding-a-block-to-a-design" title="Permalink to this heading"></a></h2>
 <p>A <code class="xref any docutils literal notranslate"><span class="pre">block</span></code> is added to a <code class="xref any docutils literal notranslate"><span class="pre">design</span></code> by dragging and dropping it from the ‘Block
 Palette’ into the <a class="reference internal" href="user_interface_overview.html#layout-view"><span class="std std-ref">Layout View</span></a> as follows:</p>
 <blockquote>
@@ -184,7 +190,7 @@ Specification of that Block.</p>
 </div>
 </div>
 <div class="section" id="removing-a-block-from-a-design">
-<h2>Removing a Block from a Design<a class="headerlink" href="#removing-a-block-from-a-design" title="Permalink to this headline"></a></h2>
+<h2>Removing a Block from a Design<a class="headerlink" href="#removing-a-block-from-a-design" title="Permalink to this heading"></a></h2>
 <p>If a <code class="xref any docutils literal notranslate"><span class="pre">block</span></code> has been added to a <code class="xref any docutils literal notranslate"><span class="pre">design</span></code> erroneously, or is no longer required
 within the current Design it can be removed in one of two ways:</p>
 <ol class="arabic">
@@ -213,7 +219,7 @@ links associated with it are automatically removed.</p>
 </div>
 </div>
 <div class="section" id="working-with-the-block-palette">
-<h2>Working with the Block Palette<a class="headerlink" href="#working-with-the-block-palette" title="Permalink to this headline"></a></h2>
+<h2>Working with the Block Palette<a class="headerlink" href="#working-with-the-block-palette" title="Permalink to this heading"></a></h2>
 <p>The Block Palette contains a list of each <code class="xref any docutils literal notranslate"><span class="pre">block</span></code> available to a <code class="xref any docutils literal notranslate"><span class="pre">design</span></code> based
 on pre-defined constraints imposed by the underlying hardware infrastructure
 associated with the system.</p>
@@ -226,7 +232,7 @@ represent them.</p>
 immediately available again for selection in the Block Palette.</p>
 </div>
 <div class="section" id="specifying-block-attributes">
-<h2>Specifying Block Attributes<a class="headerlink" href="#specifying-block-attributes" title="Permalink to this headline"></a></h2>
+<h2>Specifying Block Attributes<a class="headerlink" href="#specifying-block-attributes" title="Permalink to this heading"></a></h2>
 <p>The behaviour of a <code class="xref any docutils literal notranslate"><span class="pre">block</span></code> is defined via its <code class="xref any docutils literal notranslate"><span class="pre">attributes</span></code>.
 Attributes are pre-defined based on the function of the Block and may include
 default values providing a starting point for later implementation-time
@@ -234,7 +240,7 @@ customisation.  A full list of the attributes associated with each Block
 available from the Block Palette can be found in the documentation associated
 with that Block.</p>
 <div class="section" id="types-of-attributes">
-<h3>Types of Attributes<a class="headerlink" href="#types-of-attributes" title="Permalink to this headline"></a></h3>
+<h3>Types of Attributes<a class="headerlink" href="#types-of-attributes" title="Permalink to this heading"></a></h3>
 <p>Four types of <code class="xref any docutils literal notranslate"><span class="pre">attribute</span></code> are available, and a <code class="xref any docutils literal notranslate"><span class="pre">block</span></code> may support zero or more
 of these depending on its purpose.  These are summarised as follows:</p>
 <table class="colwidths-given docutils align-center">
@@ -271,7 +277,7 @@ the user interface.</p></td>
 below the attribute value field.</p>
 </div>
 <div class="section" id="obtaining-information-about-an-attribute">
-<h3>Obtaining Information About an Attribute<a class="headerlink" href="#obtaining-information-about-an-attribute" title="Permalink to this headline"></a></h3>
+<h3>Obtaining Information About an Attribute<a class="headerlink" href="#obtaining-information-about-an-attribute" title="Permalink to this heading"></a></h3>
 <p>Information about an individual Attribute can be obtained by selecting the
 <a class="reference internal" href="understanding_attribute_state.html#normal-state"><span class="std std-ref">information</span></a> icon associated with it from the
 <code class="xref any docutils literal notranslate"><span class="pre">Block</span> <span class="pre">Information</span> <span class="pre">Panel</span></code>.  This opens the Attribute Information Panel within
@@ -293,7 +299,7 @@ corresponding message.</p></li>
 content provided within the underlying Block specification.</p>
 </div>
 <div class="section" id="setting-a-block-attribute">
-<h3>Setting a Block Attribute<a class="headerlink" href="#setting-a-block-attribute" title="Permalink to this headline"></a></h3>
+<h3>Setting a Block Attribute<a class="headerlink" href="#setting-a-block-attribute" title="Permalink to this heading"></a></h3>
 <p>Parameter, Input and Output Block attributes are set via the
 <code class="xref any docutils literal notranslate"><span class="pre">Block</span> <span class="pre">Information</span> <span class="pre">Panel</span></code> associated with the Block you wish to configure.</p>
 <p>The way in which an Attribute is set within the user inferface reflects the
@@ -302,7 +308,7 @@ specification.  This can also provide clues on whether the Attribute is editable
 or not.  The user interface provides the following approaches:</p>
 </div>
 <div class="section" id="view-edit-button">
-<h3>View/Edit Button<a class="headerlink" href="#view-edit-button" title="Permalink to this headline"></a></h3>
+<h3>View/Edit Button<a class="headerlink" href="#view-edit-button" title="Permalink to this heading"></a></h3>
 <p>Provides the ability to modify a <a class="reference internal" href="#complex-attributes"><span class="std std-ref">complex Attribute</span></a>.
 Selecting the button opens configurable content in the central panel.  Upon
 completion of changes the overall complex Attribute must be saved. If the
@@ -310,21 +316,21 @@ Attribute is modifiable the text reads ‘Edit’, otherwise it reads ‘View’
 <p><em>GET SCREENSHOT</em></p>
 </div>
 <div class="section" id="dropdown-list">
-<h3>Dropdown List<a class="headerlink" href="#dropdown-list" title="Permalink to this headline"></a></h3>
+<h3>Dropdown List<a class="headerlink" href="#dropdown-list" title="Permalink to this heading"></a></h3>
 <p>Provides the ability to select a value from a list of pre-defined values
 appropriate to the Attribute within is current Block context.  Upon selection
 the Attribute value field updates to reflect the selected value.</p>
 <p><em>GET SCREENSHOT</em></p>
 </div>
 <div class="section" id="text-input">
-<h3>Text Input<a class="headerlink" href="#text-input" title="Permalink to this headline"></a></h3>
+<h3>Text Input<a class="headerlink" href="#text-input" title="Permalink to this heading"></a></h3>
 <p>Provides a ‘free text’ field accepting any alphanumeric string.  Attributes that
 have been edited but not yet submitted are shown in the .  Press the <em>Enter</em> key
 to submit the value. Upon successful submission the <a class="reference internal" href="understanding_attribute_state.html#locally-edited-state"><span class="std std-ref">edit</span></a> icon is replaced by the default <a class="reference internal" href="understanding_attribute_state.html#normal-state"><span class="std std-ref">information</span></a> icon.</p>
 <p><em>GET SCREENSHOT</em></p>
 </div>
 <div class="section" id="checkbox">
-<h3>Checkbox<a class="headerlink" href="#checkbox" title="Permalink to this headline"></a></h3>
+<h3>Checkbox<a class="headerlink" href="#checkbox" title="Permalink to this heading"></a></h3>
 <p>Provides the option to switch on or switch off the action performed by the
 Attribute.   If the checkbox is empty the Attribute is <em>off</em>.</p>
 <p><em>GET SCREENHOST</em></p>
@@ -352,7 +358,7 @@ reverts to the <a class="reference internal" href="understanding_attribute_state
 icon is displayed next to the modified Attribute.</p>
 </div>
 <div class="section" id="exporting-attributes">
-<h3>Exporting Attributes<a class="headerlink" href="#exporting-attributes" title="Permalink to this headline"></a></h3>
+<h3>Exporting Attributes<a class="headerlink" href="#exporting-attributes" title="Permalink to this heading"></a></h3>
 <p>The user interface presents a heirarchical view of the overall system, with one
 or more <code class="xref any docutils literal notranslate"><span class="pre">Parent</span> <span class="pre">blocks</span></code> encapsulating increasingly deeper levels
 of your Design.  By default at the top level of your <code class="xref any docutils literal notranslate"><span class="pre">design</span></code> you will only see
@@ -422,7 +428,7 @@ a specific order to be displayed in the user interface:</p>
 </div></blockquote>
 </div>
 <div class="section" id="local-vs-server-parameter-attribute-state">
-<h3>Local vs. Server Parameter Attribute State<a class="headerlink" href="#local-vs-server-parameter-attribute-state" title="Permalink to this headline"></a></h3>
+<h3>Local vs. Server Parameter Attribute State<a class="headerlink" href="#local-vs-server-parameter-attribute-state" title="Permalink to this heading"></a></h3>
 <p>The underlying physcial hardware infrastructure described by your virtual
 representation is defined and configured based on the content of the Design
 specification saved behind the graphical representation you interact with on
@@ -467,7 +473,7 @@ will not be stored permenantly until the overall Design has been saved.</p>
 </div>
 </div>
 <div class="section" id="attribute-change-lifecycle">
-<h3>Attribute Change Lifecycle<a class="headerlink" href="#attribute-change-lifecycle" title="Permalink to this headline"></a></h3>
+<h3>Attribute Change Lifecycle<a class="headerlink" href="#attribute-change-lifecycle" title="Permalink to this heading"></a></h3>
 <p>Attributes values modified via a <code class="xref any docutils literal notranslate"><span class="pre">Block</span> <span class="pre">Information</span> <span class="pre">Panel</span></code> are recorded as part
 of the overall <code class="xref any docutils literal notranslate"><span class="pre">design</span></code>.  We refer to the combined submission and recording
 processes as a <em>‘put’</em> action (as in ‘we are putting the value in the
@@ -505,7 +511,7 @@ in the saved Design.</p></li>
 </div>
 </div>
 <div class="section" id="complex-attributes">
-<h2>Complex Attributes<a class="headerlink" href="#complex-attributes" title="Permalink to this headline"></a></h2>
+<h2>Complex Attributes<a class="headerlink" href="#complex-attributes" title="Permalink to this heading"></a></h2>
 <p>An Attribute associated with a Block may itself represent a collection of values
 which, when taken together, define the overall Attribute.  For example, the
 Sequencer Block type contains a single Attribute defining the sequence of steps
@@ -522,13 +528,13 @@ technical documentation of its Block.</p>
 <p class="caption"><span class="caption-text">Example Attribute Table associated with a complex Attribute</span><a class="headerlink" href="#id2" title="Permalink to this image"></a></p>
 </div>
 <div class="section" id="identifying-table-attributes">
-<h3>Identifying Table Attributes<a class="headerlink" href="#identifying-table-attributes" title="Permalink to this headline"></a></h3>
+<h3>Identifying Table Attributes<a class="headerlink" href="#identifying-table-attributes" title="Permalink to this heading"></a></h3>
 <p>A Table Attribute can be identifed by the <a class="reference internal" href="#view-edit-button"><span class="std std-ref">View/Edit Button</span></a> associated with it.
 Selecting the button opens the Attribute Table within the central panel of the
 user interface.</p>
 </div>
 <div class="section" id="specifying-attribute-table-content">
-<h3>Specifying Attribute Table Content<a class="headerlink" href="#specifying-attribute-table-content" title="Permalink to this headline"></a></h3>
+<h3>Specifying Attribute Table Content<a class="headerlink" href="#specifying-attribute-table-content" title="Permalink to this heading"></a></h3>
 <p>Upon opening an Attribute Table you are presented with details of the content of
 that Attribute, and the ability to define values.  Like Attributes themselves
 these values may be selected from a list of pre-defined options, selectable
@@ -548,7 +554,7 @@ and recording within the overall system Design.  To submit an Attribute Table:</
 </div></blockquote>
 </div>
 <div class="section" id="static-vs-dynamic-attribute-tables">
-<h3>Static vs. Dynamic Attribute Tables<a class="headerlink" href="#static-vs-dynamic-attribute-tables" title="Permalink to this headline"></a></h3>
+<h3>Static vs. Dynamic Attribute Tables<a class="headerlink" href="#static-vs-dynamic-attribute-tables" title="Permalink to this heading"></a></h3>
 <p>Depending on the specification of a table-based Attribute in its underlying
 Block the Attribute Table presented may be static or dynamic in nature.</p>
 <p><em>Static</em> Attribute Tables contain a pre-defined number of columns and rows
@@ -587,7 +593,7 @@ added before or after previously defined rows as follows:</p>
 </div>
 </div>
 <div class="section" id="working-with-block-methods">
-<h2>Working with Block Methods<a class="headerlink" href="#working-with-block-methods" title="Permalink to this headline"></a></h2>
+<h2>Working with Block Methods<a class="headerlink" href="#working-with-block-methods" title="Permalink to this heading"></a></h2>
 <p>While Block <code class="xref any docutils literal notranslate"><span class="pre">attributes</span></code> define the <em>behaviour</em> of a Block, <code class="xref any docutils literal notranslate"><span class="pre">Methods</span></code> define the <em>actions</em> it can perform.</p>
 <p>A Method in represented in the user inferface as a button, labelled with the
 name of the action that will be performed. The Method will only be executed if
@@ -610,7 +616,7 @@ specification.</p></li>
 <p>A full list of the Methods available within each Block and details of their
 Method parameters can be found in the documentation defining that Block.</p>
 <div class="section" id="obtaining-information-about-method-execution">
-<h3>Obtaining information about Method execution<a class="headerlink" href="#obtaining-information-about-method-execution" title="Permalink to this headline"></a></h3>
+<h3>Obtaining information about Method execution<a class="headerlink" href="#obtaining-information-about-method-execution" title="Permalink to this heading"></a></h3>
 <p>Selecting the ‘Information’ icon associated with a Block Method displays two
 sources of information relating to the Method:</p>
 <blockquote>
@@ -629,7 +635,7 @@ in the ‘Right-hand panel’.</p></li>
 </div>
 </div>
 <div class="section" id="block-ports">
-<h2>Block Ports<a class="headerlink" href="#block-ports" title="Permalink to this headline"></a></h2>
+<h2>Block Ports<a class="headerlink" href="#block-ports" title="Permalink to this heading"></a></h2>
 <p>If their purpose demands it Blocks are capable of <em>receiving</em> input information
 via one or more <code class="xref any docutils literal notranslate"><span class="pre">Sink</span> <span class="pre">Ports</span></code> and <em>transmitting</em> information via one
 or more <code class="xref any docutils literal notranslate"><span class="pre">Source</span> <span class="pre">Ports</span></code>.</p>
@@ -663,13 +669,13 @@ a second Block is achieved via a <code class="xref any docutils literal notransl
 with links see <a class="reference internal" href="#linking-blocks"><span class="std std-ref">Linking Blocks</span></a> below.</p>
 </div>
 <div class="section" id="linking-blocks">
-<h2>Linking Blocks<a class="headerlink" href="#linking-blocks" title="Permalink to this headline"></a></h2>
+<h2>Linking Blocks<a class="headerlink" href="#linking-blocks" title="Permalink to this heading"></a></h2>
 <p>Blocks are connected to one another via <code class="xref any docutils literal notranslate"><span class="pre">Links</span></code>.  A Link joins a
 <code class="xref any docutils literal notranslate"><span class="pre">Source</span> <span class="pre">Port</span></code> from one Block to a <code class="xref any docutils literal notranslate"><span class="pre">Sink</span> <span class="pre">Port</span></code> on another.  Both ports must be
 of the same type.  The ports available to a Block and their specification are
 defined in the documentation for that Block.</p>
 <div class="section" id="creating-a-block-link">
-<h3>Creating a Block Link<a class="headerlink" href="#creating-a-block-link" title="Permalink to this headline"></a></h3>
+<h3>Creating a Block Link<a class="headerlink" href="#creating-a-block-link" title="Permalink to this heading"></a></h3>
 <p>To create a Link between two blocks:</p>
 <blockquote>
 <div><ol class="arabic simple">
@@ -692,7 +698,7 @@ information panel opens in the right hand panel displaying the name of the
 </div>
 </div>
 <div class="section" id="interrogating-link-attributes">
-<h3>Interrogating Link Attributes<a class="headerlink" href="#interrogating-link-attributes" title="Permalink to this headline"></a></h3>
+<h3>Interrogating Link Attributes<a class="headerlink" href="#interrogating-link-attributes" title="Permalink to this heading"></a></h3>
 <p>A <code class="xref any docutils literal notranslate"><span class="pre">link</span></code> does not possess attributes of its own, but selecting it within a
 <code class="xref any docutils literal notranslate"><span class="pre">layout</span></code> displays information about its <code class="xref any docutils literal notranslate"><span class="pre">source</span> <span class="pre">port</span></code> origin and <code class="xref any docutils literal notranslate"><span class="pre">sink</span> <span class="pre">port</span></code>
 target in the right-hand panel of the user interface.</p>
@@ -712,7 +718,7 @@ change has occurred.</p>
 </div>
 </div>
 <div class="section" id="removing-a-link">
-<h3>Removing a Link<a class="headerlink" href="#removing-a-link" title="Permalink to this headline"></a></h3>
+<h3>Removing a Link<a class="headerlink" href="#removing-a-link" title="Permalink to this heading"></a></h3>
 <p>If a <code class="xref any docutils literal notranslate"><span class="pre">link</span></code> has been added to a <code class="xref any docutils literal notranslate"><span class="pre">design</span></code> erroneously, or is no longer required within the current Design it can be removed in one of two ways:</p>
 <ol class="arabic">
 <li><p><em>Hitting the ‘Delete’ or backspace key:</em></p>
@@ -736,7 +742,7 @@ change has occurred.</p>
 </ol>
 </div>
 <div class="section" id="constraints-when-using-links">
-<h3>Constraints When Using Links<a class="headerlink" href="#constraints-when-using-links" title="Permalink to this headline"></a></h3>
+<h3>Constraints When Using Links<a class="headerlink" href="#constraints-when-using-links" title="Permalink to this heading"></a></h3>
 <p>Links are subject to the following constraints:</p>
 <blockquote>
 <div><ul class="simple">
@@ -752,7 +758,7 @@ within the Design Layout to aid identification of similarly typed ports.</p></li
 </div>
 </div>
 <div class="section" id="saving-a-design">
-<h2>Saving a Design<a class="headerlink" href="#saving-a-design" title="Permalink to this headline"></a></h2>
+<h2>Saving a Design<a class="headerlink" href="#saving-a-design" title="Permalink to this heading"></a></h2>
 <p>You can save your Design at any time during the creation or modification
 process, and we recommend you do so regularly.</p>
 <p>To save a Design:</p>
@@ -778,7 +784,7 @@ leave the ‘Filename’ field blank.</p>
 </div>
 </div>
 <div class="section" id="opening-an-existing-design">
-<h2>Opening an Existing Design<a class="headerlink" href="#opening-an-existing-design" title="Permalink to this headline"></a></h2>
+<h2>Opening an Existing Design<a class="headerlink" href="#opening-an-existing-design" title="Permalink to this heading"></a></h2>
 <p>A <code class="xref any docutils literal notranslate"><span class="pre">parent</span> <span class="pre">block</span></code> may facilitate multiple <code class="xref any docutils literal notranslate"><span class="pre">designs</span></code>, each reflecting
 operation of that Block within different scenarios.  Only a single Design can be
 utilised at any given time.  By default this is the Design that is open at the
