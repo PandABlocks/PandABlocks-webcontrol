@@ -1,0 +1,343 @@
+<!-- https://stackoverflow.com/a/37843854 -->
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>User Interface Overview &mdash; PandABlocks-webcontrol 3.0b1
+ documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/graphviz.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/theme_overrides.css" type="text/css" />
+    <link rel="shortcut icon" href="../_static/favicon.ico"/>
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Working With a Design" href="working_with_a_design.html" />
+    <link rel="prev" title="Quick Start" href="quick-start.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../contents.html" class="icon icon-home">
+            PandABlocks-webcontrol
+              <img src="../_static/PandA-logo-for-black-background.svg" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                3.0b1
+
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+    
+              <p class="caption" role="heading"><span class="caption-text">Overview</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Introduction</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">User Guide</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="quick-start.html">Quick Start</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">User Interface Overview</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#user-interface-components">User Interface Components</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#principle-user-interface-views">Principle User Interface views</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#layout-view">Layout View</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#attribute-view">Attribute View</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#panel-popping">Panel Popping</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="working_with_a_design.html">Working With a Design</a></li>
+<li class="toctree-l1"><a class="reference internal" href="monitoring_attribute_values.html">Monitoring Attribute Values</a></li>
+<li class="toctree-l1"><a class="reference internal" href="understanding_attribute_state.html">Understanding Attribute State</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="glossary.html">Glossary</a></li>
+</ul>
+
+    
+  
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../contents.html">PandABlocks-webcontrol</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../contents.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">User Interface Overview</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/userguide/user_interface_overview.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <div class="section" id="user-interface-overview">
+<h1>User Interface Overview<a class="headerlink" href="#user-interface-overview" title="Permalink to this heading"></a></h1>
+<p>The user interface provides a fully interactive environment for designing,
+configuring and managing components and the links between them that together
+define the underlying control system.</p>
+<div class="section" id="user-interface-components">
+<h2>User Interface Components<a class="headerlink" href="#user-interface-components" title="Permalink to this heading"></a></h2>
+<p>The user interface consists of four core components.  The content of each
+compoent changes dynamically to support the activity you are undertaking:</p>
+<div class="figure align-center" id="id1">
+<img alt="../_images/ui_schematic.png" src="../_images/ui_schematic.png" />
+<p class="caption"><span class="caption-text">User interface overview</span><a class="headerlink" href="#id1" title="Permalink to this image"></a></p>
+</div>
+<p>Looking at each component in more detail:</p>
+<table class="colwidths-given docutils align-center">
+<colgroup>
+<col style="width: 20%" />
+<col style="width: 80%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Component</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Navigation Bar</p></td>
+<td><p>The <em>‘navigation bar’</em> at the top of the screen provides the ability to
+move through the currently open Design, selecting design elements at
+increasingly deep levels of implementation beginning at your selected
+<code class="xref any docutils literal notranslate"><span class="pre">Root</span> <span class="pre">Block</span></code>.  In doing so it provides a breadcrumb-like map of where
+you currently are within the Design.</p></td>
+</tr>
+<tr class="row-odd"><td><p>Left-hand Panel</p></td>
+<td><p>The <em>‘left-hand panel’</em> provides general information about the
+<code class="xref any docutils literal notranslate"><span class="pre">Parent</span> <span class="pre">Block</span></code> currently forming the central focus of interest within
+the user interface.</p></td>
+</tr>
+<tr class="row-even"><td><p>Central Panel</p></td>
+<td><p>The <em>‘central panel’</em> displays information about an Attribute selected
+from the Parent Block presented in the ‘left-hand panel’.  If <strong>Layout</strong>
+is selected from a <code class="xref any docutils literal notranslate"><span class="pre">Parent</span> <span class="pre">Block</span></code> then the <a class="reference internal" href="#layout-view"><span class="std std-ref">Layout View</span></a> is displayed.
+In <a class="reference internal" href="#attribute-view"><span class="std std-ref">Attribute View</span></a> a <a class="reference internal" href="monitoring_attribute_values.html#working-with-charts"><span class="std std-ref">plot</span></a> or <a class="reference internal" href="monitoring_attribute_values.html#working-with-numerical-tables"><span class="std std-ref">table</span></a> of Attribute value data against time is
+displayed.</p></td>
+</tr>
+<tr class="row-odd"><td><p>Right-hand Panel</p></td>
+<td><p>The <em>‘right-hand panel’</em> provides detailed information about the Block,
+Attribute or Link currently in focus.  For example, if the ‘left-hand
+panel’ represents a <code class="xref any docutils literal notranslate"><span class="pre">block</span></code> the ‘right-hand panel’ reflects an
+<code class="xref any docutils literal notranslate"><span class="pre">attribute</span></code> within that Block or a <code class="xref any docutils literal notranslate"><span class="pre">link</span></code> associated with it.  If the
+‘left-hand panel’represents the <code class="xref any docutils literal notranslate"><span class="pre">Parent</span> <span class="pre">Block</span></code> then the ‘right-hand
+panel’ may contain details of an Attribute associated with that block or
+a <code class="xref any docutils literal notranslate"><span class="pre">Child</span> <span class="pre">Block</span></code> contained in the Parent Block’s Design.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="principle-user-interface-views">
+<h2>Principle User Interface views<a class="headerlink" href="#principle-user-interface-views" title="Permalink to this heading"></a></h2>
+<p>To support design, configuration and management activies the user interface
+provides two principle views into the underlying control system:</p>
+<table class="colwidths-given docutils align-center">
+<colgroup>
+<col style="width: 20%" />
+<col style="width: 80%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>View</p></th>
+<th class="head"><p>Content</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><a class="reference internal" href="#layout-view"><span class="std std-ref">Layout View</span></a></p></td>
+<td><p>Provides an interactive environment for designing and configuring your
+control system through <code class="xref any docutils literal notranslate"><span class="pre">block</span></code>, <code class="xref any docutils literal notranslate"><span class="pre">attribute</span></code> and <code class="xref any docutils literal notranslate"><span class="pre">link</span></code> specification.
+The resulting <code class="xref any docutils literal notranslate"><span class="pre">flowgraph</span></code> provides a visual representation of the
+formal <code class="xref any docutils literal notranslate"><span class="pre">design</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#attribute-view"><span class="std std-ref">Attribute View</span></a></p></td>
+<td><p>Provides details of a single Attribute, including the ability to view
+graphical representation of the Attribute’s value within the control
+system over time.</p></td>
+</tr>
+</tbody>
+</table>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>Remember that the location of information, and its nature, will depend on
+the context in which you are viewing it.  In summary:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>A Block is <em>always</em> displayed in the left-hand panel.  This may
+represent a Parent Block or a Child Block.</p></li>
+<li><p>Attribute meta-data is always displayed in the right-hand panel.</p></li>
+<li><p>Link information is always displayed in the right-hand panel.</p></li>
+</ul>
+</div></blockquote>
+</div>
+</div>
+<div class="section" id="layout-view">
+<h2>Layout View<a class="headerlink" href="#layout-view" title="Permalink to this heading"></a></h2>
+<p>The Layout View is used to create, modify and manage the overall Design of your
+control system.</p>
+<p>The Layout View is accessed via the <strong>‘View’</strong> or <strong>‘Edit’</strong> button associated
+with the <em>‘Layout’</em> Attribute on a <code class="xref any docutils literal notranslate"><span class="pre">Parent</span> <span class="pre">Block</span></code>.</p>
+<p>Once the <code class="xref any docutils literal notranslate"><span class="pre">layout</span></code> is displayed individual <code class="xref any docutils literal notranslate"><span class="pre">blocks</span></code> within it can moved
+around the screen by clicking and dragging them to your desired location.  Any
+<code class="xref any docutils literal notranslate"><span class="pre">links</span></code> will be dynamically re-routed to accommodate the new location.
+Note there is also the ability to automatically optimise the Layout via the
+<strong>‘Auto Layout’</strong> button within the ‘central panel’.</p>
+<p>A typical example of the view you may expect to see is shown below.</p>
+<div class="figure align-center" id="id2">
+<img alt="../_images/PANDA-layout-spread-out.png" src="../_images/PANDA-layout-spread-out.png" />
+<p class="caption"><span class="caption-text">Example layout</span><a class="headerlink" href="#id2" title="Permalink to this image"></a></p>
+</div>
+<p>In this example we see:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>Summary information about the ‘PANDA’ system displayed in the ‘left-hand
+panel’.</p></li>
+<li><p>The Design of the ‘PANDA’ presented in the central <code class="xref any docutils literal notranslate"><span class="pre">layout</span></code> panel.  Note
+the ‘CLOCKS’ <code class="xref any docutils literal notranslate"><span class="pre">block</span></code> is highlighted.</p></li>
+<li><p>Detailed information about the ‘CLOCKS’ Block in the ‘right-hand’ panel,
+including all of its pre-defined <code class="xref any docutils literal notranslate"><span class="pre">attributes</span></code>.</p></li>
+<li><p>The ‘navigation bar’ denoting that we are viewing the ‘CLOCKS’ Block via
+the layout of the ‘PANDA’ System.</p></li>
+</ul>
+</div></blockquote>
+</div>
+<div class="section" id="attribute-view">
+<h2>Attribute View<a class="headerlink" href="#attribute-view" title="Permalink to this heading"></a></h2>
+<p>The user interface automatically transitions to Attribute View when an Attribute
+is selected from either the ‘left-hand panel’ or ‘right-hand panel’.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>If the Attribute is selected from the ‘left-hand panel’ more detailed
+information about that Attribute is displayed in the ‘right-hand panel’.</p></li>
+<li><p>If the Attribute is selected from the ‘right-hand panel’ the <code class="xref any docutils literal notranslate"><span class="pre">Block</span></code>
+represented in the ‘right-hand panel’ is transferred to the ‘left-hand
+panel’ as the new focus of interest, with more detailed information about
+the selected Attribute now presented on the right.</p></li>
+</ul>
+</div></blockquote>
+<p>In both cases the ‘central panel’ presents a view of the Attribute’s value
+against time.  This may represent a constantly changing value, for example a
+calculated data value updated every 2ms, or a periodically changing boolean
+on/off status indicator that only changes every 10h.  Two representations of the
+Attribute value are available and can be selected by choosing the appropriate
+option at the bottom of the ‘central panel’ thus:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>Plot - presents the Attribute Value as a line chart, displaying value
+against time.  This graphical view is interactive and as a user you have
+the ability to undertake basic activities within the chart including
+panning, zooming and exporting for offline use.  See <a class="reference internal" href="monitoring_attribute_values.html#monitoring-attribute-values"><span class="std std-ref">Monitoring Attribute Values</span></a> for further information.</p></li>
+<li><p>Table - presents the Attribute Value as a series of rows in a table.  Each
+row represents the value at a different time point.</p></li>
+</ul>
+</div></blockquote>
+<p>For example, viewing the plot associated with the ‘Val’ Attribute of the ‘PANDA
+Input Encoder’ Block:</p>
+<div class="figure align-center" id="id3">
+<img alt="../_images/attribute_view_chart.png" src="../_images/attribute_view_chart.png" />
+<p class="caption"><span class="caption-text">Example plot showing continuously recorded data</span><a class="headerlink" href="#id3" title="Permalink to this image"></a></p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Since we are now in ‘Attribute View’ the left-hand panel contains details of
+the ‘Input Encoder 1’ Block not the ‘PANDA’ Parent Block.</p>
+</div>
+</div>
+<div class="section" id="panel-popping">
+<h2>Panel Popping<a class="headerlink" href="#panel-popping" title="Permalink to this heading"></a></h2>
+<p>Under normal use the ‘left-hand panel’ contains summary information about the
+current <code class="xref any docutils literal notranslate"><span class="pre">block</span></code> in focus and the ‘right-hand panel’ detailed information
+relating to an <code class="xref any docutils literal notranslate"><span class="pre">attribute</span></code> or <code class="xref any docutils literal notranslate"><span class="pre">method</span></code> associated with that Block.  In complex
+systems it may be desireable to display information about a number of connected
+Blocks to track how each updates as data moves through the system they
+represent.  This can be achieved by <em>‘popping’</em> the Block Information Panel via
+the icon in the top left-hand corner of the panel.  This causes the Block
+Information Panel to open in its own independent window.  Multiple panels can be
+opened in the same way.</p>
+<p>Connectivity to the underlying system is maintained meaning each independent
+window is updated in response to activity within the control system.  Similarly,
+manual updates to any Attribute within an independent Information Panel is
+reflected back to the control system in the same way as occurs when the
+Information Panel is integrated with the main user interface.  For example:</p>
+<div class="figure align-center" id="id4">
+<img alt="../_images/window_popping_output.svg" src="../_images/window_popping_output.svg" /><p class="caption"><span class="caption-text">Example of multiple Block Information Panels popped into an independent
+display</span><a class="headerlink" href="#id4" title="Permalink to this image"></a></p>
+</div>
+<p>In this image, which spans two monitor screens, we see three Child Blocks
+(‘CLOCKS’, ‘COUNTER1’ and ‘BITS’) associated with the ‘PANDA’ Parent Block
+<em>popped</em> into individual windows and displayed alongside the overall ‘PANDA’
+Layout.</p>
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="quick-start.html" class="btn btn-neutral float-left" title="Quick Start" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="working_with_a_design.html" class="btn btn-neutral float-right" title="Working With a Design" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2018, Diamond Light Source.</p>
+  </div>
+
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+ <script type="text/javascript">
+    $(document).ready(function() {
+        $(".toggle > *").hide();
+        $(".toggle .header").show();
+        $(".toggle .header").click(function() {
+            $(this).parent().children().not(".header").toggle(400);
+            $(this).parent().children(".header").toggleClass("open");
+        })
+    });
+</script>
+
+
+</body>
+</html>

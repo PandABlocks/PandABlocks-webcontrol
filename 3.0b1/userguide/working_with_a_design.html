@@ -1,0 +1,852 @@
+<!-- https://stackoverflow.com/a/37843854 -->
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Working With a Design &mdash; PandABlocks-webcontrol 3.0b1
+ documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/graphviz.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/theme_overrides.css" type="text/css" />
+    <link rel="shortcut icon" href="../_static/favicon.ico"/>
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Monitoring Attribute Values" href="monitoring_attribute_values.html" />
+    <link rel="prev" title="User Interface Overview" href="user_interface_overview.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../contents.html" class="icon icon-home">
+            PandABlocks-webcontrol
+              <img src="../_static/PandA-logo-for-black-background.svg" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                3.0b1
+
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+    
+              <p class="caption" role="heading"><span class="caption-text">Overview</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Introduction</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">User Guide</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="quick-start.html">Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="user_interface_overview.html">User Interface Overview</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Working With a Design</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#adding-a-block-to-a-design">Adding a Block to a Design</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#removing-a-block-from-a-design">Removing a Block from a Design</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#working-with-the-block-palette">Working with the Block Palette</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#specifying-block-attributes">Specifying Block Attributes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#types-of-attributes">Types of Attributes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#obtaining-information-about-an-attribute">Obtaining Information About an Attribute</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#setting-a-block-attribute">Setting a Block Attribute</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#view-edit-button">View/Edit Button</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#dropdown-list">Dropdown List</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#text-input">Text Input</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#checkbox">Checkbox</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#exporting-attributes">Exporting Attributes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#local-vs-server-parameter-attribute-state">Local vs. Server Parameter Attribute State</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#attribute-change-lifecycle">Attribute Change Lifecycle</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#complex-attributes">Complex Attributes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#identifying-table-attributes">Identifying Table Attributes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#specifying-attribute-table-content">Specifying Attribute Table Content</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#static-vs-dynamic-attribute-tables">Static vs. Dynamic Attribute Tables</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#working-with-block-methods">Working with Block Methods</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#obtaining-information-about-method-execution">Obtaining information about Method execution</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#block-ports">Block Ports</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#linking-blocks">Linking Blocks</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#creating-a-block-link">Creating a Block Link</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#interrogating-link-attributes">Interrogating Link Attributes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#removing-a-link">Removing a Link</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#constraints-when-using-links">Constraints When Using Links</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#saving-a-design">Saving a Design</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#opening-an-existing-design">Opening an Existing Design</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="monitoring_attribute_values.html">Monitoring Attribute Values</a></li>
+<li class="toctree-l1"><a class="reference internal" href="understanding_attribute_state.html">Understanding Attribute State</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="glossary.html">Glossary</a></li>
+</ul>
+
+    
+  
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../contents.html">PandABlocks-webcontrol</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../contents.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Working With a Design</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/userguide/working_with_a_design.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <div class="section" id="working-with-a-design">
+<h1>Working With a Design<a class="headerlink" href="#working-with-a-design" title="Permalink to this heading"></a></h1>
+<p>A <code class="xref any docutils literal notranslate"><span class="pre">design</span></code> forms the heart of your system implementation.  It provides an
+interactive graphical representation of your system, helping you build and
+manage:</p>
+<ul class="simple">
+<li><p><code class="xref any docutils literal notranslate"><span class="pre">Blocks</span></code> representing hardware components, logic gates, etc.</p></li>
+<li><p>The <code class="xref any docutils literal notranslate"><span class="pre">connectivity</span></code> between blocks, in terms of input (sink) ports and
+output (source) ports.</p></li>
+<li><p>The <code class="xref any docutils literal notranslate"><span class="pre">attributes</span></code> associated with blocks and links.</p></li>
+<li><p>The <code class="xref any docutils literal notranslate"><span class="pre">methods</span></code> available to influence behaviour within blocks.</p></li>
+</ul>
+<p>A Design is created in the user interface <a class="reference internal" href="user_interface_overview.html#layout-view"><span class="std std-ref">Layout View</span></a>.</p>
+<div class="section" id="adding-a-block-to-a-design">
+<h2>Adding a Block to a Design<a class="headerlink" href="#adding-a-block-to-a-design" title="Permalink to this heading"></a></h2>
+<p>A <code class="xref any docutils literal notranslate"><span class="pre">block</span></code> is added to a <code class="xref any docutils literal notranslate"><span class="pre">design</span></code> by dragging and dropping it from the ‘Block
+Palette’ into the <a class="reference internal" href="user_interface_overview.html#layout-view"><span class="std std-ref">Layout View</span></a> as follows:</p>
+<blockquote>
+<div><ol class="arabic simple">
+<li><p>Select the <strong>‘Palette’</strong> icon at the bottom of the Layout Panel.  The
+Block Palette opens containing the set of blocks currently available
+to you.</p></li>
+<li><p>Identify the Block you wish to add.  By hovering over it the mouse
+pointer changes from an arrow to a hand.</p></li>
+<li><p>Click the left mouse button to select the Block and while holding down
+the mouse button drag the Block into the Layout Panel.</p></li>
+<li><p>When you reach your desired location for the Block within the Layout
+Panel release the mouse button.</p></li>
+</ol>
+</div></blockquote>
+<p>The Block Palette icon is replaced by a full representation of the selected
+Block, showing:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>The Block name (shown relative to its <code class="xref any docutils literal notranslate"><span class="pre">Parent</span> <span class="pre">Block</span></code>).</p></li>
+<li><p>An optional, configurable descriptive label (initially containing default
+text).</p></li>
+<li><p><code class="xref any docutils literal notranslate"><span class="pre">Source</span> <span class="pre">Ports</span></code> responsible for transmitting output from the
+Block, including their type.</p></li>
+<li><p><code class="xref any docutils literal notranslate"><span class="pre">Sink</span> <span class="pre">Ports</span></code> responsible for receiving input to the Block,
+including their type.</p></li>
+</ul>
+</div></blockquote>
+<p>After adding a Block to the Layout Panel it can be selected by hovering over it
+and clicking the left mouse button.  Upon selection the
+<code class="xref any docutils literal notranslate"><span class="pre">Block</span> <span class="pre">Information</span> <span class="pre">Panel</span></code> presenting each <code class="xref any docutils literal notranslate"><span class="pre">attribute</span></code> and <code class="xref any docutils literal notranslate"><span class="pre">method</span></code> available
+to that Block is displayed in the right-hand panel of the web interface.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>On intially adding a new Block to your Design it is configured according to
+its pre-defined default settings retrieved from the underlying Design
+Specification of that Block.</p>
+</div>
+</div>
+<div class="section" id="removing-a-block-from-a-design">
+<h2>Removing a Block from a Design<a class="headerlink" href="#removing-a-block-from-a-design" title="Permalink to this heading"></a></h2>
+<p>If a <code class="xref any docutils literal notranslate"><span class="pre">block</span></code> has been added to a <code class="xref any docutils literal notranslate"><span class="pre">design</span></code> erroneously, or is no longer required
+within the current Design it can be removed in one of two ways:</p>
+<ol class="arabic">
+<li><p><em>By dragging it to the Bin:</em></p>
+<blockquote>
+<div><ol class="arabic simple">
+<li><p>Select the Block to be removed by hovering over it and clicking the left mouse button.  Upon selection a <strong>‘Bin’</strong> icon is displayed at the bottom of the Layout Panel.</p></li>
+<li><p>While holding down the left mouse button drag the Block over the <strong>‘Bin’</strong> icon.  The icon is highlighted.</p></li>
+<li><p>Release the left mouse button.</p></li>
+</ol>
+</div></blockquote>
+</li>
+<li><p><em>Hitting the Delete or Backspace Key:</em></p>
+<blockquote>
+<div><ol class="arabic simple">
+<li><p>Select the Block to be removed by hovering over it and clicking the left mouse button.  The selected Block is highlighted.</p></li>
+<li><p>Hit the <em>Delete</em> key or <em>backspace</em> key on your keyboard.</p></li>
+</ol>
+</div></blockquote>
+</li>
+</ol>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Upon removing a Block from your Design all <code class="xref any docutils literal notranslate"><span class="pre">Source</span> <span class="pre">Port</span></code> and <code class="xref any docutils literal notranslate"><span class="pre">Sink</span> <span class="pre">Port</span></code>
+links associated with it are automatically removed.</p>
+</div>
+</div>
+<div class="section" id="working-with-the-block-palette">
+<h2>Working with the Block Palette<a class="headerlink" href="#working-with-the-block-palette" title="Permalink to this heading"></a></h2>
+<p>The Block Palette contains a list of each <code class="xref any docutils literal notranslate"><span class="pre">block</span></code> available to a <code class="xref any docutils literal notranslate"><span class="pre">design</span></code> based
+on pre-defined constraints imposed by the underlying hardware infrastructure
+associated with the system.</p>
+<p>When a Block is selected from the Block Palette for inclusion in a Design it is
+removed from the Block Palette to ensure it is not included more than once.  If
+all Blocks of a particular type have been added to a Design it is not possible
+to add any more as the underlying hardware implementation will not be able to
+represent them.</p>
+<p>If a Block is <a class="reference internal" href="#removing-a-block-from-a-design"><span class="std std-ref">removed</span></a> from a Design it is
+immediately available again for selection in the Block Palette.</p>
+</div>
+<div class="section" id="specifying-block-attributes">
+<h2>Specifying Block Attributes<a class="headerlink" href="#specifying-block-attributes" title="Permalink to this heading"></a></h2>
+<p>The behaviour of a <code class="xref any docutils literal notranslate"><span class="pre">block</span></code> is defined via its <code class="xref any docutils literal notranslate"><span class="pre">attributes</span></code>.
+Attributes are pre-defined based on the function of the Block and may include
+default values providing a starting point for later implementation-time
+customisation.  A full list of the attributes associated with each Block
+available from the Block Palette can be found in the documentation associated
+with that Block.</p>
+<div class="section" id="types-of-attributes">
+<h3>Types of Attributes<a class="headerlink" href="#types-of-attributes" title="Permalink to this heading"></a></h3>
+<p>Four types of <code class="xref any docutils literal notranslate"><span class="pre">attribute</span></code> are available, and a <code class="xref any docutils literal notranslate"><span class="pre">block</span></code> may support zero or more
+of these depending on its purpose.  These are summarised as follows:</p>
+<table class="colwidths-given docutils align-center">
+<colgroup>
+<col style="width: 30%" />
+<col style="width: 70%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Type</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="xref any docutils literal notranslate"><span class="pre">Input</span> <span class="pre">Attribute</span></code></p></td>
+<td><p>An Attribute identifying the source of data that will be received into a
+<code class="xref any docutils literal notranslate"><span class="pre">block</span></code> via a <code class="xref any docutils literal notranslate"><span class="pre">Sink</span> <span class="pre">Port</span></code> with the same name.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref any docutils literal notranslate"><span class="pre">Output</span> <span class="pre">Attribute</span></code></p></td>
+<td><p>An Attribute identifying the value (or stream of values) that will be
+transmitted out of a <code class="xref any docutils literal notranslate"><span class="pre">block</span></code> via a <code class="xref any docutils literal notranslate"><span class="pre">Source</span> <span class="pre">Port</span></code> with the same name.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref any docutils literal notranslate"><span class="pre">Parameter</span> <span class="pre">Attribute</span></code></p></td>
+<td><p>An Attribute that can be set by a user while configuring a Block,
+ultimately influencing the behavior of that Block.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref any docutils literal notranslate"><span class="pre">Readback</span> <span class="pre">Attribute</span></code></p></td>
+<td><p>An Attribute whose value is set automatically by a process within the
+execution environment.  Readback attributes cannot be set manually via
+the user interface.</p></td>
+</tr>
+</tbody>
+</table>
+<p>Attributes whose value can be set at design-time are denoted by a highlight
+below the attribute value field.</p>
+</div>
+<div class="section" id="obtaining-information-about-an-attribute">
+<h3>Obtaining Information About an Attribute<a class="headerlink" href="#obtaining-information-about-an-attribute" title="Permalink to this heading"></a></h3>
+<p>Information about an individual Attribute can be obtained by selecting the
+<a class="reference internal" href="understanding_attribute_state.html#normal-state"><span class="std std-ref">information</span></a> icon associated with it from the
+<code class="xref any docutils literal notranslate"><span class="pre">Block</span> <span class="pre">Information</span> <span class="pre">Panel</span></code>.  This opens the Attribute Information Panel within
+the right-hand panel of the user interface.</p>
+<p>For each Attribute the following information is displayed:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>The fully qualified path to the Attribute allowing it to be uniquely
+identified within the Design.</p></li>
+<li><p>Basic meta-data about the Attribute including it’s type, a brief
+description of its purpose and whether it is a writeable Attribute.</p></li>
+<li><p>Details of the <a class="reference internal" href="understanding_attribute_state.html#understanding-attribute-state"><span class="std std-ref">Attribute state</span></a>
+associated with the Attribute, including severity of any issues and any
+corresponding message.</p></li>
+<li><p>Timestamp details showing when the Attribute was last updated.</p></li>
+</ul>
+</div></blockquote>
+<p>Attribute meta-data and alarm state information is derived from pre-configured
+content provided within the underlying Block specification.</p>
+</div>
+<div class="section" id="setting-a-block-attribute">
+<h3>Setting a Block Attribute<a class="headerlink" href="#setting-a-block-attribute" title="Permalink to this heading"></a></h3>
+<p>Parameter, Input and Output Block attributes are set via the
+<code class="xref any docutils literal notranslate"><span class="pre">Block</span> <span class="pre">Information</span> <span class="pre">Panel</span></code> associated with the Block you wish to configure.</p>
+<p>The way in which an Attribute is set within the user inferface reflects the
+nature of that Attribute based on its defintion in the underlying Block
+specification.  This can also provide clues on whether the Attribute is editable
+or not.  The user interface provides the following approaches:</p>
+</div>
+<div class="section" id="view-edit-button">
+<h3>View/Edit Button<a class="headerlink" href="#view-edit-button" title="Permalink to this heading"></a></h3>
+<p>Provides the ability to modify a <a class="reference internal" href="#complex-attributes"><span class="std std-ref">complex Attribute</span></a>.
+Selecting the button opens configurable content in the central panel.  Upon
+completion of changes the overall complex Attribute must be saved. If the
+Attribute is modifiable the text reads ‘Edit’, otherwise it reads ‘View’</p>
+<p><em>GET SCREENSHOT</em></p>
+</div>
+<div class="section" id="dropdown-list">
+<h3>Dropdown List<a class="headerlink" href="#dropdown-list" title="Permalink to this heading"></a></h3>
+<p>Provides the ability to select a value from a list of pre-defined values
+appropriate to the Attribute within is current Block context.  Upon selection
+the Attribute value field updates to reflect the selected value.</p>
+<p><em>GET SCREENSHOT</em></p>
+</div>
+<div class="section" id="text-input">
+<h3>Text Input<a class="headerlink" href="#text-input" title="Permalink to this heading"></a></h3>
+<p>Provides a ‘free text’ field accepting any alphanumeric string.  Attributes that
+have been edited but not yet submitted are shown in the .  Press the <em>Enter</em> key
+to submit the value. Upon successful submission the <a class="reference internal" href="understanding_attribute_state.html#locally-edited-state"><span class="std std-ref">edit</span></a> icon is replaced by the default <a class="reference internal" href="understanding_attribute_state.html#normal-state"><span class="std std-ref">information</span></a> icon.</p>
+<p><em>GET SCREENSHOT</em></p>
+</div>
+<div class="section" id="checkbox">
+<h3>Checkbox<a class="headerlink" href="#checkbox" title="Permalink to this heading"></a></h3>
+<p>Provides the option to switch on or switch off the action performed by the
+Attribute.   If the checkbox is empty the Attribute is <em>off</em>.</p>
+<p><em>GET SCREENHOST</em></p>
+<p>To configure an Attribute:</p>
+<blockquote>
+<div><ol class="arabic simple">
+<li><p>Select the Block you wish to configure by clicking on it within the Layout Panel.  The selected Block will be highlighted and the <code class="xref any docutils literal notranslate"><span class="pre">Block</span> <span class="pre">Information</span> <span class="pre">Panel</span></code> associated with it displayed on the right-hand panel of the user interface.</p></li>
+<li><p>Find the Attribute you wish to configure in the list of available Attributes.</p></li>
+<li><p>Edit the Attribute value field as necessary based on the update process associated with the update approach described above.</p></li>
+</ol>
+</div></blockquote>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>No data type validation is performed on manually entered values within the
+user interface.  Validation is performed upon receipt by the backend
+server.  If an invalid format is detected a <a class="reference internal" href="understanding_attribute_state.html#warning-state"><span class="std std-ref">Warning</span></a> icon
+is presented in the user interface.</p>
+</div>
+<p>During the process of submitting a new Attribute value a <a class="reference internal" href="understanding_attribute_state.html#processing-state"><span class="std std-ref">spinning</span></a> icon is displayed to the left of the modified Attribute.
+For more information on the process this represents see
+<a class="reference internal" href="#attribute-change-lifecycle"><span class="std std-ref">Attribute Change Lifecycle</span></a>.</p>
+<p>Upon successful submission the icon associated with the modified Attribute
+reverts to the <a class="reference internal" href="understanding_attribute_state.html#normal-state"><span class="std std-ref">information</span></a> icon.</p>
+<p>In case of submission failure an <a class="reference internal" href="understanding_attribute_state.html#update-error-state"><span class="std std-ref">attribute update error</span></a>
+icon is displayed next to the modified Attribute.</p>
+</div>
+<div class="section" id="exporting-attributes">
+<h3>Exporting Attributes<a class="headerlink" href="#exporting-attributes" title="Permalink to this heading"></a></h3>
+<p>The user interface presents a heirarchical view of the overall system, with one
+or more <code class="xref any docutils literal notranslate"><span class="pre">Parent</span> <span class="pre">blocks</span></code> encapsulating increasingly deeper levels
+of your Design.  By default at the top level of your <code class="xref any docutils literal notranslate"><span class="pre">design</span></code> you will only see
+attributes associated with Parent blocks but it might be an underlying attribute
+within a Child Block that influences the behaviour of its parent.  To mitigate
+this scenario every Parent Block provides the option to <strong>Export</strong> one or more
+Attributes from its children so they are displayed within the Parent Block.</p>
+<p>In doing so it becomes possible to monitor, and potentially utilise, crucial
+Attributes implemented deep within a Design at increasingly abstracted levels of
+detail.</p>
+<p>To specify an Attribute for export:</p>
+<blockquote>
+<div><ol class="arabic simple">
+<li><p>Identify the Attribute you wish to monitor outside the current layout level within the overall Deisgn.  Note its source (in the format <code class="docutils literal notranslate"><span class="pre">BlockName.Attribute</span></code>).</p></li>
+<li><p>Within the Parent Block describing the Layout select the <strong>‘View’</strong> option associated with the ‘Exports’ Attribute.</p></li>
+<li><p>When the Export Table is displayed select the first available blank row.  If no blank rows are available select the option to add a new row.</p></li>
+<li><p>In the ‘Source’ column select the drop-down menu option and find the Attribute you wish to export in the list of Attributes available.</p></li>
+<li><p>In the ‘Export’ column enter the name of the Attribute as you would like it to appear when exported to its Parent Block.  Leave the ‘Export’ field blank to display the default name of the Attribute.  User specified display names must be specified in <code class="docutils literal notranslate"><span class="pre">camelCase</span></code> format, for example <em>myAttribute</em>.</p></li>
+</ol>
+</div></blockquote>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">camelCase</span></code> naming convention is required to ensure an appropiate
+Attribute label can be generated in the Parent <code class="xref any docutils literal notranslate"><span class="pre">Block</span> <span class="pre">Information</span> <span class="pre">Panel</span></code>.</p>
+</div>
+<p>Once successfully exported the Attribute appears within the ‘Exported
+Attributes’ section of the Parent <code class="xref any docutils literal notranslate"><span class="pre">Block</span> <span class="pre">Information</span> <span class="pre">Panel</span></code> in the left-hand
+panel of the user interface.</p>
+<p>Previously specified Attributes can be edited at any time within the Export
+Table following a similar process.</p>
+<p>Any number of Attributes can be exported from Child Blocks to their overall
+Parent Block.</p>
+<p>The order in which exported Attributes appear within their Parent Block mirrors
+the order in which they were added to the export specification.  If you require
+a specific order to be displayed in the user interface:</p>
+<blockquote>
+<div><ol class="arabic simple">
+<li><p>With the Export Table displayed select the Edit icon associated with an existing Attribute or <a class="reference internal" href="understanding_attribute_state.html#normal-state"><span class="std std-ref">Information</span></a> icon associated with a new Attribute.  The information panel associated with the Attribute is displayed on the right-hand side.</p></li>
+<li><p>To insert a new Attribute <em>above</em> the current one select the <strong>‘Insert row above’</strong> option.</p></li>
+<li><p>To insert a new Attribute <em>below</em> the current one select the <strong>‘Insert row below’</strong> option.</p></li>
+<li><p>On selecting the appropriate insert option a new row is added to the Export Table.</p></li>
+<li><p>An existing Attribute can also be re-ordered by moving it up and down the list of attributes via the <strong>‘Move Up’</strong> or <strong>‘Move Down’</strong> option associated with it.</p></li>
+</ol>
+</div></blockquote>
+<p>Attributes that have previously been exported can be removed from the Parent Block by deleting them from the Parent Block’s export table.  To remove an exported Attribute:</p>
+<blockquote>
+<div><ol class="arabic simple">
+<li><p>Identify the attribute to be removed.</p></li>
+<li><p>Within the Parent Block containing the Attribute select the <strong>‘View’</strong> option associated with the ‘Export’ Attribute.</p></li>
+<li><p>Identify the line in the export table representing the Attribute to be removed.</p></li>
+<li><p>Select the information icon assoicated with the Attribute.  It’s information panel is displayed on the right-hand side.</p></li>
+<li><p>Select the <strong>‘Delete’</strong> option associated with the <strong>‘Delete row’</strong> field.</p></li>
+</ol>
+</div></blockquote>
+<p>To complete the export process the export specification defined within the Export Table must be submitted for processing and recording within the overall system Design.  To submit your export specification:</p>
+<blockquote>
+<div><ol class="arabic simple">
+<li><p>Select the <strong>‘Submit’</strong> option at the bottom of the Export Table.</p></li>
+<li><p>Refresh the Parent Block in the left-hand panel and confirm that the exported Attribute(s) have been promoted to the Parent Block or removed attributes are no longer visible.</p></li>
+</ol>
+</div></blockquote>
+<p>Changes to the export specification can be discarded at any time throughout the modification process without impacting the currently recorded specification.  To discard changes:</p>
+<blockquote>
+<div><ol class="arabic simple">
+<li><p>Select the <strong>‘Discard Changes’</strong> option at the bottom of the Export Table.</p></li>
+</ol>
+</div></blockquote>
+</div>
+<div class="section" id="local-vs-server-parameter-attribute-state">
+<h3>Local vs. Server Parameter Attribute State<a class="headerlink" href="#local-vs-server-parameter-attribute-state" title="Permalink to this heading"></a></h3>
+<p>The underlying physcial hardware infrastructure described by your virtual
+representation is defined and configured based on the content of the Design
+specification saved behind the graphical representation you interact with on
+screen.  Only when modified content is submitted and recorded to the Design
+specification is the change effected in physical hardware.  It is therefore
+crucial to understand the difference between ‘local’ attribute state and
+‘server’ attribute state, particularly for <code class="xref any docutils literal notranslate"><span class="pre">Parameter</span> <span class="pre">Attributes</span></code> that can be modified directly within the user interface.</p>
+<p>Local Attribute state represents the staus of a Parameter Attribute that has
+been modified within the User Inferface but not yet submitted for inclusion in
+the underlying Design specification.  As such the modified value has no effect
+on the currently implemented hardware solution.  Locally modified attributes are
+denoted by the ‘edit’ status icon next to the Attribute name within their
+<code class="xref any docutils literal notranslate"><span class="pre">Block</span> <span class="pre">Information</span> <span class="pre">Panel</span></code>.  A Parameter Attribute enters the ‘local’ state as
+soon as its incumbent value is changed in any way (including adding content to a
+previously empty Attibute value field) and will remain so until the ‘Enter’ key
+is pressed, triggering submission of content to the server.  If the server
+detects an error in the variable content or format it will return an error and
+the variable will remain in ‘local’ state until the issue is resolved.  Details
+of the mechanism of submitting modified content is described in the <a class="reference internal" href="#attribute-change-lifecycle"><span class="std std-ref">Attribute Change Lifecycle</span></a> section below.</p>
+<p>Once a Parameter Attribute has been successfully recorded it is said to be in
+the ‘server’ attribute state, denoting that it has been saved to an underlying
+information server used to host the Design specification.  Attributes in
+‘server’ state are reflected in the underlying hardware implementation and will
+be utilised by the system during exection of the hardware design.  ‘Server’
+state attributes are denoted by the ‘information’ status icon.</p>
+<p>The following diagram shows the process involved in modifying a Parameter
+Attribute, mapping ‘local’ and ‘server’ states to the activities within it.
+Note also the inclusion of Attribute state icons as displayed in the user
+interface to denote the state of the Parameter Attribute as activities are
+completed.</p>
+<div class="figure align-center" id="id1">
+<img alt="../_images/attribute_lifecycle.svg" src="../_images/attribute_lifecycle.svg" /><p class="caption"><span class="caption-text">Attribute change lifecycle workflow</span><a class="headerlink" href="#id1" title="Permalink to this image"></a></p>
+</div>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>Do not confuse ‘local’ and ‘server’ Attribute state with a ‘saved’ Design.
+<a class="reference internal" href="#saving-a-design"><span class="std std-ref">Saving a Design</span></a> via a Parent Block ‘Save’ method does not result in all
+locally modified Attribute fields being saved to that Design.  Only
+Attributes already in the ‘server’ state will be included when the overall
+Design is saved.  Similarly, modified Attributes now in the ‘server’ state
+will not be stored permenantly until the overall Design has been saved.</p>
+</div>
+</div>
+<div class="section" id="attribute-change-lifecycle">
+<h3>Attribute Change Lifecycle<a class="headerlink" href="#attribute-change-lifecycle" title="Permalink to this heading"></a></h3>
+<p>Attributes values modified via a <code class="xref any docutils literal notranslate"><span class="pre">Block</span> <span class="pre">Information</span> <span class="pre">Panel</span></code> are recorded as part
+of the overall <code class="xref any docutils literal notranslate"><span class="pre">design</span></code>.  We refer to the combined submission and recording
+processes as a <em>‘put’</em> action (as in ‘we are putting the value in the
+attribute’).</p>
+<p>Once the ‘put’ is complete the Attribute value takes immediate effect,
+influencing any executing processes as appropriate from that point forward.  If
+an error is detected during the ‘put’ process it is immediately abandonded and
+the nature of the error reflected back to the user interface.</p>
+<p>The round-trip from submission of a value via the user interface to its
+utilisation in the execution environment takes a small but non-deterministic
+period of time while data is transferred, validated and ultimately recorded in
+the Design.  Attribute modification cannot therefore be considered an atomic
+process.</p>
+<p>Within the user interface the duration of this round-trip is represented by a
+<a class="reference internal" href="understanding_attribute_state.html#processing-state"><span class="std std-ref">spinning</span></a> icon in place of the default information icon
+upon submission of the Attribute value.  Once the change process is complete the
+spinning icon reverts to the default <a class="reference internal" href="understanding_attribute_state.html#normal-state"><span class="std std-ref">information</span></a> icon.  This
+reversion is the only reliable indication that a value has been recorded and is
+now being utilised.</p>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>Remember the three rules of Attribute change:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>Changing an Attribute value in the user interface has no impact on the
+underlying physical system until it has been ‘put’.</p></li>
+<li><p>Once the ‘put’ process is complete the change takes immediate effect.</p></li>
+<li><p>Changes to an Attribute will not be stored permenantly unless the
+overall Design has been <a class="reference internal" href="#saving-a-design"><span class="std std-ref">saved</span></a>. Only those
+Attribute values that have been ‘put’ on the server will be recorded
+in the saved Design.</p></li>
+</ul>
+</div></blockquote>
+</div>
+</div>
+</div>
+<div class="section" id="complex-attributes">
+<h2>Complex Attributes<a class="headerlink" href="#complex-attributes" title="Permalink to this heading"></a></h2>
+<p>An Attribute associated with a Block may itself represent a collection of values
+which, when taken together, define the overall Attribute.  For example, the
+Sequencer Block type contains a single Attribute defining the sequence of steps
+performed by underlying hardware when controlling motion of a motor.</p>
+<p>The collection of values required by the Attribute are presented in the user
+interface as an Attribute Table.  The template for the table is generated
+dynamically based on the specification of the Attribute within its Block.  For
+details of utilising the table associated with a specific Attribute refer to the
+technical documentation of its Block.</p>
+<p>An example of an Attribute Table for the ‘Sequencer’ Block associated with a
+‘PANDA’ Parent Block is shown below:</p>
+<div class="figure align-center" id="id2">
+<img alt="../_images/attribute_table.png" src="../_images/attribute_table.png" />
+<p class="caption"><span class="caption-text">Example Attribute Table associated with a complex Attribute</span><a class="headerlink" href="#id2" title="Permalink to this image"></a></p>
+</div>
+<div class="section" id="identifying-table-attributes">
+<h3>Identifying Table Attributes<a class="headerlink" href="#identifying-table-attributes" title="Permalink to this heading"></a></h3>
+<p>A Table Attribute can be identifed by the <a class="reference internal" href="#view-edit-button"><span class="std std-ref">View/Edit Button</span></a> associated with it.
+Selecting the button opens the Attribute Table within the central panel of the
+user interface.</p>
+</div>
+<div class="section" id="specifying-attribute-table-content">
+<h3>Specifying Attribute Table Content<a class="headerlink" href="#specifying-attribute-table-content" title="Permalink to this heading"></a></h3>
+<p>Upon opening an Attribute Table you are presented with details of the content of
+that Attribute, and the ability to define values.  Like Attributes themselves
+these values may be selected from a list of pre-defined options, selectable
+enable/disable options, or text/numerical inputs.</p>
+<p>After adding values the content of the table must be submitted for processing
+and recording within the overall system Design.  To submit an Attribute Table:</p>
+<blockquote>
+<div><ol class="arabic simple">
+<li><p>Select the <strong>‘Submit’</strong> option at the bottom of the Attribute Table.</p></li>
+</ol>
+</div></blockquote>
+<p>Updates and changes within the table can be discarded at any time throughout the modification process without impacting the currently recorded specification.  To discard changes:</p>
+<blockquote>
+<div><ol class="arabic simple">
+<li><p>Select the <strong>‘Discard Changes’</strong> option at the bottom of the Attribute Table.</p></li>
+</ol>
+</div></blockquote>
+</div>
+<div class="section" id="static-vs-dynamic-attribute-tables">
+<h3>Static vs. Dynamic Attribute Tables<a class="headerlink" href="#static-vs-dynamic-attribute-tables" title="Permalink to this heading"></a></h3>
+<p>Depending on the specification of a table-based Attribute in its underlying
+Block the Attribute Table presented may be static or dynamic in nature.</p>
+<p><em>Static</em> Attribute Tables contain a pre-defined number of columns and rows
+describing the information required for that Attribute.  All fields must be
+completed in order to fully define the Attribute.</p>
+<p><em>Dynamic</em> Attribute Tables contain a pre-defined number of columns but allow for
+a varying number of rows.  At least one row must be present to define the
+Attribute but typically more will be required to fully describe its behaviour.</p>
+<p>New rows are added to the table in one of two ways:</p>
+<blockquote>
+<div><ul>
+<li><p>To add a new row to the end of the table select the <strong>‘Add’</strong> option below
+the current last row entry.  A new row is created.</p></li>
+<li><p>If the order in which table entries are specified is important (for
+example in the case of describing a sequence of activities), rows can be
+added before or after previously defined rows as follows:</p>
+<blockquote>
+<div><ol class="arabic simple">
+<li><p>With the Attribute Table displayed select the ‘edit’ icon associated with an existing row entry or <a class="reference internal" href="understanding_attribute_state.html#normal-state"><span class="std std-ref">information</span></a> icon associated with a new row.  The information panel associated with the row is displayed on the right-hand side.</p></li>
+<li><p>To insert a new row <em>above</em> the current one select the <strong>‘Insert row above’</strong> option.</p></li>
+<li><p>To insert a new row <em>below</em> the current one select the <strong>‘Insert row below’</strong> option.</p></li>
+<li><p>An existing row can also be re-ordered by moving it up and down the list of attributes via the <strong>‘Move Up’</strong> or <strong>‘Move Down’</strong> option associated with it.</p></li>
+</ol>
+</div></blockquote>
+</li>
+</ul>
+</div></blockquote>
+<p>Rows that have been previously specified can be removed by deleting them from the Attribute Table.  To remove a row:</p>
+<blockquote>
+<div><ol class="arabic simple">
+<li><p>Identify the row to be removed.</p></li>
+<li><p>Select the <a class="reference internal" href="understanding_attribute_state.html#normal-state"><span class="std std-ref">information</span></a> icon assoicated with the row.  It’s information panel is displayed on the right-hand side.</p></li>
+<li><p>Select the <strong>‘Delete’</strong> option associated with the ‘Delete row’ field.</p></li>
+</ol>
+</div></blockquote>
+</div>
+</div>
+<div class="section" id="working-with-block-methods">
+<h2>Working with Block Methods<a class="headerlink" href="#working-with-block-methods" title="Permalink to this heading"></a></h2>
+<p>While Block <code class="xref any docutils literal notranslate"><span class="pre">attributes</span></code> define the <em>behaviour</em> of a Block, <code class="xref any docutils literal notranslate"><span class="pre">Methods</span></code> define the <em>actions</em> it can perform.</p>
+<p>A Method in represented in the user inferface as a button, labelled with the
+name of the action that will be performed. The Method will only be executed if
+the button is pressed on the user interface.</p>
+<p>A Method may require input parameters defining how the action is to be enacted.
+For example, the ‘Save’ Method associated with the Design within a
+<code class="xref any docutils literal notranslate"><span class="pre">Parent</span> <span class="pre">Block</span></code> requires a single input parameter - the name of the file to
+which Design information is stored. Method parameters:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>Can be edited directly via the <code class="xref any docutils literal notranslate"><span class="pre">Block</span> <span class="pre">Information</span> <span class="pre">Panel</span></code>.</p></li>
+<li><p>Exist in ‘local’ state until the button associated with the Method is
+pressed.</p></li>
+<li><p>Should be considered as properties of the Method they are associated with
+rather than entities in their own right.  Method parameters are never
+recorded on the server or saved within the persistent Design
+specification.</p></li>
+</ul>
+</div></blockquote>
+<p>A full list of the Methods available within each Block and details of their
+Method parameters can be found in the documentation defining that Block.</p>
+<div class="section" id="obtaining-information-about-method-execution">
+<h3>Obtaining information about Method execution<a class="headerlink" href="#obtaining-information-about-method-execution" title="Permalink to this heading"></a></h3>
+<p>Selecting the ‘Information’ icon associated with a Block Method displays two
+sources of information relating to the Method:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>The right-hand panel displays details about the Method including a
+description of its purpose and the parameters it requires to execute
+successfully.</p></li>
+<li><p>The central panel shows a log recording each instance of Method execution
+within your current session.  This includes the time of submission and
+completion, the status of that completion (e.g. success or failure) and
+any alarms associated with that status.  Selecting the Method parameter
+name from the table header opens further information about that parameter
+in the ‘Right-hand panel’.</p></li>
+</ul>
+</div></blockquote>
+</div>
+</div>
+<div class="section" id="block-ports">
+<h2>Block Ports<a class="headerlink" href="#block-ports" title="Permalink to this heading"></a></h2>
+<p>If their purpose demands it Blocks are capable of <em>receiving</em> input information
+via one or more <code class="xref any docutils literal notranslate"><span class="pre">Sink</span> <span class="pre">Ports</span></code> and <em>transmitting</em> information via one
+or more <code class="xref any docutils literal notranslate"><span class="pre">Source</span> <span class="pre">Ports</span></code>.</p>
+<p>A list of the Source ports and Sink ports associated with a Block can be found
+in the documentation for that Block.</p>
+<p>To aid the design process ports are colour coded to denote the type of
+information they transmit (<code class="xref any docutils literal notranslate"><span class="pre">Source</span> <span class="pre">Ports</span></code>) or receive (<code class="xref any docutils literal notranslate"><span class="pre">Sink</span> <span class="pre">Port</span></code>).  These are summarised below:</p>
+<table class="colwidths-auto docutils align-center">
+<thead>
+<tr class="row-odd"><th class="head"><p>Port Type</p></th>
+<th class="head"><p>Key</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Boolean</p></td>
+<td><p>Blue</p></td>
+</tr>
+<tr class="row-odd"><td><p>Int32</p></td>
+<td><p>Orange</p></td>
+</tr>
+<tr class="row-even"><td><p>Motor</p></td>
+<td><p>Pink</p></td>
+</tr>
+<tr class="row-odd"><td><p>NDArray</p></td>
+<td><p>Brown</p></td>
+</tr>
+</tbody>
+</table>
+<p>Transmission of information between a Source Port on one Block to a Sink Port on
+a second Block is achieved via a <code class="xref any docutils literal notranslate"><span class="pre">link</span></code>.  For further information about working
+with links see <a class="reference internal" href="#linking-blocks"><span class="std std-ref">Linking Blocks</span></a> below.</p>
+</div>
+<div class="section" id="linking-blocks">
+<h2>Linking Blocks<a class="headerlink" href="#linking-blocks" title="Permalink to this heading"></a></h2>
+<p>Blocks are connected to one another via <code class="xref any docutils literal notranslate"><span class="pre">Links</span></code>.  A Link joins a
+<code class="xref any docutils literal notranslate"><span class="pre">Source</span> <span class="pre">Port</span></code> from one Block to a <code class="xref any docutils literal notranslate"><span class="pre">Sink</span> <span class="pre">Port</span></code> on another.  Both ports must be
+of the same type.  The ports available to a Block and their specification are
+defined in the documentation for that Block.</p>
+<div class="section" id="creating-a-block-link">
+<h3>Creating a Block Link<a class="headerlink" href="#creating-a-block-link" title="Permalink to this heading"></a></h3>
+<p>To create a Link between two blocks:</p>
+<blockquote>
+<div><ol class="arabic simple">
+<li><p>Select the <code class="xref any docutils literal notranslate"><span class="pre">Source</span> <span class="pre">Port</span></code> or <code class="xref any docutils literal notranslate"><span class="pre">Sink</span> <span class="pre">Port</span></code> representing one terminus of the link you wish to make by hovering over the Port on the Block.  The Port will be temporarily highlighted.</p></li>
+<li><p>Click the left mouse button and while holding it down drag the Link to the Port representing the other terminus of the link you wish to make.  The target port will be temporarily highlighted.</p></li>
+<li><p>Release the mouse button.  If the <a class="reference internal" href="#constraints-when-using-links"><span class="std std-ref">Link constraints</span></a> defined below have been respected the Link is displayed within the Design Layout.</p></li>
+</ol>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>If an error occurs during the creation process details are displayed at
+the bottom of the Layout panel.</p>
+</div>
+</div></blockquote>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>To confirm the Connection has been created correctly select the Link by
+clicking on it.  The Link is highlighted to denote selection and the Link
+information panel opens in the right hand panel displaying the name of the
+<code class="xref any docutils literal notranslate"><span class="pre">Source</span> <span class="pre">Port</span></code> and <code class="xref any docutils literal notranslate"><span class="pre">Sink</span> <span class="pre">Port</span></code> associated with the Link.</p>
+</div>
+</div>
+<div class="section" id="interrogating-link-attributes">
+<h3>Interrogating Link Attributes<a class="headerlink" href="#interrogating-link-attributes" title="Permalink to this heading"></a></h3>
+<p>A <code class="xref any docutils literal notranslate"><span class="pre">link</span></code> does not possess attributes of its own, but selecting it within a
+<code class="xref any docutils literal notranslate"><span class="pre">layout</span></code> displays information about its <code class="xref any docutils literal notranslate"><span class="pre">source</span> <span class="pre">port</span></code> origin and <code class="xref any docutils literal notranslate"><span class="pre">sink</span> <span class="pre">port</span></code>
+target in the right-hand panel of the user interface.</p>
+<p>To interrogate the attributes associated with the Link you have created:</p>
+<blockquote>
+<div><ol class="arabic simple">
+<li><p>Hover over the Link of interest.  The Link changes colour to denote that it may be selected.</p></li>
+<li><p>Click the left mouse button to select the Link.  A Link Information Panel open in the right-hand panel of the user interface.</p></li>
+</ol>
+</div></blockquote>
+<div class="admonition caution">
+<p class="admonition-title">Caution</p>
+<p>It is possible to modify the Source and Sink associated with the Link from
+the Link Information Panel.  Do so cautiously as this will change how blocks
+are connected in the overall Design without any acknowledgement that a
+change has occurred.</p>
+</div>
+</div>
+<div class="section" id="removing-a-link">
+<h3>Removing a Link<a class="headerlink" href="#removing-a-link" title="Permalink to this heading"></a></h3>
+<p>If a <code class="xref any docutils literal notranslate"><span class="pre">link</span></code> has been added to a <code class="xref any docutils literal notranslate"><span class="pre">design</span></code> erroneously, or is no longer required within the current Design it can be removed in one of two ways:</p>
+<ol class="arabic">
+<li><p><em>Hitting the ‘Delete’ or backspace key:</em></p>
+<blockquote>
+<div><ol class="arabic simple">
+<li><p>Hover over the Link of interest.  The Link changes colour to denote that it may be selected.</p></li>
+<li><p>Click the left mouse button to select the Link. The Link is highlighted.</p></li>
+<li><p>Hit the <em>Delete</em> or <em>backspace</em> key on your keyboard.  The Link is removed from the Design Layout.</p></li>
+</ol>
+</div></blockquote>
+</li>
+<li><p><em>Via the Link Information Panel:</em></p>
+<blockquote>
+<div><ol class="arabic simple">
+<li><p>Hover over the Link of interest.  The Link changes colour to denote that it may be selected.</p></li>
+<li><p>Click the left mouse button to select the Link.  A Link Information Panel open in the right-hand panel of the user interface.</p></li>
+<li><p>Select the <strong>‘Delete’</strong> button in the Link Information Panel.  The Link is removed from the Design Layout.</p></li>
+</ol>
+</div></blockquote>
+</li>
+</ol>
+</div>
+<div class="section" id="constraints-when-using-links">
+<h3>Constraints When Using Links<a class="headerlink" href="#constraints-when-using-links" title="Permalink to this heading"></a></h3>
+<p>Links are subject to the following constraints:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>A <code class="xref any docutils literal notranslate"><span class="pre">sink</span> <span class="pre">port</span></code> can only accept a single Link.</p></li>
+<li><p>Multiple links can originate from a <code class="xref any docutils literal notranslate"><span class="pre">source</span> <span class="pre">port</span></code>, connecting multiple
+Blocks to that Source Port.</p></li>
+<li><p>Links can only be used to connect a <code class="xref any docutils literal notranslate"><span class="pre">source</span> <span class="pre">port</span></code> and a <code class="xref any docutils literal notranslate"><span class="pre">sink</span> <span class="pre">port</span></code> of the
+same logical type (e.g. boolean, int32).  Port types are specified in the
+documentation associated with the Block of interest, and colour coded
+within the Design Layout to aid identification of similarly typed ports.</p></li>
+</ul>
+</div></blockquote>
+</div>
+</div>
+<div class="section" id="saving-a-design">
+<h2>Saving a Design<a class="headerlink" href="#saving-a-design" title="Permalink to this heading"></a></h2>
+<p>You can save your Design at any time during the creation or modification
+process, and we recommend you do so regularly.</p>
+<p>To save a Design:</p>
+<blockquote>
+<div><ol class="arabic">
+<li><p>Navigate to the <code class="xref any docutils literal notranslate"><span class="pre">Root</span> <span class="pre">Block</span></code> representing the highest level of the Design you wish to save.</p></li>
+<li><p>Navigate to the ‘Save’ Attribute Group at the bottom of the left-hand panel.  Expand it if necessary.</p></li>
+<li><p>Enter a descriptive name for the Design in the ‘Design’ field.  Note this will be used later to identify existing Designs available for use.</p>
+<blockquote>
+<div><div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>To save your Design with the same name as the currently open Design
+leave the ‘Filename’ field blank.</p>
+</div>
+</div></blockquote>
+</li>
+<li><p>Select the <strong>‘Save’</strong> button.  The information icon to the left of the button will spin to denote the save is in progess, returning to the information icon when the Design is saved.</p></li>
+</ol>
+</div></blockquote>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>If an error is detected during the save process a red warning icon is displayed next to the button.</p>
+</div>
+</div>
+<div class="section" id="opening-an-existing-design">
+<h2>Opening an Existing Design<a class="headerlink" href="#opening-an-existing-design" title="Permalink to this heading"></a></h2>
+<p>A <code class="xref any docutils literal notranslate"><span class="pre">parent</span> <span class="pre">block</span></code> may facilitate multiple <code class="xref any docutils literal notranslate"><span class="pre">designs</span></code>, each reflecting
+operation of that Block within different scenarios.  Only a single Design can be
+utilised at any given time.  By default this is the Design that is open at the
+time of system execution.</p>
+<p>When a <code class="xref any docutils literal notranslate"><span class="pre">parent</span> <span class="pre">block</span></code> is opened a list of all <code class="xref any docutils literal notranslate"><span class="pre">Designs</span></code> within it is
+available via the ‘Design’ Attribute displayed in the left-hand panel.
+Selecting a pre-existing Design results in the Design being presented in the
+central Layout panel.</p>
+<p>To open an existing Design:</p>
+<blockquote>
+<div><ol class="arabic simple">
+<li><p>Navigate to the <code class="xref any docutils literal notranslate"><span class="pre">parent</span> <span class="pre">block</span></code> represening the highest level of the system you wish to use.</p></li>
+<li><p>Navigate to the ‘Design’ Attribute and select the dropdown arrow to display the list of available Designs.</p></li>
+<li><p>Select the Design you wish to use.</p></li>
+<li><p>Select the <a class="reference internal" href="#view-edit-button"><span class="std std-ref">View/Edit Button</span></a> associated with the ‘Layout’ Attribute.</p></li>
+</ol>
+</div></blockquote>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>If no previously saved designs exist the ‘Design’ Attribute list will be
+empty.</p>
+</div>
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="user_interface_overview.html" class="btn btn-neutral float-left" title="User Interface Overview" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="monitoring_attribute_values.html" class="btn btn-neutral float-right" title="Monitoring Attribute Values" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2018, Diamond Light Source.</p>
+  </div>
+
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+ <script type="text/javascript">
+    $(document).ready(function() {
+        $(".toggle > *").hide();
+        $(".toggle .header").show();
+        $(".toggle .header").click(function() {
+            $(this).parent().children().not(".header").toggle(400);
+            $(this).parent().children(".header").toggleClass("open");
+        })
+    });
+</script>
+
+
+</body>
+</html>
