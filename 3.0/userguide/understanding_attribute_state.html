@@ -1,0 +1,252 @@
+<!-- https://stackoverflow.com/a/37843854 -->
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Understanding Attribute State &mdash; PandABlocks-webcontrol 3.0
+ documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/graphviz.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/theme_overrides.css" type="text/css" />
+    <link rel="shortcut icon" href="../_static/favicon.ico"/>
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Glossary" href="glossary.html" />
+    <link rel="prev" title="Monitoring Attribute Values" href="monitoring_attribute_values.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../contents.html" class="icon icon-home">
+            PandABlocks-webcontrol
+              <img src="../_static/PandA-logo-for-black-background.svg" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                3.0
+
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+    
+              <p class="caption" role="heading"><span class="caption-text">Overview</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Introduction</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">User Guide</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="quick-start.html">Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="user_interface_overview.html">User Interface Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="working_with_a_design.html">Working With a Design</a></li>
+<li class="toctree-l1"><a class="reference internal" href="monitoring_attribute_values.html">Monitoring Attribute Values</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Understanding Attribute State</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#normal-state">Normal State</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#processing-state">Processing State</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#locally-edited-state">Locally Edited State</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#update-error-state">Update Error State</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#warning-state">Warning State</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#error-state">Error State</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#invalid-state">Invalid State</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#disconnected-state">Disconnected State</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#presenting-status-information">Presenting Status Information</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="glossary.html">Glossary</a></li>
+</ul>
+
+    
+  
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../contents.html">PandABlocks-webcontrol</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../contents.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Understanding Attribute State</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/userguide/understanding_attribute_state.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <div class="section" id="understanding-attribute-state">
+<h1>Understanding Attribute State<a class="headerlink" href="#understanding-attribute-state" title="Permalink to this heading"></a></h1>
+<p>At any given time an Attribute can be in one of several states.  State is
+dependent upon a range of factors including:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>The value associated with the Attribute.</p></li>
+<li><p>The pre-defined permissible operating range/threshold appropriate to the
+specification of the Attribute.</p></li>
+<li><p>The workflow that the Attribute is currently involved in.</p></li>
+<li><p>The context of the overall control system.</p></li>
+</ul>
+</div></blockquote>
+<p>State information is presented in the user interface as a symbol displayed to
+the left of the Attribute name, with the following states represented:</p>
+<div class="section" id="normal-state">
+<h2>Normal State<a class="headerlink" href="#normal-state" title="Permalink to this heading"></a></h2>
+<p>Data associated with the Attribute is within an acceptable operating theshold or
+range.  For a <code class="xref any docutils literal notranslate"><span class="pre">Parameter</span> <span class="pre">Attribute</span></code> this also means the value has been
+successfully <a class="reference internal" href="working_with_a_design.html#attribute-change-lifecycle"><span class="std std-ref">put</span></a> onto the underlying server.</p>
+<div class="figure align-center">
+<img alt="../_images/information_icon.png" src="../_images/information_icon.png" />
+</div>
+</div>
+<div class="section" id="processing-state">
+<h2>Processing State<a class="headerlink" href="#processing-state" title="Permalink to this heading"></a></h2>
+<p>Data has been submitted to the underlying server or a request has been made to
+retrieve information from the underlying server.  In both cases a process has
+been triggered and a response is a awaited.</p>
+<p><em>GET IMAGE</em></p>
+</div>
+<div class="section" id="locally-edited-state">
+<h2>Locally Edited State<a class="headerlink" href="#locally-edited-state" title="Permalink to this heading"></a></h2>
+<p>Data within the user interface has been changed but not yet <a class="reference internal" href="working_with_a_design.html#attribute-change-lifecycle"><span class="std std-ref">put</span></a> to the underlying server.  Consequently the local
+edit will have no effect on execution of the system and will not be saved as
+part of the <code class="xref any docutils literal notranslate"><span class="pre">Design</span></code>.</p>
+<div class="figure align-center">
+<img alt="../_images/locally_edited_icon.png" src="../_images/locally_edited_icon.png" />
+</div>
+</div>
+<div class="section" id="update-error-state">
+<h2>Update Error State<a class="headerlink" href="#update-error-state" title="Permalink to this heading"></a></h2>
+<p>The Attribute value <a class="reference internal" href="working_with_a_design.html#attribute-change-lifecycle"><span class="std std-ref">put</span></a> to the underlying server
+has not been accepted.  This typically occurs because the value has failed the
+validation test associated with the Attibute as defined in its Block
+specification.</p>
+<p><em>GET IMAGE</em></p>
+</div>
+<div class="section" id="warning-state">
+<h2>Warning State<a class="headerlink" href="#warning-state" title="Permalink to this heading"></a></h2>
+<p>An issue has been detected and requires investigation.  This state is typically
+triggered when an <code class="xref any docutils literal notranslate"><span class="pre">Input</span> <span class="pre">Attribute</span></code>, <code class="xref any docutils literal notranslate"><span class="pre">Output</span> <span class="pre">Attribute</span></code> or
+<code class="xref any docutils literal notranslate"><span class="pre">Readback</span> <span class="pre">Attribute</span></code> data is deemed to be outside normal operating parameters
+but is still considered acceptable.</p>
+<div class="figure align-center">
+<img alt="../_images/warning_icon.png" src="../_images/warning_icon.png" />
+</div>
+</div>
+<div class="section" id="error-state">
+<h2>Error State<a class="headerlink" href="#error-state" title="Permalink to this heading"></a></h2>
+<p>An issue has been detected resulting in an error being reported by the
+underlying server.  This state is typically triggered when <code class="xref any docutils literal notranslate"><span class="pre">Input</span> <span class="pre">Attribute</span></code>,
+<code class="xref any docutils literal notranslate"><span class="pre">Output</span> <span class="pre">Attribute</span></code> or <code class="xref any docutils literal notranslate"><span class="pre">Readback</span> <span class="pre">Attribute</span></code> data is deemed to be outside
+acceptable operating conditions and immediate action is recommended.</p>
+<div class="figure align-center">
+<img alt="../_images/error_icon.png" src="../_images/error_icon.png" />
+</div>
+</div>
+<div class="section" id="invalid-state">
+<h2>Invalid State<a class="headerlink" href="#invalid-state" title="Permalink to this heading"></a></h2>
+<p>The overall Block context has changed since the user interface was last
+accessed.  Data displayed may no longer be accurate or consistent with the
+current <code class="xref any docutils literal notranslate"><span class="pre">design</span></code></p>
+<div class="figure align-center">
+<img alt="../_images/disconnected_icon.png" src="../_images/disconnected_icon.png" />
+</div>
+</div>
+<div class="section" id="disconnected-state">
+<h2>Disconnected State<a class="headerlink" href="#disconnected-state" title="Permalink to this heading"></a></h2>
+<p>Communication with the Block hosting the Attribute has been lost by the
+underlying server.  Immediate investigation is recommended.</p>
+<p><em>GET IMAGE</em></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Operating ranges and threshold values are not specified directly within the
+user interface but instead via configuration of individual Attributes in the
+underlying Block Specification.  These settings are then reflected into the
+User Interface.  See specific Block documentation for additional
+information.</p>
+</div>
+</div>
+<div class="section" id="presenting-status-information">
+<h2>Presenting Status Information<a class="headerlink" href="#presenting-status-information" title="Permalink to this heading"></a></h2>
+<p>Within Block Information Panels (presented in either the left-hand or right-hand
+panels) status information is displayed to the left of each Attribute via the
+corresponding state icon (see table above).</p>
+<p>When presenting historical Attribute value data via the <a class="reference internal" href="monitoring_attribute_values.html#monitoring-attribute-values"><span class="std std-ref">Attribute value table</span></a> view corresponding icons are displayed against
+each row of data.</p>
+<p>When presenting historical Attribute value data via the <a class="reference internal" href="monitoring_attribute_values.html#monitoring-attribute-values"><span class="std std-ref">Attribute Chart</span></a> view the line colour denotes the alarm state.</p>
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="monitoring_attribute_values.html" class="btn btn-neutral float-left" title="Monitoring Attribute Values" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="glossary.html" class="btn btn-neutral float-right" title="Glossary" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2018, Diamond Light Source.</p>
+  </div>
+
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+ <script type="text/javascript">
+    $(document).ready(function() {
+        $(".toggle > *").hide();
+        $(".toggle .header").show();
+        $(".toggle .header").click(function() {
+            $(this).parent().children().not(".header").toggle(400);
+            $(this).parent().children(".header").toggleClass("open");
+        })
+    });
+</script>
+
+
+</body>
+</html>
