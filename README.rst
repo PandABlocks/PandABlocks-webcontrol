@@ -8,7 +8,7 @@ Web server config, startup, and zpg creation tools
 ============== ==============================================================
 Source code    https://github.com/PandABlocks/PandABlocks-webcontrol
 Documentation  https://PandABlocks.github.io/PandABlocks-webcontrol
-Changelog      https://github.com/PandABlocks/PandABlocks-webcontrol/blob/master/CHANGELOG.rst
+Changelog      https://github.com/PandABlocks/PandABlocks-webcontrol/releases
 ============== ==============================================================
 
 .. |code_ci| image:: https://github.com/PandABlocks/PandABlocks-webcontrol/workflows/Code%20CI/badge.svg?branch=master
