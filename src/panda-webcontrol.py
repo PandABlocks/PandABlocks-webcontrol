@@ -39,9 +39,6 @@ parser.add_argument(
 parser.add_argument(
     "--mri", default="PANDA",
     help="MRI of the base PandA Block that the webserver hosts")
-parser.add_argument(
-    "--logfile", default="",
-    help="Log file that will be logged to, if not present then stdout")
 args = parser.parse_args()
 
 if args.logfile:
