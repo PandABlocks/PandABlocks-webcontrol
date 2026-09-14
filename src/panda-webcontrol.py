@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 import logging.handlers
 import code
 import argparse
@@ -126,9 +127,13 @@ process.add_controller(controller)
 # Start the server
 process.start()
 
-# Wait for completion
-header = "Welcome to PandA web control"
-code.interact(header, local=locals())
+# Check if we are running under systemd and can't run interactively
+if 'INVOCATION_ID' in os.environ:
+    import cothread
+    cothread.WaitForQuit()
+else:
+    header = "Welcome to PandA web control"
+    code.interact(header, local=locals())
 
-# If we stop with CTRL-D then do an orderly shutdown
+# Do an orderly shutdown
 process.stop(timeout=1)
