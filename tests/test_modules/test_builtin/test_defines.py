@@ -7,7 +7,6 @@ from malcolm.modules.builtin.defines import module_path, tmp_dir
 class TestModulePath(unittest.TestCase):
     def setUp(self):
         self.path = os.path.join(os.path.dirname(__file__), "dummy_module")
-        self.d = module_path(name="dummy", path=self.path)
 
     def tearDown(self):
         import sys
@@ -18,8 +17,6 @@ class TestModulePath(unittest.TestCase):
         delattr(malcolm.modules, "dummy")
 
     def test_init(self):
-        assert self.d.name == "dummy"
-        assert self.d.value == self.path
         import malcolm.modules
 
         assert hasattr(malcolm.modules, "dummy")
