@@ -1,0 +1,54 @@
+- builtin.parameters.string:
+    name: mri
+    description: MRI for created block
+
+- builtin.parameters.string:
+    name: config_dir
+    description: Where to store saved configs
+
+- builtin.parameters.int32:
+    name: width
+    description: Width of the produced image
+    default: 160
+
+- builtin.parameters.int32:
+    name: height
+    description: Height of the produced image
+    default: 120
+
+- builtin.parameters.string:
+    name: label
+    description: Beamline specific label for the detector
+    default: DemoDetector
+
+- builtin.parameters.string:
+    name: readout_time
+    description: Readout time of the detector
+    default: 0.001
+
+- builtin.defines.docstring:
+    value: |
+      This block uses a demo FileWriter and exposes a Detector like interface
+      that can be controlled with a DetectorChildPart
+
+- scanning.controllers.RunnableController:
+    mri: $(mri)
+    config_dir: $(config_dir)
+    description: |
+      Demo detector that writes HDF files for an x, y scan
+
+- builtin.parts.LabelPart:
+    value: $(label)
+
+- scanning.parts.DatasetTablePart:
+    name: DSET
+
+- scanning.parts.ExposureDeadtimePart:
+    name: EXPOSURE
+    readout_time: $(readout_time)
+    min_exposure: 0.0001
+
+- demo.parts.FileWritePart:
+    name: FW
+    width: $(width)
+    height: $(height)

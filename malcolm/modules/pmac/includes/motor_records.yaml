@@ -1,0 +1,64 @@
+- builtin.parameters.string:
+    name: pv_prefix
+    description: The root PV for the motor record
+
+- ca.parts.CADoublePart:
+    name: demand
+    description: Demand the motor to move to a position
+    pv: $(pv_prefix)
+    config: 0
+
+- ca.parts.CADoublePart:
+    name: readback
+    description: The current position of the motor
+    rbv: $(pv_prefix).RBV
+
+- ca.parts.CALongPart:
+    name: doneMoving
+    description: Will be set to zero when motor is stationary
+    rbv: $(pv_prefix).DMOV
+
+- ca.parts.CADoublePart:
+    name: accelerationTime
+    description: The time taken to accelerate to velocity
+    rbv: $(pv_prefix).ACCL
+
+- ca.parts.CADoublePart:
+    name: maxVelocity
+    description: The maximum velocity the motor can move at
+    rbv: $(pv_prefix).VMAX
+
+- ca.parts.CADoublePart:
+    name: resolution
+    description: Motor resolution
+    rbv: $(pv_prefix).ERES
+
+- ca.parts.CADoublePart:
+    name: offset
+    description: User offset
+    rbv: $(pv_prefix).OFF
+
+- ca.parts.CAStringPart:
+    name: units
+    description: Engineering units
+    rbv: $(pv_prefix).EGU
+
+- ca.parts.CADoublePart:
+    name: userHighLimit
+    description: User high limit
+    rbv: $(pv_prefix).HLM
+
+- ca.parts.CADoublePart:
+    name: userLowLimit
+    description: User low limit
+    rbv: $(pv_prefix).LLM
+
+- ca.parts.CADoublePart:
+    name: dialHighLimit
+    description: Dial high limit
+    rbv: $(pv_prefix).DHLM
+
+- ca.parts.CADoublePart:
+    name: dialLowLimit
+    description: Dial low limit
+    rbv: $(pv_prefix).DLLM

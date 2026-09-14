@@ -1,0 +1,153 @@
+{
+  "attributes": {
+    "layout": {
+      "POS": {
+        "x": 505.29268292682923, 
+        "y": -5.576218172399081, 
+        "visible": true
+      }, 
+      "HDF5": {
+        "x": 687.0975609756097, 
+        "y": -5.576218172399081, 
+        "visible": true
+      }, 
+      "LUT1": {
+        "x": 135.87804878048792, 
+        "y": 78.81808382359964, 
+        "visible": true
+      }, 
+      "PCAP": {
+        "x": 307.3902439024391, 
+        "y": -37.50101467225613, 
+        "visible": true
+      }, 
+      "PULSE1": {
+        "x": -437.0, 
+        "y": -256.00711595488787, 
+        "visible": true
+      }, 
+      "SRGATE1": {
+        "x": -48.85365853658516, 
+        "y": -113.56199549233048, 
+        "visible": true
+      }, 
+      "TTLIN1": {
+        "x": -681.9268292682926, 
+        "y": -256.3526337414256, 
+        "visible": true
+      }, 
+      "TTLIN2": {
+        "x": -682.8536585365857, 
+        "y": 84.40752861209035, 
+        "visible": true
+      }, 
+      "TTLOUT1": {
+        "x": -215.68292682926824, 
+        "y": -393.4400368295069, 
+        "visible": true
+      }
+    }
+  },
+  "children": {
+    "POS": {
+      "arrayCallbacks": true, 
+      "attributesFile": ""
+    },
+    "HDF5": {
+      "arrayCallbacks": false, 
+      "attributesFile": ""
+    },
+    "LUT1": {
+      "label": "End of Frame", 
+      "inputs": "expanded", 
+      "inpa": "PULSE1.OUT", 
+      "inpaDelay": 0, 
+      "inpb": "TTLIN2.VAL", 
+      "inpbDelay": 0, 
+      "inpc": "SRGATE1.OUT", 
+      "inpcDelay": 0, 
+      "inpd": "ZERO", 
+      "inpdDelay": 0, 
+      "inpe": "ZERO", 
+      "inpeDelay": 0, 
+      "parameters": "expanded", 
+      "typea": "Pulse-On-Rising-Edge", 
+      "typeb": "Pulse-On-Rising-Edge", 
+      "typec": "Input-Level", 
+      "typed": "Input-Level", 
+      "typee": "Input-Level", 
+      "func": "(A|B)&C", 
+      "outputs": "expanded"
+    }, 
+    "PCAP": {
+      "label": "Position Capture", 
+      "inputs": "expanded", 
+      "enable": "ONE", 
+      "enableDelay": 0, 
+      "gate": "SRGATE1.OUT", 
+      "gateDelay": 0, 
+      "trig": "LUT1.OUT", 
+      "trigDelay": 0, 
+      "parameters": "expanded", 
+      "trigEdge": "Rising", 
+      "shiftSum": 0, 
+      "outputs": "expanded", 
+      "tsStartCapture": "Value", 
+      "tsEndCapture": "No", 
+      "tsTrigCapture": "No", 
+      "samplesCapture": "Value", 
+      "readbacks": "expanded", 
+      "attributesFile": "", 
+      "triggerMode": "Internal"
+    }, 
+    "PULSE1": {
+      "label": "Live Rising Pulse", 
+      "inputs": "expanded", 
+      "enable": "ONE", 
+      "enableDelay": 0, 
+      "trig": "TTLIN1.VAL", 
+      "trigDelay": 0, 
+      "parameters": "expanded", 
+      "delay": 0.0, 
+      "delayUnits": "s", 
+      "width": 20.0, 
+      "widthUnits": "us", 
+      "trigEdge": "Rising", 
+      "outputs": "expanded", 
+      "readbacks": "expanded"
+    }, 
+    "SRGATE1": {
+      "label": "Frame Gate", 
+      "inputs": "expanded", 
+      "enable": "PCAP.ACTIVE", 
+      "enableDelay": 0, 
+      "set": "PULSE1.OUT", 
+      "setDelay": 0, 
+      "rst": "TTLIN2.VAL", 
+      "rstDelay": 0, 
+      "parameters": "expanded", 
+      "whenDisabled": "Set output low", 
+      "setEdge": "Rising", 
+      "rstEdge": "Rising", 
+      "outputs": "expanded"
+    }, 
+    "TTLIN1": {
+      "label": "Live Frame", 
+      "parameters": "expanded", 
+      "term": "High-Z", 
+      "outputs": "expanded"
+    }, 
+    "TTLIN2": {
+      "label": "Dead Frame", 
+      "parameters": "expanded", 
+      "term": "High-Z", 
+      "outputs": "expanded"
+    }, 
+    "TTLOUT1": {
+      "label": "Detector Trigger", 
+      "inputs": "expanded", 
+      "val": "PULSE1.OUT", 
+      "valDelay": 0
+    }
+  }
+}

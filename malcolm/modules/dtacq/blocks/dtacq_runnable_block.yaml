@@ -1,0 +1,59 @@
+- builtin.parameters.string:
+    name: mri_prefix
+    description: Malcolm resource id of the Block and prefix for children
+
+- builtin.parameters.string:
+    name: pv_prefix
+    description: PV prefix for driver and all plugins
+
+- builtin.parameters.string:
+    name: config_dir
+    description: Where to store saved configs
+
+- builtin.parameters.string:
+    name: label
+    description: Beamline specific label for the detector
+    default: D-TACQ
+
+- builtin.defines.docstring:
+    value: |
+      Device block corresponding to dtacq + reframe + stat + pos + hdf writer.
+
+      - Detector driver should have pv prefix $(pv_prefix):ADC
+      - Reframe plugin should have pv prefix $(pv_prefix):TRIG
+      - Pos should have pv prefix $(pv_prefix):POS
+      - Stat should have pv prefix $(pv_prefix):STAT
+      - HDF should have pv prefix $(pv_prefix):HDF5
+
+- scanning.controllers.RunnableController:
+    mri: $(mri_prefix)
+    config_dir: $(config_dir)
+    description: |
+      D-TACQ are high performance ADC modules for scientific data acquisition
+
+- builtin.parts.LabelPart:
+    value: $(label)
+
+- dtacq.blocks.dtacq_driver_block:
+    mri: $(mri_prefix):DRV
+    prefix: $(pv_prefix):ADC
+
+- adUtil.blocks.reframe_plugin_block:
+    mri: $(mri_prefix):TRIG
+    prefix: $(pv_prefix):TRIG
+
+- adUtil.parts.ReframePluginPart:
+    name: TRIG
+    mri: $(mri_prefix):TRIG
+
+- ADCore.blocks.stats_plugin_block:
+    mri: $(mri_prefix):STAT
+    prefix: $(pv_prefix):STAT
+
+- ADCore.parts.StatsPluginPart:
+    name: STAT
+    mri: $(mri_prefix):STAT
+
+- ADCore.includes.filewriting_collection:
+    pv_prefix: $(pv_prefix)
+    mri_prefix: $(mri_prefix)

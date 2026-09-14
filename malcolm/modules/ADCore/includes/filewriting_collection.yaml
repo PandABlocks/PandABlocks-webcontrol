@@ -1,0 +1,33 @@
+- builtin.parameters.string:
+    name: pv_prefix
+    description: PV prefix for all the other plugins
+
+- builtin.parameters.string:
+    name: mri_prefix
+    description: Malcolm resource id prefix for all created blocks
+
+- builtin.parameters.string:
+    name: runs_on_windows
+    description: Translate directory paths if IOC runs on Windows
+    default: False
+
+- scanning.parts.DatasetTablePart:
+    name: DSET
+
+- ADCore.blocks.position_labeller_block:
+    mri: $(mri_prefix):POS
+    prefix: $(pv_prefix):POS
+
+- ADCore.parts.PositionLabellerPart:
+    name: POS
+    mri: $(mri_prefix):POS
+
+- ADCore.blocks.hdf_writer_block:
+    mri: $(mri_prefix):HDF5
+    prefix: $(pv_prefix):HDF5
+
+- ADCore.parts.HDFWriterPart:
+    name: HDF5
+    mri: $(mri_prefix):HDF5
+    runs_on_windows: $(runs_on_windows)
+    required_version: 3.12

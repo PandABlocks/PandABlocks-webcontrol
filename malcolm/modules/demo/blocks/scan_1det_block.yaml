@@ -1,0 +1,38 @@
+- builtin.parameters.string:
+    name: mri
+    description: MRI for created block
+
+- builtin.parameters.string:
+    name: config_dir
+    description: Where to store saved configs
+
+- builtin.defines.docstring:
+    value: |
+      Demo scan that drives an detector like block called DETECTOR and a demo
+      motion controller called MOTION
+
+- scanning.controllers.RunnableController:
+    mri: $(mri)
+    config_dir: $(config_dir)
+    description: |
+      Demo scan with a single detector and motor controller suitable for
+      making an interesting pattern when scanning x and y in range -10 to 10
+
+- builtin.parts.LabelPart:
+    value: Mapping x, y with demo detector
+
+- scanning.parts.DatasetTablePart:
+    name: DSET
+
+- scanning.parts.SimultaneousAxesPart:
+    value: [x, y]
+
+- scanning.parts.DetectorChildPart:
+    name: DET
+    mri: DETECTOR
+    initial_visibility: True
+
+- demo.parts.MotionChildPart:
+    name: MOT
+    mri: MOTION
+    initial_visibility: True

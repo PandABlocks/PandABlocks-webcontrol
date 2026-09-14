@@ -1,73 +1,116 @@
 name: Code CI
 
+# When to trigger
 on:
   push:
+    branches:
+      - master
+      - main
+    tags:
+      - "*"
   pull_request:
+  schedule:
+    # Run every Monday at 8am
+    - cron: '0 8 * * MON'
 
+# Global environment
+# env:
+#   # EPICS Base version for system block IOC
+#   EPICS_BASE_VER: R3.14.12.7
+#   EPICS_BASE_DIR: epics_base
+
+
+# Jobs
 jobs:
-  make_zpkg:
+  build:
+    runs-on: ubuntu-20.04
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.7.2"]
+        # pipenv: ["skip-lock"] # Use latest available dependencies
+        # Extra job for publishing using Pipfile.lock
+        include:
+          - python-version: "3.7.2"
+            pipenv: "deploy"
+            publish: true
 
-    runs-on: ubuntu-latest
+    name: build/${{ matrix.python-version }}/${{ matrix.pipenv }}
 
     steps:
-      # Git repositories
-      - name: Checkout Source
-        uses: actions/checkout@v2
-        with:
-          path: PandABlocks-webcontrol
-          # Require history to get back to last tag for version number of branches
-          fetch-depth: 0
+    - name: Checkout source
+      uses: actions/checkout@v2
+      with:
+        # require all of history to see all tagged versions' docs
+        fetch-depth: 0
 
-      - name: Checkout PandABlocks-rootfs
-        uses: actions/checkout@v2
-        with:
-          repository: PandABlocks/PandABlocks-rootfs
-          path: PandABlocks-rootfs
+    - name: Install packages
+      run: sudo apt-get install graphviz
 
-      # Login into ghcr
-      - name: login to ghcr
-        uses: docker/login-action@v1
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN  }}
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
 
-      # Build
-      - name: Make
-        run: |
-          docker pull ghcr.io/pandablocks/pandablocks-dev-container:latest
-          docker run \
-            -v "${{ github.workspace }}:/repos" \
-            -v "${{ github.workspace }}/build:/build" \
-            ghcr.io/pandablocks/pandablocks-dev-container:latest\
-            /bin/bash -c \
-            "cd PandABlocks-webcontrol && ln -s CONFIG.example CONFIG && make zpkg"
-      
-      # Artifact
-      - name: Upload zpkg
-        uses: actions/upload-artifact@v4
-        with:
-          name: zpkg
-          path: ./PandABlocks-webcontrol/build/panda-webcontrol@*.zpg
+    - name: Setup Git config
+      run: |
+        git config --global user.email "MrMalcolm@github.com"
+        git config --global user.name "Mr. Malcolm"
 
-  release:
-    needs: [make_zpkg]
-    runs-on: ubuntu-latest
-    # Make a release on every tag
-    if: github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags')
-    steps:
-      - uses: actions/download-artifact@v4
-        with:
-          name: zpkg
-          path: zpkg
+    # - name: Cache EPICS Base
+    #   uses: actions/cache@v2
+    #   id: epics-base-cache
+    #   with:
+    #     path: ${{ env.EPICS_BASE_DIR }}
+    #     key: epics_base-${{ runner.os }}-${{ env.EPICS_BASE_VER }}
 
-      - name: Github Release
-        # We pin to the SHA, not the tag, for security reasons.
-        # https://docs.github.com/en/actions/learn-github-actions/security-hardening-for-github-actions#using-third-party-actions
-        uses: softprops/action-gh-release@2d72d869af3bf23602f9593a1e3fd739b80ac1eb  # v0.1.12
-        with:
-          prerelease: ${{ contains(github.ref_name, 'a') || contains(github.ref_name, 'b') || contains(github.ref_name, 'rc') }}
-          files: zpkg/*
-          body: See [Changelog](CHANGELOG.rst) for more details
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    # - name: Install EPICS Base
+    #   if: steps.epics-base-cache.outputs.cache-hit != 'true'
+    #   run: |
+    #     wget -nv https://github.com/epics-base/epics-base/archive/${EPICS_BASE_VER}.tar.gz
+    #     tar -zxf ${EPICS_BASE_VER}.tar.gz
+    #     mv epics-base-${EPICS_BASE_VER} ${EPICS_BASE_DIR}
+    #     make -isj -C ${EPICS_BASE_DIR}/
+
+    # - name: Set EPICS Base path
+    #   run: echo "EPICS_BASE=`pwd`/${EPICS_BASE_DIR}" >> $GITHUB_ENV
+
+    - name: Install Python dependencies
+      run: |
+        env
+        pip install pipenv
+        pipenv install --dev --${{ matrix.pipenv }} --python ${{ matrix.python-version }} && pipenv graph
+
+    - name: Create Sdist and Wheel
+      # for reproducible builds set SOURCE_DATE_EPOCH to the date of the last commit
+      # See here for more info : https://reproducible-builds.org/
+      # Also use the same version of wheel as inside DLS
+      run: |
+        export SOURCE_DATE_EPOCH=$(git log -1 --pretty=%ct)
+        pip install "wheel==0.37.0"
+        python setup.py sdist bdist_wheel
+
+    - name: Flake8
+      run: pipenv run flake8
+
+    - name: Pytest
+      run: |
+        set -o pipefail
+        pipenv run tests
+
+    # - name: Coverage
+    #   if: matrix.publish
+    #   uses: codecov/codecov-action@v2
+    #   with:
+    #     fail_ci_if_error: true # optional (default = false)
+    #     files: ./coverage.xml
+
+    - name: Publish Sdist and Wheel to PyPI
+      # Only once when on a tag
+      if: matrix.publish && startsWith(github.ref, 'refs/tags')
+      # We pin to the SHA, not the tag, for security reasons.
+      # https://docs.github.com/en/free-pro-team@latest/actions/learn-github-actions/security-hardening-for-github-actions#using-third-party-actions
+      uses: pypa/gh-action-pypi-publish@27b31702a0e7fc50959f5ad993c78deac1bdfc29  # v1.4.2
+      with:
+        user: __token__
+        password: ${{ secrets.pypi_token }}

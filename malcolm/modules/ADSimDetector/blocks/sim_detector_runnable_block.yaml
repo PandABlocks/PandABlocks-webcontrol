@@ -1,0 +1,66 @@
+- builtin.parameters.string:
+    name: mri_prefix
+    description: Malcolm resource id of the Block and prefix for children
+
+- builtin.parameters.string:
+    name: pv_prefix
+    description: PV prefix for driver and all plugins
+
+- builtin.parameters.string:
+    name: config_dir
+    description: Where to store saved configs
+
+- builtin.parameters.string:
+    name: label
+    description: Beamline specific label for the detector
+    default: SimDetector
+
+- builtin.parameters.string:
+    name: drv_suffix
+    description: PV suffix for detector driver
+    default: DET
+
+- builtin.defines.docstring:
+    value: |
+      Device Block corresponding to SimDetector + stat + pos + hdf writer.
+
+      - Detector driver should have pv prefix $(pv_prefix):$(drv_suffix)
+      - Pos should have pv prefix $(pv_prefix):POS
+      - Stat should have pv prefix $(pv_prefix):STAT
+      - HDF should have pv prefix $(pv_prefix):HDF5
+
+- scanning.controllers.RunnableController:
+    mri: $(mri_prefix)
+    config_dir: $(config_dir)
+    template_designs: $(yamldir)/$(yamlname)_designs
+    description: |
+      SimDetector produces a simulated detector image, with either a Linear
+      ramp, array of peaks, or sine wave function used to make the 2D image
+
+- builtin.parts.LabelPart:
+    value: $(label)
+
+- ADSimDetector.blocks.sim_detector_driver_block:
+    mri: $(mri_prefix):DRV
+    prefix: $(pv_prefix):$(drv_suffix)
+
+- ADCore.parts.DetectorDriverPart:
+    name: DRV
+    mri: $(mri_prefix):DRV
+    soft_trigger_modes:
+        - Internal
+
+- scanning.parts.ExposureDeadtimePart:
+    name: DEADTIME
+
+- ADCore.blocks.stats_plugin_block:
+    mri: $(mri_prefix):STAT
+    prefix: $(pv_prefix):STAT
+
+- ADCore.parts.StatsPluginPart:
+    name: STAT
+    mri: $(mri_prefix):STAT
+
+- ADCore.includes.filewriting_collection:
+    pv_prefix: $(pv_prefix)
+    mri_prefix: $(mri_prefix)

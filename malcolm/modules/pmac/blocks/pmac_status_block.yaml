@@ -1,0 +1,36 @@
+- builtin.parameters.string:
+    name: mri
+    description: Malcolm resource id of the Block
+
+- builtin.parameters.string:
+    name: pv_prefix
+    description: The root PV for the Controller records
+
+- builtin.controllers.StatefulController:
+    mri: $(mri)
+
+- asyn.parts.AsynSourcePortPart:
+    name: port
+    description: Asyn Port Name
+    rbv: $(pv_prefix):Port
+    port_type: motor
+
+- ca.parts.CADoublePart:
+    name: servoFreq
+    description: Servo interrupt frequency (hz)
+    rbv: $(pv_prefix):SERVO_FREQ
+
+- ca.parts.CACharArrayPart:
+    name: iVariables
+    description: representation of the values of i variables in the slow poll
+    rbv: $(pv_prefix):I_VARIABLES_RBV
+
+- ca.parts.CACharArrayPart:
+    name: pVariables
+    description: representation of the values of p variables in the slow poll
+    rbv: $(pv_prefix):P_VARIABLES_RBV
+
+- ca.parts.CACharArrayPart:
+    name: mVariables
+    description: representation of the values of m variables in the slow poll
+    rbv: $(pv_prefix):M_VARIABLES_RBV

@@ -1,0 +1,36 @@
+# Define the parameters this Block will take
+- builtin.parameters.string:
+    name: mri
+    description: Malcolm resource id of the Block
+
+- builtin.parameters.string:
+    name: config_dir
+    description: Where to store saved configs
+
+- builtin.defines.docstring:
+    value: |
+      Device Block that controls 2 child counters to simulate a motor controller
+      with move methods
+
+- builtin.controllers.ManagerController:
+    mri: $(mri)
+    config_dir: $(config_dir)
+    description: $(docstring)
+
+# Add the Counter blocks
+- demo.blocks.counter_block:
+    mri: $(mri):COUNTERX
+
+- demo.blocks.counter_block:
+    mri: $(mri):COUNTERY
+
+# Add Parts to use the Counter blocks within Motion block
+- demo.parts.CounterMovePart:
+    name: x
+    mri: $(mri):COUNTERX
+
+- demo.parts.CounterMovePart:
+    name: y
+    mri: $(mri):COUNTERY
+
+

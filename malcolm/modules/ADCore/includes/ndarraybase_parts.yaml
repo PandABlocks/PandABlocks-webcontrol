@@ -1,0 +1,41 @@
+- builtin.parameters.string:
+    name: prefix
+    description: The root PV for the all records
+
+- asyn.parts.AsynSourcePortPart:
+    name: out
+    description: Array Source Port Name
+    rbv: $(prefix):PortName_RBV
+    port_type: NDArray
+
+- ca.parts.CABooleanPart:
+    name: arrayCallbacks
+    description: Whether to produce images or not
+    pv: $(prefix):ArrayCallbacks
+    rbv_suffix: _RBV
+
+- ca.parts.CALongPart:
+    name: arrayCounter
+    description: Reset unique id for next frame
+    pv: $(prefix):ArrayCounter
+    config: 0
+
+- ca.parts.CALongPart:
+    name: arrayCounterReadback
+    description: Current unique id number for frame
+    rbv: $(prefix):ArrayCounter_RBV
+
+- ca.parts.CALongPart:
+    name: uniqueId
+    description: Current unique id number for frame
+    rbv: $(prefix):UniqueId_RBV
+
+- ca.parts.CACharArrayPart:
+    name: attributesFile
+    description: Filename for NDAttributes
+    pv: $(prefix):NDAttributesFile
+
+- ca.parts.CAStringPart:
+    name: driverVersion
+    description: Version of EPICS AD Driver
+    rbv: $(prefix):DriverVersion_RBV

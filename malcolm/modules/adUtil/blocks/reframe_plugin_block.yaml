@@ -1,0 +1,73 @@
+- builtin.parameters.string:
+    name: mri
+    description: Malcolm resource id of the Block
+
+- builtin.parameters.string:
+    name: prefix
+    description: The root PV for the all records
+
+- builtin.defines.docstring:
+    value: Hardware block corresponding to PVs used for aravisGigE detector driver
+
+- builtin.controllers.StatefulController:
+    mri: $(mri)
+    description: $(docstring)
+
+- ADCore.includes.ndpluginbase_parts:
+    prefix: $(prefix)
+    mri: $(mri)
+
+- ca.parts.CAChoicePart:
+    name: imageMode
+    description: Whether to take 1, many, or unlimited images at start
+    pv: $(prefix):TriggerMode
+
+- ca.parts.CAChoicePart:
+    name: triggerMode
+    description: What is triggering the plugin to generate frames
+    pv: $(prefix):TriggerOnCond
+
+- ca.parts.CAChoicePart:
+    name: triggerOffCondition
+    description: What is signalling the end of a frame
+    pv: $(prefix):TriggerOffCond
+
+- ca.parts.CALongPart:
+    name: numImages
+    description: Number of images to take if imageMode=Multiple
+    pv: $(prefix):TriggerCount
+    rbv_suffix: _RBV
+
+- ca.parts.CADoublePart:
+    name: postCount
+    description: How many samples to take after each trigger
+    pv: $(prefix):POSTCOUNT
+
+- ca.parts.CAActionPart:
+    name: start
+    description: Demand for starting acquisition
+    pv: $(prefix):Capture
+    status_pv: $(prefix):Mode_RBV
+    good_status: Idle
+
+- ca.parts.CAActionPart:
+    name: stop
+    description: Stop acquisition
+    pv: $(prefix):Capture
+    value: 0
+    wait: False
+
+- ca.parts.CABooleanPart:
+    name: acquiring
+    description: If plugin is currently acquiring
+    rbv: $(prefix):Capture
+
+- ca.parts.CAChoicePart:
+    name: averageSamples
+    description: Average samples for each channel
+    pv: $(prefix):AverageSamples
+
+- ca.parts.CALongPart:
+    name: triggerChannel
+    description: Channel source for triggers
+    pv: $(prefix):TriggerChannel

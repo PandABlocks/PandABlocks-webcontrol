@@ -1,0 +1,30 @@
+<svg version="1.1" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+ <path d="m60.513 10h20" fill="none" stroke="#000" stroke-width="1px"/>
+ <path d="m60.513 30h20" fill="none" stroke="#000" stroke-width="1px"/>
+ <path d="m60.513 50h20" fill="none" stroke="#000" stroke-width="1px"/>
+ <path d="m60.513 70h20" fill="none" stroke="#000" stroke-width="1px"/>
+ <path d="m60.513 90h20" fill="none" stroke="#000" stroke-width="1px"/>
+ <path d="m60.513 110h20" fill="none" stroke="#000" stroke-width="1px"/>
+ <rect x="45.513" y="1" width="20" height="118" fill="#e6e6e6" stroke="#000"/>
+ <path d="m35.513 17h17c5 0 8 5 8 10v66c0 5-3 10-8 10h-17" fill="#e6e6e6" fill-rule="evenodd" stroke="#000" stroke-width="1px"/>
+ <path d="m35.513 17c5 0 8 5 8 10v66c0 5-3 10-8 10-3 0-5-2-5-5v-76c0-3.001 2-5 5-5z" fill="#e6e6e6" fill-rule="evenodd" stroke="#000" stroke-width="1px"/>
+ <ellipse transform="scale(-1,1)" cx="-40.513" cy="60" rx="1.5" ry="2.75"/>
+ <ellipse transform="scale(-1,1)" cx="-35.513" cy="25" rx="1.5" ry="2.75"/>
+ <ellipse transform="scale(-1,1)" cx="-40.513" cy="50" rx="1.5" ry="2.75"/>
+ <ellipse transform="scale(-1,1)" cx="-40.513" cy="40" rx="1.5" ry="2.75"/>
+ <ellipse transform="scale(-1,1)" cx="-40.513" cy="30" rx="1.5" ry="2.75"/>
+ <ellipse transform="scale(-1,1)" cx="-40.513" cy="90" rx="1.5" ry="2.75"/>
+ <ellipse transform="scale(-1,1)" cx="-40.513" cy="80" rx="1.5" ry="2.75"/>
+ <ellipse transform="scale(-1,1)" cx="-40.513" cy="70" rx="1.5" ry="2.75"/>
+ <ellipse transform="scale(-1,1)" cx="-35.513" cy="75" rx="1.5" ry="2.75"/>
+ <ellipse transform="scale(-1,1)" cx="-35.513" cy="65" rx="1.5" ry="2.75"/>
+ <ellipse transform="scale(-1,1)" cx="-35.513" cy="55" rx="1.5" ry="2.75"/>
+ <ellipse transform="scale(-1,1)" cx="-35.513" cy="45" rx="1.5" ry="2.75"/>
+ <ellipse transform="scale(-1,1)" cx="-35.513" cy="95" rx="1.5" ry="2.75"/>
+ <ellipse transform="scale(-1,1)" cx="-35.513" cy="85" rx="1.5" ry="2.75"/>
+ <ellipse transform="scale(-1,1)" cx="-35.513" cy="35" rx="1.5" ry="2.75"/>
+ <path d="m50.513 114h5c1 0 2-2 2-4s-1-4-2-4h-5" fill="#e6e6e6" stroke="#000"/>
+ <ellipse transform="scale(-1,1)" cx="-50.513" cy="110" rx="2" ry="4" fill="#e6e6e6" stroke="#000"/>
+ <path d="m51.513 14h4c1 0 2-2 2-4s-1-4-2-4h-5" fill="#e6e6e6" stroke="#000"/>
+ <ellipse transform="scale(-1,1)" cx="-50.513" cy="10" rx="2" ry="4" fill="#e6e6e6" stroke="#000"/>
+</svg>

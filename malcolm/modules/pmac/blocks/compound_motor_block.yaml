@@ -1,0 +1,38 @@
+- builtin.parameters.string:
+    name: mri
+    description: Malcolm resource id of the Block
+
+- builtin.parameters.string:
+    name: pv_prefix
+    description: The root PV for the motor record
+
+- builtin.parameters.float64:
+    name: initial_velocity_settle
+    description: Time in seconds for motor to settle at constant velocity
+    default: 0.0
+
+- builtin.controllers.StatefulController:
+    mri: $(mri)
+
+- pmac.includes.motor_records:
+    pv_prefix: $(pv_prefix)
+
+- pmac.parts.CompoundMotorSinkPortsPart:
+    name: cs
+    rbv: $(pv_prefix).OUT
+
+- builtin.parts.Float64Part:
+    name: velocitySettle
+    description: Time in seconds for motor to settle at constant velocity
+    writeable: True
+    value: $(initial_velocity_settle)
+    precision: 3
+    units: s
+
+- builtin.parts.Float64Part:
+    name: maxVelocityPercent
+    description: What percentage of maxVelocity to use for turnarounds
+    writeable: True
+    value: 100
+    precision: 3
+    units: "%"
