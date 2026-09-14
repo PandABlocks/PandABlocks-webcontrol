@@ -10,5 +10,9 @@ rm -rf $HERE/www
 mkdir $HERE/www
 wget -O $TMP $RELEASE
 tar -C $HERE/www -zxf $TMP
+template='{% raw admin_loader.load("nav.html").generate(active="panda-webcontrol", etc_loader=etc_loader, request=request) %}'
+sed -e "s|</body>|$template</body>|" \
+    ./www/index.html > \
+    ./www/index-nav.html
 git add $HERE/www
 
