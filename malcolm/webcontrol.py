@@ -13,6 +13,11 @@ from malcolm.profiler import Profiler
 from malcolm.modules import builtin, pandablocks, web
 
 
+DEFAULT_TEMPLATE_DIR = web.parts.www_dir
+DEFAULT_TEMPLATE_DESIGNS_DIR = os.path.join(web.parts.www_dir,
+                                            "template_designs")
+
+
 def parse_args():
     # Parse arguments
     parser = argparse.ArgumentParser()
@@ -29,10 +34,10 @@ def parse_args():
         "--configdir", default="/opt/share/designs",
         help="Config directory to save and load designs")
     parser.add_argument(
-        "--templatedesigns", default="/opt/share/template_designs",
+        "--templatedesigns", default=DEFAULT_TEMPLATE_DESIGNS_DIR,
         help="Directory to get template designs for tutorials")
     parser.add_argument(
-        "--templatedir", default="/opt/share/panda-webcontrol/templates",
+        "--templatedir", default=DEFAULT_TEMPLATE_DIR,
         help="Directory to get templated html files from")
     parser.add_argument(
         "--optionsdir", default="/opt/share/panda-webcontrol/options",
@@ -47,6 +52,9 @@ def parse_args():
     parser.add_argument(
         "--mri", default="PANDA",
         help="MRI of the base PandA Block that the webserver hosts")
+    parser.add_argument(
+        "--no-nav", action="store_true",
+        help="Whether to disable the bottom nav bar")
     return parser.parse_args()
 
 
@@ -67,12 +75,12 @@ def main():
             return args.templatedir
 
         def get(self, path):
-            if path == "details":
+            if path == "details" or args.no_nav:
                 # /details/... shouldn't have bottom nav
-                self.render("webcontrol-withoutnav.html")
+                self.render("index.html")
             else:
                 # /gui/... should have index.html, templated with nav
-                self.render("webcontrol-index.html", etc_loader=self.etc_loader,
+                self.render("index-nav.html", etc_loader=self.etc_loader,
                             admin_loader=self.admin_loader)
 
 
@@ -80,7 +88,6 @@ def main():
         # Override the things that returns the GUI html to use
         # a templated version
         GuiHandler = TemplateHandler
-        logging.info("Importing malcolm")
 
 
     # Check the options
