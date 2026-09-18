@@ -192,7 +192,7 @@ class TestContext(unittest.TestCase):
         with self.assertRaises(TimeoutError):
             self.o.wait_all_futures(fs, 0)
 
-        assert 0 == len(self.o._q._event_queue)
+        assert 0 == self.o._q._event_queue.qsize()
 
     def test_futures_exception(self):
         fs = [self.o.put_async(["block", "attr", "value"], 32)]

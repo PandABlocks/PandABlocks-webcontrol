@@ -3,8 +3,6 @@ import time
 import weakref
 from typing import TYPE_CHECKING, Any, Callable, Dict, List, Tuple, Union
 
-import cothread
-
 from .concurrency import Queue
 from .errors import AbortedError, BadValueError, TimeoutError
 from .future import Future
@@ -92,8 +90,6 @@ class Context:
 
     def handle_request(self, controller, request):
         controller.handle_request(request)
-        # Yield control to allow the request to be handled
-        cothread.Yield()
 
     def ignore_stops_before_now(self):
         """Ignore any stops received before this point"""
@@ -224,7 +220,7 @@ class Context:
             for future, request in futures:
                 if callback:
                     log.warning(f"Unsubscribing from {request.path}")
-                    cothread.Callback(self.unsubscribe, future)
+                    self._process.spawn(self.unsubscribe, future)
                 else:
                     self.unsubscribe(future)
 

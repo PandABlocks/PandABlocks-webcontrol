@@ -48,7 +48,7 @@ class RestfulHandler(RequestHandler):
         self._registrar.report(builtin.infos.RequestInfo(request, mri))
 
     def queue_response(self, response):
-        # called from cothread
+        # called from a worker thread
         IOLoopHelper.call(self._queue.put, response)
 
     def handle_response(self, response):

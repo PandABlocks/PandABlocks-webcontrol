@@ -1,11 +1,8 @@
 import logging
+import queue as queue_module
+import threading
 import time
-from threading import get_ident as get_thread_ident
 from typing import Any, Callable, Dict, Tuple, TypeVar, Union
-
-import cothread
-
-from malcolm.compat import get_stack_size
 
 from .errors import TimeoutError
 
@@ -16,8 +13,8 @@ T = TypeVar("T")
 log = logging.getLogger(__name__)
 
 # Re-export
-sleep = cothread.Sleep
-RLock = cothread.RLock
+sleep = time.sleep
+RLock = threading.RLock
 
 
 class Spawned:
@@ -31,7 +28,7 @@ class Spawned:
         self._function = func
         self._args = args
         self._kwargs = kwargs
-        cothread.Spawn(self.catching_function, stack_size=get_stack_size())
+        threading.Thread(target=self.catching_function, daemon=True).start()
 
     def catching_function(self):
         try:
@@ -70,28 +67,16 @@ class Spawned:
 
 
 class Queue:
-    """Threadsafe and cothreadsafe queue with gets in calling thread"""
+    """Threadsafe queue with gets in calling thread"""
 
     def __init__(self):
-        if get_thread_ident() == cothread.scheduler_thread_id:
-            self._event_queue = cothread.EventQueue()
-        else:
-            self._event_queue = cothread.ThreadedEventQueue()
+        self._event_queue: "queue_module.Queue" = queue_module.Queue()
 
     def get(self, timeout=None):
-        # In cothread's thread
-        start = time.time()
-        remaining_timeout = timeout
-        while remaining_timeout is None or remaining_timeout >= 0:
-            try:
-                return self._event_queue.Wait(timeout=remaining_timeout)
-            except cothread.Timedout:
-                if timeout is not None:
-                    remaining_timeout = start + timeout - time.time()
-                    if remaining_timeout < 0:
-                        raise TimeoutError("Queue().get() timed out")
-        raise TimeoutError("Queue().get() given negative timeout")
+        try:
+            return self._event_queue.get(timeout=timeout)
+        except queue_module.Empty:
+            raise TimeoutError("Queue().get() timed out")
 
     def put(self, value):
-        # In cothread's thread
-        self._event_queue.Signal(value)
+        self._event_queue.put(value)

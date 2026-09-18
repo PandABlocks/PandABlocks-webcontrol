@@ -1,7 +1,5 @@
 from typing import Callable, Dict, Optional, Tuple
 
-from cothread import cothread
-from tornado import gen
 from tornado.websocket import WebSocketClientConnection, websocket_connect
 
 from malcolm.annotypes import Anno, deserialize_object, json_decode, json_encode
@@ -67,7 +65,6 @@ class WebsocketClientComms(builtin.controllers.ClientComms):
         self._start_client()
 
     def _start_client(self):
-        # Called from cothread
         if self._conn is None:
             IOLoopHelper.call(self.recv_loop)
             self._connected_queue.get(timeout=self.connect_timeout)
@@ -75,19 +72,18 @@ class WebsocketClientComms(builtin.controllers.ClientComms):
             root_subscribe.set_callback(self._update_remote_blocks)
             IOLoopHelper.call(self._send_request, root_subscribe)
 
-    @gen.coroutine
-    def recv_loop(self):
-        # Called from tornado
+    async def recv_loop(self):
+        # Called from the asyncio event loop
         url = "ws://%s:%d/ws" % (self.hostname, self.port)
-        self._conn = yield websocket_connect(
+        self._conn = await websocket_connect(
             url, connect_timeout=self.connect_timeout - 0.5
         )
-        cothread.Callback(self._connected_queue.put, None)
+        self._connected_queue.put(None)
         while True:
-            message = yield self._conn.read_message()
+            message = await self._conn.read_message()
             if message is None:
                 self._conn = None
-                cothread.Callback(self._report_fault)
+                self._report_fault()
                 return
             self.on_message(message)
 
@@ -109,15 +105,13 @@ class WebsocketClientComms(builtin.controllers.ClientComms):
                     response.message = ResponseError(response.message)
             else:
                 request = self._request_lookup[response.id]
-            # Transfer the work of the callback to cothread
-            cothread.Callback(request.callback, response)
+            request.callback(response)
         except Exception:
             # If we don't catch the exception here, tornado will spew odd
             # error messages about 'HTTPRequest' object has no attribute 'path'
             self.log.exception("on_message(%r) failed", message)
 
     def _report_fault(self):
-        # Called in cothread thread
         with self._lock:
             if self.state.value != self.state_set.DISABLING:
                 self.transition(self.state_set.FAULT, "Server disconnected")
@@ -134,7 +128,6 @@ class WebsocketClientComms(builtin.controllers.ClientComms):
                 self.log.debug("Callback %s raised", request.callback)
 
     def _stop_client(self):
-        # Called from cothread
         if self._conn:
             IOLoopHelper.call(self._conn.close)
             self._connected_queue.get(timeout=self.connect_timeout)
@@ -142,7 +135,7 @@ class WebsocketClientComms(builtin.controllers.ClientComms):
 
     def _update_remote_blocks(self, response):
         response = deserialize_object(response, Update)
-        cothread.Callback(self.remote_blocks.set_value, response.value)
+        self.remote_blocks.set_value(response.value)
 
     def do_disable(self):
         super().do_disable()
@@ -165,13 +158,13 @@ class WebsocketClientComms(builtin.controllers.ClientComms):
         done_queue = Queue()
 
         def handle_response(response):
-            # Called from tornado
+            # Called from the asyncio event loop
             if not isinstance(response, Delta):
                 # Return or Error is the end of our subscription, log and ignore
                 self.log.debug("Proxy got response %r", response)
                 done_queue.put(None)
             else:
-                cothread.Callback(self._handle_response, response, block, done_queue)
+                self._handle_response(response, block, done_queue)
 
         subscribe.set_callback(handle_response)
         IOLoopHelper.call(self._send_request, subscribe)

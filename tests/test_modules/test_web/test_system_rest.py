@@ -1,6 +1,5 @@
 import unittest
 
-import cothread
 from annotypes import json_encode
 from tornado import gen
 from tornado.httpclient import AsyncHTTPClient, HTTPRequest
@@ -32,7 +31,7 @@ class TestSystemRest(unittest.TestCase):
         result = yield self.http_client.fetch(
             f"http://localhost:{self.socket}/rest/{mri}"
         )
-        cothread.Callback(self.result.put, result)
+        self.result.put(result)
 
     @gen.coroutine
     def post(self, mri, method, args):
@@ -42,7 +41,7 @@ class TestSystemRest(unittest.TestCase):
             body=args,
         )
         result = yield self.http_client.fetch(req)
-        cothread.Callback(self.result.put, result)
+        self.result.put(result)
 
     def test_get_hello(self):
         IOLoopHelper.call(self.get, "hello")
