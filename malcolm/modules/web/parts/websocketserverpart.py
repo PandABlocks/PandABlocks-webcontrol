@@ -5,7 +5,6 @@ import socket
 import struct
 from typing import Dict, Optional
 
-import cothread
 from tornado.websocket import WebSocketError, WebSocketHandler
 
 from malcolm.annotypes import (
@@ -131,7 +130,7 @@ class MalcWebSocketHandler(WebSocketHandler):
             self.write_message(json_encode(error_message))
 
     def on_response(self, response):
-        # called from cothread
+        # called from a worker thread
         IOLoopHelper.call(self._on_response, response)
         # Wait for completion once every 10 message
         self._counter += 1
@@ -163,7 +162,7 @@ class MalcWebSocketHandler(WebSocketHandler):
                         )
         finally:
             assert self._queue, "No queue"
-            cothread.Callback(self._queue.put, None)
+            self._queue.put(None)
 
     # http://stackoverflow.com/q/24851207
     # TODO: remove this when the web gui is hosted from the box

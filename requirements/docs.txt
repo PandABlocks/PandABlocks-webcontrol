@@ -4,4 +4,3 @@ ipython
 sphinx_rtd_theme
 ruamel.yaml
 annotypes>=0.20
-cothread

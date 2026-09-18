@@ -24,12 +24,7 @@ class PandABlocksClient:
 
     def __init__(self, hostname="localhost", port=8888, queue_cls=None):
         if queue_cls is None:
-            try:
-                # Python 2
-                from Queue import Queue as queue_cls
-            except ImportError:
-                # Python 3
-                from queue import Queue as queue_cls
+            from queue import Queue as queue_cls
         self.queue_cls = queue_cls
         self.hostname = hostname
         self.port = port

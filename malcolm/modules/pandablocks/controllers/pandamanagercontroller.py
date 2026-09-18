@@ -3,7 +3,7 @@ import re
 import time
 from typing import Any, Dict, Sequence, Set, Tuple
 
-from cothread.cosocket import socket
+from socket import socket
 
 from malcolm.annotypes import Anno
 from malcolm.core import Display, NumberMeta, Queue, TimeoutError, TimeStamp, Widget

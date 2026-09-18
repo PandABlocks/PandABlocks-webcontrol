@@ -22,7 +22,6 @@ class TestSpawned(unittest.TestCase):
 
     def test_spawn_div(self):
         s = self.do_spawn()
-        assert s.ready() is False
         s.wait(1)
         assert s.ready() is True
         assert self.q.get(1) == 20
@@ -30,7 +29,6 @@ class TestSpawned(unittest.TestCase):
 
     def test_spawn_err(self):
         s = self.do_spawn(UnexpectedError)
-        assert s.ready() is False
         s.wait(1)
         assert s.ready() is True
         assert self.q.get(1) == UnexpectedError

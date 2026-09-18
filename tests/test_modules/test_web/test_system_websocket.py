@@ -2,7 +2,6 @@ import json
 import unittest
 from sys import version_info
 
-import cothread
 from annotypes import json_encode
 from tornado import gen
 from tornado.websocket import websocket_connect
@@ -41,7 +40,7 @@ class TestSystemWSCommsServerOnly(unittest.TestCase):
         for _ in range(num):
             resp = yield conn.read_message()
             resp = json.loads(resp)
-            cothread.Callback(self.result.put, resp)
+            self.result.put(resp)
         conn.close()
 
     @gen.coroutine

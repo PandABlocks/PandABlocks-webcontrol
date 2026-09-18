@@ -8,7 +8,7 @@ from tornado.web import RequestHandler
 from tornado.template import Loader
 
 # Import the right things
-from malcolm.core import Process, Part, Hook
+from malcolm.core import Process
 from malcolm.profiler import Profiler
 from malcolm.modules import builtin, pandablocks, web
 
@@ -122,8 +122,8 @@ def main():
 
     # Check if we are running under systemd and can't run interactively
     if 'INVOCATION_ID' in os.environ:
-        import cothread
-        cothread.WaitForQuit()
+        import asyncio
+        asyncio.run(asyncio.Event().wait())
     else:
         header = "Welcome to PandA web control"
         code.interact(header, local=locals())

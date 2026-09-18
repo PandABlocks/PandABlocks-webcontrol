@@ -1,6 +1,5 @@
 from typing import Optional
 
-from cothread import cothread
 from tornado.httpserver import HTTPServer
 from tornado.web import Application
 
@@ -85,4 +84,4 @@ class HTTPServerComms(builtin.controllers.ServerComms):
         else:
             assert self.process, "No attached process"
             controller = self.process.get_controller(info.mri)
-        cothread.Callback(controller.handle_request, info.request)
+        controller.handle_request(info.request)
