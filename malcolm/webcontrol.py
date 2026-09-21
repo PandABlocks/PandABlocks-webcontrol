@@ -3,6 +3,8 @@ import logging.handlers
 import code
 import argparse
 import os
+import socket
+import time
 
 from tornado.web import RequestHandler
 from tornado.template import Loader
@@ -56,6 +58,24 @@ def parse_args():
         "--no-nav", action="store_true",
         help="Whether to disable the bottom nav bar")
     return parser.parse_args()
+
+
+def wait_for_port(hostname, port, timeout=None, poll_interval=1.0):
+    # Block until we can open a TCP connection to (hostname, port)
+    log = logging.getLogger(__name__)
+    start_time = time.time()
+    while True:
+        try:
+            with socket.create_connection((hostname, port), timeout=poll_interval):
+                return
+        except OSError:
+            if timeout is not None and time.time() - start_time > timeout:
+                raise TimeoutError(
+                    "Timed out waiting for %s:%s to be ready" % (
+                        hostname, port))
+            log.info("Waiting for PandA TCP server at %s:%s...",
+                     hostname, port)
+            time.sleep(poll_interval)
 
 
 def main():
@@ -116,6 +136,9 @@ def main():
         template_designs=args.templatedesigns, port=args.port, mri=args.mri,
         doc_url_base="/fpga_docs/", poll_period=0.1)
     process.add_controller(controller)
+
+    # Wait for the PandA TCP server to be ready before starting
+    wait_for_port(args.hostname, args.port)
 
     # Start the server
     process.start()
