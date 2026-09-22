@@ -1,7 +1,0 @@
-.. code-block:: javascript
-
-    {
-        "typeid": "malcolm:core/Return:1.0",
-        "id": 32,
-        "value": "Running"
-    }

@@ -1,0 +1,83 @@
+version: 1
+project:
+  title: PandABlocks-webcontrol
+  github: https://github.com/PandABlocks/PandABlocks-webcontrol
+  plugins:
+    - https://github.com/DiamondLightSource/myst-version-switcher-plugin/releases/download/v0.22.0/version-switcher.mjs
+  # Cross-repository references (mystmd xref + Sphinx intersphinx).
+  # PROTOTYPE for upstreaming into the DLS python-copier-template (Stage A spec §6).
+  #
+  # Inventory target — interim vs eventual:
+  #   The MyST repos below are mid-docs-migration, so each base points at the
+  #   repo's `docs`-branch build and the inventory is fetched from
+  #   `<repo>/docs/objects.inv`. Once the upstream version-switcher action
+  #   (maintained in a separate repo) publishes a `stable` symlink to the latest
+  #   release, switch these bases to `<repo>/stable`. `stable` resolves on GitHub
+  #   Pages because the Pages artifact is tarred with `--dereference`, which
+  #   materialises the symlink target into the served site — valid as long as that
+  #   target version is retained in the published tree.
+  references:
+    # PandABlocks-client (Sphinx, released) stays on its published /main path and
+    # backs the Stage A xref probe in reference/capture. Resolves via objects.inv.
+    PandABlocks-client: https://pandablocks.github.io/PandABlocks-client/main
+    # meta-panda (MyST) docs-branch build is live; interim /docs target per the
+    # note above (-> /stable once releases + the switcher action land). Backs the
+    # xrefs in tutorials and reference/capture.
+    meta-panda: https://pandablocks.github.io/meta-panda/main
+    # PandABlocks-FPGA (MyST) docs-branch build; interim /docs target per the note
+    # above (-> /stable once releases + the switcher action land). Backs the xrefs
+    # in reference/fields from the FPGA block docs.
+    PandABlocks-FPGA: https://pandablocks.github.io/PandABlocks-FPGA/main
+  # Escalate link/cross-reference quality rules from warning to error so that,
+  # combined with `myst build --strict`, a broken link, an unresolved cross
+  # reference, or an empty auto-filled label fails CI instead of publishing a
+  # dead link. See reference/documentation-standards in meta-panda for the
+  # linking conventions these rules enforce.
+  error_rules:
+    - rule: link-resolves
+      severity: error
+    - rule: reference-target-resolves
+      severity: error
+    - rule: link-text-exists
+      severity: error
+  toc:
+    - file: index.md
+    - file: tutorials.md
+      children:
+        - file: tutorials/connecting_to_web_control.md
+    - file: how-to.md
+      children:
+        - file: how-to/monitor-attribute-values.md
+        - file: how-to/save-restore-design.md
+        - file: how-to/use-web-control-to-set-up-a-panda.md
+    - file: explanations.md
+      children:
+        - file: explanations/web-control-ui-overview.md
+    - file: reference.md
+      children:
+        - file: reference/glossary.md
+        - url: https://github.com/PandABlocks/PandABlocks-webcontrol/releases
+          title: Release Notes
+site:
+  template: book-theme
+  parts:
+    navbar_end: navbar_end.md
+  nav:
+    - title: Tutorials
+      url: /tutorials
+    - title: How-to Guides
+      url: /how-to
+    - title: Explanations
+      url: /explanations
+    - title: Reference
+      url: /reference
+  options:
+    # Output page URLs by folder, e.g. /reference/commands rather than the
+    # default flattened /commands.
+    folders: true
+    logo: images/PandA-logo-for-black-background.svg
+    # Pin the favicon to the bundled PandA logo so `myst build` never fetches the
+    # default favicon from mystmd.org (a flaky remote fetch that intermittently
+    # fails the build).
+    favicon: images/PandA-logo-for-black-background.svg
+    github_url: https://github.com/PandABlocks/PandABlocks-webcontrol

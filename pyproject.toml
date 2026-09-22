@@ -6,6 +6,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "PandABlocks-webcontrol"
 description = "Web UI for PandABlocks"
+requires-python = ">=3.10"
 readme = "README.md"
 license = "Apache-2.0"
 authors = [{name = "Tom Cobb", email = "tom.cobb@diamond.ac.uk"}]
@@ -86,3 +87,16 @@ skip = ["setup.py", "conf.py", "build"]
 [tool.pytest.ini_options]
 # Run pytest with all our checkers, and don't spam us with massive tracebacks on error
 addopts = "--tb=native -vv --black --mypy --doctest-modules"
+
+[tool.ruff]
+src = ["python", "tests"]
+line-length = 88
+lint.select = [
+    "B",  # flake8-bugbear - https://docs.astral.sh/ruff/rules/#flake8-bugbear-b
+    "C4", # flake8-comprehensions - https://docs.astral.sh/ruff/rules/#flake8-comprehensions-c4
+    "E",  # pycodestyle errors - https://docs.astral.sh/ruff/rules/#error-e
+    "F",  # pyflakes rules - https://docs.astral.sh/ruff/rules/#pyflakes-f
+    "W",  # pycodestyle warnings - https://docs.astral.sh/ruff/rules/#warning-w
+    "I",  # isort - https://docs.astral.sh/ruff/rules/#isort-i
+    "UP", # pyupgrade - https://docs.astral.sh/ruff/rules/#pyupgrade-up
+]

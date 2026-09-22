@@ -1,8 +1,0 @@
-.. code-block:: javascript
-
-    {
-      "typeid": "malcolm:core/Error:1.0",
-      "id": 2,
-      "message": "Non-existant block 'foo'"
-    }
-
