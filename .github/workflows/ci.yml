@@ -1,0 +1,59 @@
+name: CI
+
+# Single entry point for this repo's GitHub Actions CI. The code/test half is local
+# reusable `_*.yml` workflows; the docs half consumes the shared version-switcher
+# reusable workflows (DiamondLightSource/myst-version-switcher-plugin) pinned at a tag:
+#
+#   docs    -> docs.yml@<tag>           versioned MyST docs build (build-command input)
+#   release -> release.yml@<tag>        GitHub Release on a tag (attaches docs.zip)
+#   publish -> publish-dispatch.yml     deploy the assembled docs site (the shim that
+#                                       pins publish.yml@<tag>; it branches internally)
+#
+# Docs detail: the build (docs.yml) runs for every event including fork PRs and uploads
+# each build's `docs` artifact, but NEVER publishes. Publishing is nested here (the
+# `publish` job → publish-dispatch.yml shim → publish.yml) so its status shows on the
+# PR/commit. ONE publish job covers every event in the canonical repo; publish.yml
+# branches internally: deploy (internal PR / main push), tag re-dispatch (a same-SHA
+# tag deploy is dropped by Pages unless dispatched), or fork-PR warn (forks build with
+# a read-only token and never deploy). So there is no fork guard here.
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+    tags: ['*']            # '*' never matches '/'
+
+jobs:
+  # --- Docs build (every event; never publishes) ------------------------------
+  docs:
+    uses: DiamondLightSource/myst-version-switcher-plugin/.github/workflows/docs.yml@v0.22.0
+    with:
+      # `make docs` reads build settings (incl. MYSTMD_VERSION) from CONFIG; docs.yml
+      # sets BASE_URL and packs/uploads the docs.zip artifact.
+      build-command: make docs
+
+  # Tag-only: create the GitHub Release and attach this run's artifacts (the `docs`
+  # artifact = docs.zip) so `assemble` can reconstruct that released version later.
+  release:
+    needs: [docs]
+    if: github.ref_type == 'tag'
+    uses: DiamondLightSource/myst-version-switcher-plugin/.github/workflows/release.yml@v0.22.0
+    permissions:
+      contents: write    # create the GitHub Release + attach assets
+
+  # One publish job for every event in the canonical repo — publish.yml (reached via
+  # the publish-dispatch.yml shim) owns the branching (deploy / tag re-dispatch /
+  # fork-PR warn), so there's no fork or ref guard here. `actions: write` lets the
+  # re-dispatch job re-fire the shim; `version-name` injects this run's build inline.
+  publish:
+    needs: [docs]
+    if: github.repository == 'PandABlocks/PandABlocks-webcontrol'
+    uses: ./.github/workflows/publish-dispatch.yml
+    with:
+      version-name: ${{ needs.docs.outputs.version-name }}
+    permissions:
+      contents: read
+      actions: write
+      pages: write
+      id-token: write
+      statuses: write
