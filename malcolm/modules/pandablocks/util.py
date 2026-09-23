@@ -14,7 +14,7 @@ with Anno("Documentation URL base to get HTML help pages from"):
 with Anno("The name of the Block, like LUT1 or PCAP"):
     ABlockName = str
 
-DOC_URL_BASE = "https://pandablocks-fpga.readthedocs.io/en/autogen"
+DOC_URL_BASE = "https://pandablocks.github.io/PandABlocks-FPGA/main"
 
 # Where all the icon SVGs live
 SVG_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "icons"))

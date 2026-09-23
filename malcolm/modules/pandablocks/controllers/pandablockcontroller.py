@@ -177,7 +177,7 @@ class PandABlockController(builtin.controllers.BasicController):
         self.field_parts["LABEL"] = label_part
         self.add_part(
             builtin.parts.HelpPart(
-                f"{self.doc_url_base}/build/{block_type.lower()}_doc.html"
+                f"{self.doc_url_base}/{block_type.lower()}-doc/"
             )
         )
         return icon_part

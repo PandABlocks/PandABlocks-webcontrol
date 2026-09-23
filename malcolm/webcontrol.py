@@ -57,6 +57,10 @@ def parse_args():
     parser.add_argument(
         "--no-nav", action="store_true",
         help="Whether to disable the bottom nav bar")
+    parser.add_argument(
+        "--doc-url-base",
+        default="https://pandablocks.github.io/PandABlocks-FPGA/main",
+        help="Documentation URL base to access each block help page")
     return parser.parse_args()
 
 
@@ -134,7 +138,7 @@ def main():
     controller = pandablocks.controllers.PandAManagerController(
         config_dir=args.configdir, hostname=args.hostname,
         template_designs=args.templatedesigns, port=args.port, mri=args.mri,
-        doc_url_base="/fpga_docs/", poll_period=0.1)
+        doc_url_base=args.doc_url_base, poll_period=0.1)
     process.add_controller(controller)
 
     # Wait for the PandA TCP server to be ready before starting
