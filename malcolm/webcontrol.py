@@ -21,6 +21,12 @@ DEFAULT_TEMPLATE_DESIGNS_DIR = os.path.join(web.parts.www_dir,
                                             "template_designs")
 
 
+def existing_dir(value):
+    if not Path(value).is_dir():
+        raise argparse.ArgumentTypeError(f"{value!r} is not a directory")
+    return value
+
+
 def parse_args():
     # Parse arguments
     parser = argparse.ArgumentParser()
@@ -34,35 +40,40 @@ def parse_args():
         "--wsport", default=8008, type=int,
         help="Websocket port to run the webserver on")
     parser.add_argument(
-        "--configdir", default="/opt/share/designs",
+        "--configdir", default=None, type=existing_dir,
         help="Config directory to save and load designs")
     parser.add_argument(
         "--templatedesigns", default=DEFAULT_TEMPLATE_DESIGNS_DIR,
+        type=existing_dir,
         help="Directory to get template designs for tutorials")
     parser.add_argument(
-        "--templatedir", default=DEFAULT_TEMPLATE_DIR,
+        "--templatedir", default=DEFAULT_TEMPLATE_DIR, type=existing_dir,
         help="Directory to get templated html files from")
     parser.add_argument(
-        "--optionsdir", default="/opt/share/panda-webcontrol/options",
+        "--optionsdir", default=None, type=existing_dir,
         help="Directory of options that can optionally be installed like"
              "no-subnet-check")
     parser.add_argument(
-        "--admindir", default="/usr/share/web-admin/templates",
+        "--admindir", default=None, type=existing_dir,
         help="Directory to get web-admin templates like nav.template from")
     parser.add_argument(
-        "--etcdir", default="/opt/etc/www",
+        "--etcdir", default=None, type=existing_dir,
         help="Directory to get nav elements from")
     parser.add_argument(
         "--mri", default="PANDA",
         help="MRI of the base PandA Block that the webserver hosts")
     parser.add_argument(
-        "--no-nav", action="store_true",
-        help="Whether to disable the bottom nav bar")
+        "--enable-nav", action="store_true",
+        help="Whether to show the bottom nav bar")
     parser.add_argument(
         "--doc-url-base",
         default="https://pandablocks.github.io/PandABlocks-FPGA/main",
         help="Documentation URL base to access each block help page")
-    return parser.parse_args()
+    args = parser.parse_args()
+    for attr in ["configdir", "admindir", "etcdir", "optionsdir"]:
+        if getattr(args, attr) is None:
+            setattr(args, attr, tempfile.mkdtemp(prefix=f"webcontrol-{attr}-"))
+    return args
 
 
 def wait_for_port(hostname, port, timeout=None, poll_interval=1.0):
@@ -100,7 +111,7 @@ def main():
             return args.templatedir
 
         def get(self, path):
-            if path == "details" or args.no_nav:
+            if path == "details" or not args.enable_nav:
                 # /details/... shouldn't have bottom nav
                 self.render("index.html")
             else:
