@@ -1,5 +1,6 @@
 import os
 import shutil
+import tempfile
 import unittest
 
 from mock import MagicMock
@@ -15,7 +16,6 @@ from malcolm.core import (
     config_tag,
 )
 from malcolm.modules.builtin.controllers import ManagerController, StatefulController
-from malcolm.modules.builtin.defines import tmp_dir
 from malcolm.modules.builtin.parts import ChildPart
 from malcolm.modules.builtin.util import ExportTable, LayoutTable, ManagerStates
 
@@ -59,9 +59,9 @@ class TestManagerController(unittest.TestCase):
         self.p.add_controller(self.c_child)
 
         # Create temporary config directory for ProcessController
-        self.config_dir = tmp_dir("config_dir")
+        self.config_dir = tempfile.mkdtemp()
         self.main_block_name = "mainBlock"
-        self.c = ManagerController("mainBlock", config_dir=self.config_dir.value)
+        self.c = ManagerController("mainBlock", config_dir=self.config_dir)
         self.c.add_part(MyPart("part1"))
         self.c.add_part(ChildPart("part2", mri="childBlock", initial_visibility=True))
         self.p.add_controller(self.c)
@@ -74,7 +74,7 @@ class TestManagerController(unittest.TestCase):
 
     def tearDown(self):
         self.p.stop(timeout=1)
-        shutil.rmtree(self.config_dir.value)
+        shutil.rmtree(self.config_dir)
 
     def test_init(self):
         assert self.c.layout.value.name == ["part2"]
@@ -103,7 +103,7 @@ class TestManagerController(unittest.TestCase):
         assert self.b.mri.meta.tags == ["sourcePort:block:mainBlock"]
 
     def _get_design_filename(self, block_name, design_name):
-        return f"{self.config_dir.value}/{block_name}/{design_name}.json"
+        return f"{self.config_dir}/{block_name}/{design_name}.json"
 
     def check_expected_save(
         self, design_name, x=0.0, y=0.0, visible="true", attr="defaultv"

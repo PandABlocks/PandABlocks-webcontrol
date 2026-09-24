@@ -16,12 +16,6 @@ class AbortedError(MalcolmException):
     pass
 
 
-class ResponseError(MalcolmException):
-    """A Put or Post raised an Error"""
-
-    pass
-
-
 class UnexpectedError(MalcolmException):
     """We received an object we weren't expecting"""
 
@@ -34,20 +28,8 @@ class BadValueError(MalcolmException):
     pass
 
 
-class YamlError(MalcolmException):
-    """When instantiating some YAML raises an error"""
-
-    pass
-
-
 class FieldError(MalcolmException):
     """Basically a KeyError but without quotation marks in error message"""
-
-    pass
-
-
-class IncompatibleError(MalcolmException):
-    """Incompatibility between components of this scan"""
 
     pass
 

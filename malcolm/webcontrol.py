@@ -1,18 +1,19 @@
 #!/usr/bin/env python
-import logging.handlers
 import code
+import logging
 import argparse
 import os
 import socket
+import tempfile
 import time
 
+from pathlib import Path
 from tornado.web import RequestHandler
 from tornado.template import Loader
 
 # Import the right things
 from malcolm.core import Process
-from malcolm.profiler import Profiler
-from malcolm.modules import builtin, pandablocks, web
+from malcolm.modules import pandablocks, web
 
 
 DEFAULT_TEMPLATE_DIR = web.parts.www_dir
@@ -119,9 +120,6 @@ def main():
         options = sorted(os.listdir(args.optionsdir))
     else:
         options = []
-
-    # Make a profiler
-    profiler = Profiler()
 
     # Make the top level process
     process = Process("Process")

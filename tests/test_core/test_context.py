@@ -6,7 +6,12 @@ from mock import ANY, MagicMock
 
 from malcolm.core import Process
 from malcolm.core.context import Context
-from malcolm.core.errors import AbortedError, BadValueError, ResponseError, TimeoutError
+from malcolm.core.errors import (
+    AbortedError,
+    BadValueError,
+    TimeoutError,
+    UnexpectedError,
+)
 from malcolm.core.future import Future
 from malcolm.core.request import Post, Put, Subscribe, Unsubscribe
 from malcolm.core.response import Error, Return, Update
@@ -50,8 +55,8 @@ class TestContext(unittest.TestCase):
         assert ret == 33
 
     def test_put_failure(self):
-        self.o._q.put(Error(1, ResponseError("Test Exception")))
-        with self.assertRaises(ResponseError) as cm:
+        self.o._q.put(Error(1, UnexpectedError("Test Exception")))
+        with self.assertRaises(UnexpectedError) as cm:
             self.o.put(["block", "attr", "value"], 32)
         assert str(cm.exception) == "Test Exception"
 

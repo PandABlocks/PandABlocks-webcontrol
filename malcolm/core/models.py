@@ -423,13 +423,6 @@ class NTScalar(AttributeModel):
     __slots__: List[str] = []
 
 
-@Serializable.register_subclass("epics:nt/NTUnion:1.0")
-class NTUnion(AttributeModel):
-    """AttributeModel containing a meta producing some object structure"""
-
-    __slots__: List[str] = []
-
-
 FALSE_STRINGS = {"0", "False", "false", "FALSE", "No", "no", "NO"}
 
 

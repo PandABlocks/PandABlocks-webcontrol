@@ -4,17 +4,13 @@ from .camel import CAMEL_RE, camel_to_title, snake_to_camel
 from .concurrency import Queue, RLock, Spawned, sleep
 from .context import Context
 from .controller import DEFAULT_TIMEOUT, ADescription, AMri, Controller
-from .define import Define
 from .errors import (
     AbortedError,
     BadValueError,
     FieldError,
-    IncompatibleError,
     NotWriteableError,
-    ResponseError,
     TimeoutError,
     UnexpectedError,
-    YamlError,
 )
 from .future import Future
 from .hook import AHookable, Hook, Hookable
@@ -42,7 +38,6 @@ from .models import (
     NTScalar,
     NTScalarArray,
     NTTable,
-    NTUnion,
     NumberArrayMeta,
     NumberMeta,
     StringArrayMeta,

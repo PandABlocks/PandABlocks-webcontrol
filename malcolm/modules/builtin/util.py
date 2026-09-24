@@ -1,5 +1,4 @@
-import collections.abc
-from typing import TYPE_CHECKING, Iterable, Sequence, Type, Union
+from typing import Iterable, Sequence, Union
 from xml.etree import cElementTree as ET
 
 from malcolm.annotypes import Anno, Array
@@ -14,9 +13,6 @@ from malcolm.core import (
     config_tag,
     group_tag,
 )
-
-if TYPE_CHECKING:
-    from .parts import ChildPart  # noqa: F401
 
 with Anno("Is the attribute writeable?"):
     AWriteable = bool
@@ -172,32 +168,6 @@ class ManagerStates(StatefulStates):
         self.set_allowed(self.SAVING, self.READY)
         self.set_allowed(self.READY, self.LOADING)
         self.set_allowed(self.LOADING, self.READY)
-
-
-def no_save(*attribute_names):
-    """Helper for defining ChildPart.no_save_attribute_names.
-
-    Args:
-        attribute_names (str): The Attributes of the child Block that shouldn't
-            be saved
-    """
-
-    def decorator(cls: Type["ChildPart"]) -> Type["ChildPart"]:
-        additions = set()
-        for attribute_name in attribute_names:
-            if isinstance(attribute_name, collections.abc.Iterable) and not isinstance(
-                attribute_name, str
-            ):
-                additions |= set(attribute_name)
-            else:
-                additions.add(attribute_name)
-        bad = [x for x in additions if not isinstance(x, str)]
-        assert not bad, f"Cannot add non-string attribute names to no_save: {bad}"
-        existing = cls.no_save_attribute_names or set()
-        cls.no_save_attribute_names = existing | additions
-        return cls
-
-    return decorator
 
 
 class SVGIcon:

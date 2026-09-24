@@ -71,13 +71,6 @@ class Port(Enum):
         """
         return f"sourcePort:{self.value}:{connected_value}"
 
-    def with_source_port_tag(self, tags, connected_value):
-        """Add a Source Port tag to the tags list, removing any other Source
-        Ports"""
-        new_tags = [t for t in tags if not t.startswith("sourcePort:")]
-        new_tags.append(self.source_port_tag(connected_value))
-        return new_tags
-
     @classmethod
     def port_tag_details(
         cls, tags: Sequence[str]
@@ -174,10 +167,4 @@ def method_return_unpacked():
        hello.greet("me") -> "Hello me" not {"return": "Hello me"}
     """
     tag = "method:return:unpacked"
-    return tag
-
-
-def method_hidden():
-    """Hide this method on the GUI"""
-    tag = "method:hidden"
     return tag

@@ -2,7 +2,6 @@
 from malcolm.core import submodule_all
 
 from .basiccontroller import ADescription, AMri, BasicController
-from .clientcomms import ClientComms
 from .managercontroller import (
     AConfigDir,
     ADescription,
@@ -11,7 +10,6 @@ from .managercontroller import (
     ATemplateDesigns,
     ManagerController,
 )
-from .proxycontroller import AComms, AMri, APublish, ProxyController
 from .servercomms import ADescription, AMri, ServerComms
 from .statefulcontroller import ADescription, AMri, StatefulController
 

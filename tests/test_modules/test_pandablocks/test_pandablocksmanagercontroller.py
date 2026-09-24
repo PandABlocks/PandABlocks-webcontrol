@@ -1,11 +1,11 @@
 import shutil
+import tempfile
 import unittest
 from collections import OrderedDict
 
 from mock import ANY, patch
 
 from malcolm.core import AlarmSeverity, Process, Queue, Subscribe
-from malcolm.modules.builtin.defines import tmp_dir
 from malcolm.modules.pandablocks.controllers import PandAManagerController
 from malcolm.modules.pandablocks.pandablocksclient import BlockData, FieldData
 from malcolm.modules.pandablocks.util import BitsTable, PositionCapture
@@ -18,9 +18,9 @@ class PandABlocksManagerControllerTest(unittest.TestCase):
     )
     def setUp(self, mock_client):
         self.process = Process()
-        self.config_dir = tmp_dir("config_dir")
+        self.config_dir = tempfile.mkdtemp()
         self.o = PandAManagerController(
-            mri="P", config_dir=self.config_dir.value, poll_period=1000
+            mri="P", config_dir=self.config_dir, poll_period=1000
         )
         self.client = self.o._client
         self.client.started = False
@@ -66,12 +66,12 @@ class PandABlocksManagerControllerTest(unittest.TestCase):
 
     def tearDown(self):
         self.process.stop()
-        shutil.rmtree(self.config_dir.value)
+        shutil.rmtree(self.config_dir)
 
     def test_no_connection(self):
         o = PandAManagerController(
             mri="MRI",
-            config_dir=self.config_dir.value,
+            config_dir=self.config_dir,
             hostname="non-existant-hostname",
         )
         self.process.add_controller(o)

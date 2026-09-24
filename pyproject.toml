@@ -65,7 +65,6 @@ exclude = ["tests"]
 
 [tool.setuptools.package-data]
 malcolm = [
-    "modules/*/*/*.yaml",
     "modules/*/*/*.svg",
     "modules/*/*/*/*.json",
     "modules/web/www/*",
