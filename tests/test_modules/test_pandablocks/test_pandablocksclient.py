@@ -1,8 +1,12 @@
+import asyncio
+import inspect
+import socket
 import unittest
 from collections import OrderedDict
 
-from mock import Mock, call
+from mock import call, patch
 
+from malcolm.core import Spawned
 from malcolm.modules.pandablocks.pandablocksclient import (
     BlockData,
     FieldData,
@@ -10,25 +14,93 @@ from malcolm.modules.pandablocks.pandablocksclient import (
 )
 
 
+class FakeWriter:
+    """Stands in for the StreamWriter of a connection to a PandA
+
+    Records what was sent, and gives the reader its EOF when closed, the way
+    the far end going away would.
+    """
+
+    def __init__(self, reader):
+        self._reader = reader
+        self.written = []
+
+    def write(self, data):
+        self.written.append(call(data))
+
+    async def drain(self):
+        pass
+
+    def close(self):
+        self._reader.feed_eof()
+
+    async def wait_closed(self):
+        pass
+
+
 class PandABoxControlTest(unittest.TestCase):
     def setUp(self):
         self.c = PandABlocksClient("h", "p")
 
     def start(self, messages=None):
-        self.socket = Mock()
-        if isinstance(messages, list):
-            self.socket.recv.side_effect = [item.encode("utf-8") for item in messages]
-        elif messages:
-            self.socket.recv.side_effect = [messages.encode("utf-8")]
+        if messages is None:
+            messages = []
+        elif not isinstance(messages, list):
+            messages = [messages]
 
-        def socket_cls():
-            return self.socket
+        async def open_connection(hostname, port, **kwargs):
+            # Made on the event loop, which is where the client reads it from
+            reader = asyncio.StreamReader()
+            for message in messages:
+                reader.feed_data(message.encode("utf-8"))
+            self.writer = FakeWriter(reader)
+            return reader, self.writer
 
-        self.c.start(socket_cls=socket_cls)
+        self.patch = patch(
+            "malcolm.modules.pandablocks.pandablocksclient.asyncio.open_connection",
+            open_connection,
+        )
+        self.patch.start()
+        self.addCleanup(self.patch.stop)
+        self.c.start(lambda func: Spawned(func, (), {}))
+
+    @property
+    def written(self):
+        return self.writer.written
+
+    def assert_written_once(self, data):
+        assert self.written == [call(data)]
 
     def tearDown(self):
         if self.c.started:
             self.c.stop()
+
+    def test_send_and_recv_loops_are_coroutines(self):
+        # They are awaited on the event loop rather than each taking a thread,
+        # so they must stay coroutine functions
+        assert inspect.iscoroutinefunction(PandABlocksClient._send_loop)
+        assert inspect.iscoroutinefunction(PandABlocksClient._recv_loop)
+
+    def test_connect_failure_raises_connection_error(self):
+        # Bind a port, then drop it, so there is nothing listening there
+        s = socket.socket()
+        s.bind(("127.0.0.1", 0))
+        port = s.getsockname()[1]
+        s.close()
+        c = PandABlocksClient("127.0.0.1", port)
+        with self.assertRaises(ConnectionError) as cm:
+            c.start(lambda func: Spawned(func, (), {}))
+        assert "did all services on the PandA start correctly?" in str(cm.exception)
+        assert c.started is False
+
+    def test_stop_then_start_again(self):
+        self.start(["OK =1\n"])
+        assert self.c.send_recv("") == "OK =1"
+        self.c.stop()
+        assert self.c.started is False
+        self.start(["OK =2\n"])
+        assert self.c.send_recv("") == "OK =2"
+        assert self.written == [call(b"")]
 
     def test_multiline_response_good(self):
         messages = ["!TTLIN 6\n", "!OUTENC 4\n!CAL", "C 2\n.\nblah"]
@@ -68,7 +140,7 @@ class PandABoxControlTest(unittest.TestCase):
         self.start(messages)
         block_data = self.c.get_blocks_data()
         self.c.stop()
-        assert self.socket.sendall.call_args_list == [
+        assert self.written == [
             call(b"*BLOCKS?\n"),
             call(b"*DESC.TTLIN?\n"),
             call(b"*DESC.TTLOUT?\n"),
@@ -118,7 +190,7 @@ class PandABoxControlTest(unittest.TestCase):
         self.start(messages)
         changes = list(self.c.get_changes(include_errors=True))
         self.c.stop()
-        assert self.socket.sendall.call_args_list == [
+        assert self.written == [
             call(b"*CHANGES?\n"),
             call(b"SEQ1.TABLE?\n"),
         ]
@@ -150,7 +222,7 @@ class PandABoxControlTest(unittest.TestCase):
         }
         assert self.c.get_pcap_bits_fields() == expected
         self.c.stop()
-        assert self.socket.sendall.call_args_list == [
+        assert self.written == [
             call(b"PCAP.*?\n"),
             call(b"PCAP.BITS0.BITS?\n"),
             call(b"PCAP.BITS1.BITS?\n"),
@@ -161,21 +233,21 @@ class PandABoxControlTest(unittest.TestCase):
         self.start(messages)
         assert self.c.get_field("PULSE0", "WIDTH") == "32"
         self.c.stop()
-        self.socket.sendall.assert_called_once_with(b"PULSE0.WIDTH?\n")
+        self.assert_written_once(b"PULSE0.WIDTH?\n")
 
     def test_set_field(self):
         messages = "OK\n"
         self.start(messages)
         self.c.set_field("PULSE0", "WIDTH", 0)
         self.c.stop()
-        self.socket.sendall.assert_called_once_with(b"PULSE0.WIDTH=0\n")
+        self.assert_written_once(b"PULSE0.WIDTH=0\n")
 
     def test_set_fields(self):
         messages = "OK\nOK\n"
         self.start(messages)
         self.c.set_fields({"PULSE0.WIDTH": 0, "PULSE0.DELAY": 5})
         self.c.stop()
-        assert sorted(self.socket.sendall.call_args_list) == [
+        assert sorted(self.written) == [
             call(b"PULSE0.DELAY=5\n"),
             call(b"PULSE0.WIDTH=0\n"),
         ]
@@ -185,7 +257,7 @@ class PandABoxControlTest(unittest.TestCase):
         self.start(messages)
         self.c.set_table("SEQ1", "TABLE", [1, 2, 3])
         self.c.stop()
-        self.socket.sendall.assert_called_once_with(
+        self.assert_written_once(
             b"""SEQ1.TABLE<
 1
 2
@@ -215,7 +287,7 @@ class PandABoxControlTest(unittest.TestCase):
         self.start(messages)
         fields = self.c.get_table_fields("SEQ1", "TABLE")
         self.c.stop()
-        assert self.socket.sendall.call_args_list == [
+        assert self.written == [
             call(b"SEQ1.TABLE.FIELDS?\n"),
             call(b"*ENUMS.SEQ1.TABLE[].INPB?\n"),
             call(b"*DESC.SEQ1.TABLE[].REPEATS?\n"),

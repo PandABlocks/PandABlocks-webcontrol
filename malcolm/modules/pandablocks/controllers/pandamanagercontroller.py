@@ -3,8 +3,6 @@ import re
 import time
 from typing import Any, Dict, Sequence, Set, Tuple
 
-from socket import socket
-
 from malcolm.annotypes import Anno
 from malcolm.core import Display, NumberMeta, Queue, TimeoutError, TimeStamp, Widget
 from malcolm.modules import builtin
@@ -99,7 +97,7 @@ class PandAManagerController(builtin.controllers.ManagerController):
             self._stop_queue = Queue()
             if self._client.started:
                 self._client.stop()
-            self._client.start(self.process.spawn, socket)
+            self._client.start(self.process.spawn)
         if not self._child_controllers:
             self._make_child_controllers()
         if self._poll_spawned is None:

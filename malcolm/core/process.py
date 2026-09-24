@@ -186,10 +186,11 @@ class Process(Loggable):
         self.log.debug("Done process.stop()")
 
     def spawn(self, function: Callable[..., Any], *args: Any, **kwargs: Any) -> Spawned:
-        """Runs the function in a worker thread, returning a Result object
+        """Runs the function on the shared event loop, returning a Result object
 
         Args:
-            function: Function to run
+            function: Function to run. A coroutine function is awaited on the
+                loop; a plain function is run on a worker thread
             args: Positional arguments to run the function with
             kwargs: Keyword arguments to run the function with
 

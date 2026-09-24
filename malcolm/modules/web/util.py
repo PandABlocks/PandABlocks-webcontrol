@@ -1,50 +1,28 @@
-import asyncio
-import atexit
-from threading import Thread
-from typing import Optional, Union
-
-from tornado.ioloop import IOLoop
+from typing import Union
 
 from malcolm.annotypes import Anno, Array
-from malcolm.core import Table
+from malcolm.core import EventLoop, Table
 
 
 class IOLoopHelper:
-    _loop: Optional[IOLoop] = None
-    _thread: Optional[Thread] = None
+    """Puts Tornado callbacks on the process' shared event loop.
+
+    Tornado doesn't need a loop of its own: an IOLoop is a wrapper around an
+    asyncio loop, and `EventLoop` runs one already for spawned work. Sharing it
+    means server callbacks and spawned work are ordered against each other, and
+    there is one thread rather than two. The loop is owned by malcolm.core, so
+    nothing here starts or stops it.
+    """
 
     @classmethod
     def loop(cls):
-        if cls._loop is None:
-            asyncio.set_event_loop(asyncio.new_event_loop())
-            loop = IOLoop.current()
-            cls._loop = loop
-
-            def run():
-                loop.start()
-                # loop.stop() called from somewhere else
-                loop.close()
-
-            cls._thread = Thread(target=run)
-            cls._thread.setDaemon(True)
-            cls._thread.start()
-            atexit.register(cls.stop)
-        return cls._loop
+        return EventLoop.get()
 
     @classmethod
     def call(cls, func, *args, **kwargs):
-        cls.loop().add_callback(func, *args, **kwargs)
-
-    @classmethod
-    def stop(cls):
-        if cls._loop is not None:
-            # Remove cls._loop so all other stop() methods are no-ops
-            loop = cls._loop
-            cls._loop = None
-            loop.add_callback(loop.stop)
-            # Wait until done
-            cls._thread.join()
-            cls._thread = None
+        # add_callback(func, *args, **kwargs) on an IOLoop, but without
+        # needing the IOLoop wrapper
+        EventLoop.call(func, *args, **kwargs)
 
 
 with Anno("The Malcolm Resource Identifier for the Block"):

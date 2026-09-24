@@ -1,8 +1,12 @@
+import asyncio
 import logging
 from collections import OrderedDict, namedtuple
 
 # Create a module level logger
 log = logging.getLogger(__name__)
+
+# Longest single line we will accept from the PandA
+LINE_LIMIT = 2**20
 
 
 BlockData = namedtuple("BlockData", "number,description,fields")
@@ -35,61 +39,75 @@ class PandABlocksClient:
         # True when we have been started
         self.started = False
         # Filled in on start
-        self._socket = None
+        self._spawn = None
+        self._loop = None
+        self._reader = None
+        self._writer = None
         self._send_spawned = None
         self._send_queue = None
         self._recv_spawned = None
         self._response_queues = None
-        self._thread_pool = None
 
-    def start(self, spawn=None, socket_cls=None):
-        if spawn is None:
-            from multiprocessing.pool import ThreadPool
+    def start(self, spawn):
+        """Connect to the PandA and start servicing the connection
 
-            self._thread_pool = ThreadPool(2)
-            spawn = self._thread_pool.apply_async
-        if socket_cls is None:
-            from socket import socket as socket_cls
-        assert not self.started, "Send and recv threads already started"
+        Args:
+            spawn: Callable returning something with wait()/get(), used to run
+                the send and recv coroutines on an event loop
+        """
+        assert not self.started, "Send and recv loops already started"
+        self._spawn = spawn
+        # Connect on the event loop, and wait here until it has happened
+        spawn(self._connect).get()
+        self._send_spawned = spawn(self._send_loop)
+        self._recv_spawned = spawn(self._recv_loop)
+        self.started = True
+
+    async def _connect(self):
+        # We are on the event loop, so remember it: send() is called from
+        # worker threads and has to hand messages over to this loop
+        self._loop = asyncio.get_running_loop()
         # Holds (message, response_queue) to send next
-        self._send_queue = self.queue_cls()
+        self._send_queue = asyncio.Queue()
         # Holds response_queue to send next
-        self._response_queues = self.queue_cls()
-        self._socket = socket_cls()
+        self._response_queues = asyncio.Queue()
         try:
-            self._socket.connect((self.hostname, self.port))
+            self._reader, self._writer = await asyncio.open_connection(
+                self.hostname, self.port, limit=LINE_LIMIT
+            )
         except OSError as e:
             raise ConnectionError(
                 f"Can't connect to '{self.hostname}:{self.port}', "
                 "did all services on the PandA start correctly?"
             ) from e
 
-        self._send_spawned = spawn(self._send_loop)
-        self._recv_spawned = spawn(self._recv_loop)
-        self.started = True
-
     def stop(self):
-        assert self.started, "Send and recv threads not started"
-        self._send_queue.put((self.STOP, None))
+        assert self.started, "Send and recv loops not started"
+        self._queue_send((self.STOP, None))
         self._send_spawned.wait()
-        import socket
-
-        try:
-            self._socket.shutdown(socket.SHUT_RD)
-        except Exception:
-            pass
+        # Closing the write side gives the recv loop its EOF
+        self._spawn(self._close).get()
         self._recv_spawned.wait()
-        self._socket.close()
-        self._socket = None
+        self._loop = None
+        self._reader = None
+        self._writer = None
         self.started = False
-        if self._thread_pool is not None:
-            self._thread_pool.close()
-            self._thread_pool.join()
-            self._thread_pool = None
+
+    async def _close(self):
+        self._writer.close()
+        try:
+            await self._writer.wait_closed()
+        except OSError:
+            # The PandA has gone away, which is what we wanted anyway
+            pass
+
+    def _queue_send(self, item):
+        """Hand an item to the send loop from whatever thread we are on"""
+        self._loop.call_soon_threadsafe(self._send_queue.put_nowait, item)
 
     def send(self, message):
         response_queue = self.queue_cls()
-        self._send_queue.put((message, response_queue))
+        self._queue_send((message, response_queue))
         return response_queue
 
     def recv(self, response_queue, timeout=10.0):
@@ -113,62 +131,58 @@ class PandABlocksClient:
         response = self.recv(response_queue, timeout)
         return response
 
-    def _send_loop(self):
+    async def _send_loop(self):
         """Service self._send_queue, sending requests to server"""
         while True:
-            message, response_queue = self._send_queue.get()
+            message, response_queue = await self._send_queue.get()
             if message is self.STOP:
                 break
             try:
-                self._response_queues.put(response_queue)
-                self._socket.sendall(message.encode("utf-8"))
+                self._response_queues.put_nowait(response_queue)
+                self._writer.write(message.encode("utf-8"))
+                await self._writer.drain()
             except Exception:  # pylint:disable=broad-except
                 log.exception("Exception sending message %s", message)
 
-    def _get_lines(self):
-        buf = ""
-        while True:
-            lines = buf.split("\n")
-            for line in lines[:-1]:
-                yield line
-            buf = lines[-1]
-            # Get something new from the socket
-            rx = self._socket.recv(4096).decode("utf-8")
-            if not rx:
-                break
-            buf += rx
+    async def _get_line(self):
+        """Return the next complete line, or None at end of stream"""
+        line = await self._reader.readline()
+        if not line.endswith(b"\n"):
+            # End of stream. Anything left is an incomplete line, which we
+            # drop, as we never had a whole response to make of it
+            return None
+        return line[:-1].decode("utf-8")
 
-    def _respond(self, resp):
+    async def _respond(self, resp):
         """Respond to the person waiting"""
-        response_queue = self._response_queues.get(timeout=0.1)
+        response_queue = await asyncio.wait_for(self._response_queues.get(), 0.1)
         response_queue.put(resp)
         self._completed_response_lines = []
         self._is_multiline = None
 
-    def _recv_loop(self):
-        """Service socket recv, returning responses to the correct queue"""
+    async def _recv_loop(self):
+        """Service the connection, returning responses to the correct queue"""
         self._completed_response_lines = []
         self._is_multiline = None
-        lines_iterator = self._get_lines()
         while True:
             try:
-                line = next(lines_iterator)
+                line = await self._get_line()
+                if line is None:
+                    return
                 if self._is_multiline is None:
                     self._is_multiline = line.startswith("!") or line == "."
                 if line.startswith("ERR"):
-                    self._respond(ValueError(line))
+                    await self._respond(ValueError(line))
                 elif self._is_multiline:
                     if line == ".":
-                        self._respond(self._completed_response_lines)
+                        await self._respond(self._completed_response_lines)
                     else:
                         assert (
                             line[0] == "!"
                         ), f"Multiline response {repr(line)} doesn't start with !"
                         self._completed_response_lines.append(line[1:])
                 else:
-                    self._respond(line)
-            except StopIteration:
-                return
+                    await self._respond(line)
             except Exception:
                 log.exception("Exception receiving message")
                 raise
