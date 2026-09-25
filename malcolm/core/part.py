@@ -1,5 +1,6 @@
 import re
 from typing import (
+    Any,
     Callable,
     Dict,
     List,
@@ -126,7 +127,12 @@ class InfoRegistry:
     def add_reportable(self, info: Type[Info], callback: Callback) -> None:
         self._reportable_infos[info] = callback
 
-    def report(self, reporter: object, info: Info) -> None:
+    def report(self, reporter: object, info: Info) -> Any:
+        """Report an Info to the Controller
+
+        Returns whatever the callback returned, which may be an awaitable if
+        the Controller handles this Info with a coroutine.
+        """
         typ = type(info)
         try:
             callback = self._reportable_infos[typ]
@@ -136,7 +142,7 @@ class InfoRegistry:
                 f"{[x.__name__ for x in self._reportable_infos]}\n"
                 "Did you use the wrong type of Controller?"
             )
-        callback(reporter, info)
+        return callback(reporter, info)
 
 
 class Part(Hookable):
@@ -223,6 +229,10 @@ class PartRegistrar:
             name, attr, writeable_func, self._part, needs_context
         )
 
-    def report(self, info: Info) -> None:
-        """Report an Info to the parent Controller"""
-        self._info_registry.report(self._part, info)
+    def report(self, info: Info) -> Any:
+        """Report an Info to the parent Controller
+
+        Returns whatever the Controller's handler returned, which may be an
+        awaitable, so a caller on the event loop should maybe_await it.
+        """
+        return self._info_registry.report(self._part, info)

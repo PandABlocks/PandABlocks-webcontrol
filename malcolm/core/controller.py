@@ -152,7 +152,9 @@ class Controller(Hookable):
                 responses.append(request.error_response(e))
         for cb, response in responses:
             try:
-                cb(response)
+                # A Part subscribing to its own Controller may hand us a
+                # coroutine callback
+                await maybe_await(cb(response))
             except Exception:
                 self.log.exception(f"Exception notifying {response}")
                 raise
@@ -285,8 +287,8 @@ class Controller(Hookable):
         ret = [request.return_response(result)]
         return ret
 
-    def run_hooks(self, hooks: Iterable[Hook]) -> Dict[str, List[Info]]:
-        return self.wait_hooks(*self.start_hooks(hooks))
+    async def run_hooks(self, hooks: Iterable[Hook]) -> Dict[str, List[Info]]:
+        return await self.wait_hooks(*self.start_hooks(hooks))
 
     def start_hooks(self, hooks: Iterable[Hook]) -> Tuple[Queue, List[Hook]]:
         # Hooks might be a generator, so convert to a list
@@ -303,11 +305,11 @@ class Controller(Hookable):
         hook_queue, hook_spawned = start_hooks(hooks)
         return hook_queue, hook_spawned
 
-    def wait_hooks(
+    async def wait_hooks(
         self, hook_queue: Queue, hook_spawned: List[Hook]
     ) -> Dict[str, List[Info]]:
         if hook_spawned:
-            return_dict = wait_hooks(
+            return_dict = await wait_hooks(
                 self.log, hook_queue, hook_spawned, DEFAULT_TIMEOUT
             )
         else:

@@ -109,7 +109,7 @@ class ExportTable(Table):
         self.export = AExportNameArray(export)
 
 
-def wait_for_stateful_block_init(context, mri, timeout=DEFAULT_TIMEOUT):
+async def wait_for_stateful_block_init(context, mri, timeout=DEFAULT_TIMEOUT):
     """Wait until a Block backed by a StatefulController has initialized
 
     Args:
@@ -117,7 +117,7 @@ def wait_for_stateful_block_init(context, mri, timeout=DEFAULT_TIMEOUT):
         mri (str): The mri of the child block
         timeout (float): The maximum time to wait
     """
-    context.when_matches(
+    await context.when_matches(
         [mri, "state", "value"],
         StatefulStates.READY,
         bad_values=[StatefulStates.FAULT, StatefulStates.DISABLED],

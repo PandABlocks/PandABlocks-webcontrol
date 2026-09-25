@@ -12,7 +12,7 @@ from tornado.web import RequestHandler
 from tornado.template import Loader
 
 # Import the right things
-from malcolm.core import Process
+from malcolm.core import EventLoop, Process
 from malcolm.modules import pandablocks, web
 
 
@@ -161,8 +161,13 @@ def main():
         import asyncio
         asyncio.run(asyncio.Event().wait())
     else:
-        header = "Welcome to PandA web control"
-        code.interact(header, local=locals())
+        header = (
+            "Welcome to PandA web control\n"
+            "The Block API is asynchronous, so wrap calls in run(), e.g.\n"
+            "    run(process.block_view('PANDA').save(designName='mine'))"
+        )
+        # run() lets the console drive the event loop the framework runs on
+        code.interact(header, local=dict(locals(), run=EventLoop.run))
 
     # Do an orderly shutdown
     process.stop(timeout=1)

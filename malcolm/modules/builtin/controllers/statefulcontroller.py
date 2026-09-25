@@ -12,6 +12,7 @@ from malcolm.core import (
     ProcessStartHook,
     ProcessStopHook,
     Widget,
+    maybe_await,
 )
 
 from ..hooks import DisableHook, HaltHook, InitHook, ResetHook
@@ -75,36 +76,36 @@ class StatefulController(BasicController):
             part_contexts[part] = Context(self.process)
         return part_contexts
 
-    def init(self):
-        self.try_stateful_function(ss.RESETTING, ss.READY, self.do_init)
+    async def init(self):
+        await self.try_stateful_function(ss.RESETTING, ss.READY, self.do_init)
 
-    def do_init(self):
-        self.run_hooks(
+    async def do_init(self):
+        await self.run_hooks(
             InitHook(part, context)
             for part, context in self.create_part_contexts().items()
         )
 
-    def halt(self):
-        self.run_hooks(
+    async def halt(self):
+        await self.run_hooks(
             HaltHook(part, context)
             for part, context in self.create_part_contexts().items()
         )
-        self.disable()
+        await self.disable()
 
-    def disable(self):
-        self.try_stateful_function(ss.DISABLING, ss.DISABLED, self.do_disable)
+    async def disable(self):
+        await self.try_stateful_function(ss.DISABLING, ss.DISABLED, self.do_disable)
 
-    def do_disable(self):
-        self.run_hooks(
+    async def do_disable(self):
+        await self.run_hooks(
             DisableHook(part, context)
             for part, context in self.create_part_contexts().items()
         )
 
-    def reset(self):
-        self.try_stateful_function(ss.RESETTING, ss.READY, self.do_reset)
+    async def reset(self):
+        await self.try_stateful_function(ss.RESETTING, ss.READY, self.do_reset)
 
-    def do_reset(self):
-        self.run_hooks(
+    async def do_reset(self):
+        await self.run_hooks(
             ResetHook(part, context)
             for part, context in self.create_part_contexts().items()
         )
@@ -149,10 +150,12 @@ class StatefulController(BasicController):
             else:
                 raise TypeError(f"Cannot transition from {initial_state} to {state}")
 
-    def try_stateful_function(self, start_state, end_state, func, *args, **kwargs):
+    async def try_stateful_function(
+        self, start_state, end_state, func, *args, **kwargs
+    ):
         try:
             self.transition(start_state)
-            func(*args, **kwargs)
+            await maybe_await(func(*args, **kwargs))
             self.transition(end_state)
         except Exception as e:  # pylint:disable=broad-except
             self.log.debug(

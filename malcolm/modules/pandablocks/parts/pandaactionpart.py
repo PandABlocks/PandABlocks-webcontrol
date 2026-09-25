@@ -46,5 +46,5 @@ class PandAActionPart(Part):
         )
         self.method.meta.set_tags(self.tags)
 
-    def set_field(self):
-        self.client.set_field(self.block_name, self.field_name, "")
+    async def set_field(self):
+        await self.client.set_field(self.block_name, self.field_name, "")

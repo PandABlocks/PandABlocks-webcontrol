@@ -29,6 +29,7 @@ from malcolm.core import (
     Unsubscribe,
     Update,
     get_config_tag,
+    maybe_await,
 )
 
 from ..hooks import (
@@ -142,32 +143,32 @@ class ChildPart(Part):
         registrar.hook(ResetHook, self.on_reset)
 
     @add_call_types
-    def on_init(self, context: AContext) -> None:
+    async def on_init(self, context: AContext) -> None:
         self.child_controller = context.get_controller(self.mri)
         if self.stateful:
             # Wait for a while until the child is ready as it changes the
             # save state
-            wait_for_stateful_block_init(context, self.mri)
+            await wait_for_stateful_block_init(context, self.mri)
         # Save what we have
-        self.on_save(context)
+        await self.on_save(context)
         subscribe = Subscribe(path=[self.mri, "meta", "fields"])
         subscribe.set_callback(self.update_part_exportable)
         # Wait for the first update to come in
         assert self.child_controller, "No child controller"
-        self.child_controller.handle_request(subscribe).wait()
+        await self.child_controller.handle_request(subscribe).wait_async()
 
     @add_call_types
-    def on_disable(self, context: AContext) -> None:
+    async def on_disable(self, context: AContext) -> None:
         # TODO: do we actually want to disable children on disable?
         child = context.block_view(self.mri)
         if self.stateful and child.disable.meta.writeable:
-            child.disable()
+            await child.disable()
 
     @add_call_types
-    def on_reset(self, context: AContext) -> None:
+    async def on_reset(self, context: AContext) -> None:
         child = context.block_view(self.mri)
         if self.stateful and child.reset.meta.writeable:
-            child.reset()
+            await child.reset()
 
     @add_call_types
     def on_halt(self) -> None:
@@ -177,7 +178,7 @@ class ChildPart(Part):
         self.child_controller.handle_request(unsubscribe)
 
     @add_call_types
-    def on_layout(
+    async def on_layout(
         self, context: AContext, ports: APortMap, layout: ALayoutTable
     ) -> ULayoutInfos:
         first_call = not self.part_visibility
@@ -185,14 +186,14 @@ class ChildPart(Part):
             visible = layout.visible[i]
             if name == self.name:
                 if self.visible and not visible:
-                    self.sever_sink_ports(context, ports)
+                    await self.sever_sink_ports(context, ports)
                 self.x = layout.x[i]
                 self.y = layout.y[i]
                 self.visible = visible
             else:
                 was_visible = self.part_visibility.get(name, False)
                 if was_visible and not visible:
-                    self.sever_sink_ports(context, ports, name)
+                    await self.sever_sink_ports(context, ports, name)
                 self.part_visibility[name] = visible
         # If this is the first call work out which parts are visible if not
         # specified in the initial layout table
@@ -206,7 +207,7 @@ class ChildPart(Part):
         return [ret]
 
     @add_call_types
-    def on_load(
+    async def on_load(
         self, context: AContext, structure: AStructure, init: AInit = False
     ) -> None:
         child = context.block_view(self.mri)
@@ -238,13 +239,13 @@ class ChildPart(Part):
             for k, (attr, v) in params.items():
                 if attr.value != v:
                     to_set[k] = v
-            child.put_attribute_values(to_set)
+            await child.put_attribute_values(to_set)
         if init and "design" in child:
             # We might not have cleared the changes so report here
-            self.send_modified_info_if_not_equal("design", child.design.value)
+            await self.send_modified_info_if_not_equal("design", child.design.value)
 
     @add_call_types
-    def on_save(self, context: AContext) -> AStructure:
+    async def on_save(self, context: AContext) -> AStructure:
         child = context.block_view(self.mri)
         part_structure = OrderedDict()
         for k in child:
@@ -256,15 +257,15 @@ class ChildPart(Part):
         return part_structure
 
     @add_call_types
-    def reload(self, context: AContext) -> None:
+    async def reload(self, context: AContext) -> None:
         """If we have done a save or load with the child having a particular
         design then make sure the child now has that design."""
         design = self.saved_structure.get("design", "")
         if design:
             child = context.block_view(self.mri)
-            child.design.put_value(design)
+            await child.design.put_value(design)
 
-    def update_part_exportable(self, response: Response) -> None:
+    async def update_part_exportable(self, response: Response) -> None:
         # Get a child context to check if we have a config field
         assert self.child_controller, "No child controller"
         child = self.child_controller.block_view()
@@ -328,20 +329,22 @@ class ChildPart(Part):
 
         # Wait for the first update to come in for every subscription
         for s in spawned:
-            s.wait()
+            await s.wait_async()
         port_infos = [self.port_infos[f] for f in new_fields if f in self.port_infos]
         assert self.registrar, "No registrar assigned"
-        self.registrar.report(PartExportableInfo(new_fields, port_infos))
+        await maybe_await(
+            self.registrar.report(PartExportableInfo(new_fields, port_infos))
+        )
 
-    def update_part_modified(self, response: Response) -> None:
+    async def update_part_modified(self, response: Response) -> None:
         if isinstance(response, Update):
             subscribe = self.config_subscriptions[response.id]
             name = subscribe.path[-2]
-            self.send_modified_info_if_not_equal(name, response.value)
+            await self.send_modified_info_if_not_equal(name, response.value)
         elif not isinstance(response, Return):
             self.log.warning("Got unexpected response {response}")
 
-    def send_modified_info_if_not_equal(self, name, new_value):
+    async def send_modified_info_if_not_equal(self, name, new_value):
         # If we did a save or load then we will have an original value,
         # otherwise it will be None
         original_value = self.saved_structure.get(name, None)
@@ -362,7 +365,7 @@ class ChildPart(Part):
             else:
                 self.modified_messages.pop(name, None)
             info = PartModifiedInfo(self.modified_messages.copy())
-            self.registrar.report(info)
+            await maybe_await(self.registrar.report(info))
 
     def _get_flowgraph_ports(self, ports: APortMap, typ: Type[TP]) -> Dict[str, TP]:
         ret = {}
@@ -378,7 +381,7 @@ class ChildPart(Part):
                 source_port_lookup[info.connected_value] = info.port
         return source_port_lookup
 
-    def sever_sink_ports(
+    async def sever_sink_ports(
         self, context: AContext, ports: APortMap, connected_to: str = None
     ) -> None:
         """Conditionally sever Sink Ports of the child. If connected_to
@@ -415,7 +418,7 @@ class ChildPart(Part):
                     if child[name].meta.writeable:
                         attribute_values[name] = port_info.disconnected_value
 
-            child.put_attribute_values(attribute_values)
+            await child.put_attribute_values(attribute_values)
 
     def calculate_part_visibility(self, ports: APortMap) -> None:
         """Calculate what is connected to what

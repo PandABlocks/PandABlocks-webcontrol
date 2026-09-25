@@ -41,6 +41,8 @@ with Anno("Prefix to put on the beginning of the Block Name to make MRI"):
     AMriPrefix = str
 with Anno("The BlockData object showing the fields of the Block"):
     ABlockData = BlockData
+with Anno("The table column data for each table field of the Block"):
+    ATableFields = dict
 
 # Pull re-used annotypes into our namespace in case we are subclassed
 AClient = AClient
@@ -77,6 +79,7 @@ class PandABlockController(builtin.controllers.BasicController):
         block_name: ABlockName,
         block_data: ABlockData,
         doc_url_base: ADocUrlBase,
+        table_fields: ATableFields = None,
     ) -> None:
         super().__init__(mri=f"{mri_prefix}:{block_name}")
         # Store
@@ -85,6 +88,9 @@ class PandABlockController(builtin.controllers.BasicController):
         self.block_name = block_name
         self.block_data = block_data
         self.doc_url_base = doc_url_base
+        # {field_name: {column_name: TableFieldData}}, read by our caller as
+        # fetching it is IO and we can't await in __init__
+        self.table_fields = table_fields or {}
         # {field_name: part}
         self.field_parts: Dict[str, Optional[ChangeHandler]] = {}
         # {field_name: attr.meta}
@@ -95,7 +101,7 @@ class PandABlockController(builtin.controllers.BasicController):
         for field_name, field_data in block_data.fields.items():
             self._make_parts_for(field_name, field_data)
 
-    def handle_changes(self, changes: Dict[str, Any], ts: TimeStamp) -> None:
+    async def handle_changes(self, changes: Dict[str, Any], ts: TimeStamp) -> None:
         with self.changes_squashed:
             icon_needs_update = False
             if isinstance(changes, Dict):
@@ -135,7 +141,7 @@ class PandABlockController(builtin.controllers.BasicController):
                         if field_part:
                             d[key] = field_part.attr.value
                 icon = builtin.util.SVGIcon(self.icon_part.svg_text)
-                self.icon_part.update_icon(icon, d)
+                await self.icon_part.update_icon(icon, d)
                 self.icon_part.attr.set_value(str(icon), ts=ts)
 
     def _handle_mux_update(self, mux_meta, v):
@@ -353,6 +359,12 @@ class PandABlockController(builtin.controllers.BasicController):
         group = self._make_group("parameters")
         tags = [Widget.TABLE.tag(), group, config_tag()]
         meta = TableMeta(field_data.description, tags, writeable=True)
-        part = PandATablePart(self.client, meta, self.block_name, field_name)
+        part = PandATablePart(
+            self.client,
+            meta,
+            self.block_name,
+            field_name,
+            self.table_fields.get(field_name, {}),
+        )
         self.add_part(part)
         self.field_parts[field_name] = part

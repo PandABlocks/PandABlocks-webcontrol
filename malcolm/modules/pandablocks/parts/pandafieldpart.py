@@ -65,10 +65,10 @@ class PandAFieldPart(Part):
                 return
         self.attr.set_value_alarm_ts(value, Alarm.ok, ts)
 
-    def set_field(self, value):
+    async def set_field(self, value):
         if isinstance(self.meta, BooleanMeta):
             value = int(value)
         # Mark the next change as a possible duplicate
         self.pending_change = True
-        self.client.set_field(self.block_name, self.field_name, value)
+        await self.client.set_field(self.block_name, self.field_name, value)
         self.attr.set_value(value)

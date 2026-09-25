@@ -26,10 +26,7 @@ class PandABlocksClient:
     # Sentinel that tells the send_loop and recv_loop to stop
     STOP = object()
 
-    def __init__(self, hostname="localhost", port=8888, queue_cls=None):
-        if queue_cls is None:
-            from queue import Queue as queue_cls
-        self.queue_cls = queue_cls
+    def __init__(self, hostname="localhost", port=8888):
         self.hostname = hostname
         self.port = port
         # Completed lines for a response in progress
@@ -40,7 +37,6 @@ class PandABlocksClient:
         self.started = False
         # Filled in on start
         self._spawn = None
-        self._loop = None
         self._reader = None
         self._writer = None
         self._send_spawned = None
@@ -48,25 +44,21 @@ class PandABlocksClient:
         self._recv_spawned = None
         self._response_queues = None
 
-    def start(self, spawn):
+    async def start(self, spawn):
         """Connect to the PandA and start servicing the connection
 
         Args:
-            spawn: Callable returning something with wait()/get(), used to run
-                the send and recv coroutines on an event loop
+            spawn: Callable returning something with wait_async(), used to run
+                the send and recv coroutines on the event loop
         """
         assert not self.started, "Send and recv loops already started"
         self._spawn = spawn
-        # Connect on the event loop, and wait here until it has happened
-        spawn(self._connect).get()
+        await self._connect()
         self._send_spawned = spawn(self._send_loop)
         self._recv_spawned = spawn(self._recv_loop)
         self.started = True
 
     async def _connect(self):
-        # We are on the event loop, so remember it: send() is called from
-        # worker threads and has to hand messages over to this loop
-        self._loop = asyncio.get_running_loop()
         # Holds (message, response_queue) to send next
         self._send_queue = asyncio.Queue()
         # Holds response_queue to send next
@@ -81,14 +73,13 @@ class PandABlocksClient:
                 "did all services on the PandA start correctly?"
             ) from e
 
-    def stop(self):
+    async def stop(self):
         assert self.started, "Send and recv loops not started"
-        self._queue_send((self.STOP, None))
-        self._send_spawned.wait()
+        self._send_queue.put_nowait((self.STOP, None))
+        await self._send_spawned.wait_async()
         # Closing the write side gives the recv loop its EOF
-        self._spawn(self._close).get()
-        self._recv_spawned.wait()
-        self._loop = None
+        await self._close()
+        await self._recv_spawned.wait_async()
         self._reader = None
         self._writer = None
         self.started = False
@@ -101,34 +92,38 @@ class PandABlocksClient:
             # The PandA has gone away, which is what we wanted anyway
             pass
 
-    def _queue_send(self, item):
-        """Hand an item to the send loop from whatever thread we are on"""
-        self._loop.call_soon_threadsafe(self._send_queue.put_nowait, item)
-
     def send(self, message):
-        response_queue = self.queue_cls()
-        self._queue_send((message, response_queue))
+        """Queue a message to be sent, returning the queue to await it on
+
+        Sync so that a caller can pipeline a batch of messages before awaiting
+        any of the responses, which is what parameterized_send() does.
+        """
+        response_queue: asyncio.Queue = asyncio.Queue()
+        self._send_queue.put_nowait((message, response_queue))
         return response_queue
 
-    def recv(self, response_queue, timeout=10.0):
-        response = response_queue.get(timeout=timeout)
+    async def recv(self, response_queue, timeout=10.0):
+        try:
+            response = await asyncio.wait_for(response_queue.get(), timeout)
+        except (asyncio.TimeoutError, TimeoutError):
+            raise TimeoutError(f"Timeout waiting {timeout}s for a response")
         if isinstance(response, Exception):
             raise response
         else:
             return response
 
-    def send_recv(self, message, timeout=10.0):
+    async def send_recv(self, message, timeout=10.0):
         """Send a message to a PandABox and wait for the response
 
         Args:
             message (str): The message to send
-            timeout (float): How long to wait before raising queue.Empty
+            timeout (float): How long to wait for the response
 
         Returns:
             str: The response
         """
         response_queue = self.send(message)
-        response = self.recv(response_queue, timeout)
+        response = await self.recv(response_queue, timeout)
         return response
 
     async def _send_loop(self):
@@ -156,7 +151,7 @@ class PandABlocksClient:
     async def _respond(self, resp):
         """Respond to the person waiting"""
         response_queue = await asyncio.wait_for(self._response_queues.get(), 0.1)
-        response_queue.put(resp)
+        response_queue.put_nowait(resp)
         self._completed_response_lines = []
         self._is_multiline = None
 
@@ -187,9 +182,9 @@ class PandABlocksClient:
                 log.exception("Exception receiving message")
                 raise
 
-    def _get_block_numbers(self):
+    async def _get_block_numbers(self):
         block_numbers = OrderedDict()
-        for line in self.send_recv("*BLOCKS?\n"):
+        for line in await self.send_recv("*BLOCKS?\n"):
             block_name, number = line.split()
             block_numbers[block_name] = int(number)
         return block_numbers
@@ -210,11 +205,11 @@ class PandABlocksClient:
             response_queues[parameter] = self.send(request % parameter)
         return response_queues
 
-    def get_blocks_data(self):
+    async def get_blocks_data(self):
         blocks = OrderedDict()
 
         # Get details about number of blocks
-        block_numbers = self._get_block_numbers()
+        block_numbers = await self._get_block_numbers()
         block_names = list(block_numbers)
 
         # Queue up info about each block
@@ -225,13 +220,13 @@ class PandABlocksClient:
         # TODO: we sort here while server gives these in hash table order
         for block_name in sorted(block_names):
             number = block_numbers[block_name]
-            description = strip_ok(self.recv(desc_queues[block_name]))
+            description = strip_ok(await self.recv(desc_queues[block_name]))
             fields = OrderedDict()
             blocks[block_name] = BlockData(number, description, fields)
 
             # Parse the field list
             unsorted_fields = {}
-            for line in self.recv(field_queues[block_name]):
+            for line in await self.recv(field_queues[block_name]):
                 split = line.split()
                 assert len(split) in (
                     3,
@@ -269,23 +264,23 @@ class PandABlocksClient:
             for field_name in field_names:
                 _, field_type, field_subtype = unsorted_fields[field_name]
                 if field_name in enum_queues:
-                    labels = self.recv(enum_queues[field_name])
+                    labels = await self.recv(enum_queues[field_name])
                 elif field_name + ".CAPTURE" in enum_queues:
-                    labels = self.recv(enum_queues[field_name + ".CAPTURE"])
+                    labels = await self.recv(enum_queues[field_name + ".CAPTURE"])
                 else:
                     labels = []
-                description = strip_ok(self.recv(field_desc_queues[field_name]))
+                description = strip_ok(await self.recv(field_desc_queues[field_name]))
                 fields[field_name] = FieldData(
                     field_type, field_subtype, description, labels
                 )
 
         return blocks
 
-    def get_pcap_bits_fields(self):
+    async def get_pcap_bits_fields(self):
         # {field_to_set: [bit_names]}
         # E.g. {"PCAP.BITS0"=["TTLIN1.VAL", "TTLIN2.VAL", ...], ...}
         bits_fields = []
-        for line in self.send_recv("PCAP.*?\n"):
+        for line in await self.send_recv("PCAP.*?\n"):
             split = line.split()
             if len(split) == 4:
                 field_name, _, field_type, field_subtype = split
@@ -294,12 +289,18 @@ class PandABlocksClient:
         bits_queues = self.parameterized_send("%s.BITS?\n", sorted(bits_fields))
         bits = OrderedDict()
         for k, queue in bits_queues.items():
-            bits[k + ".CAPTURE"] = self.recv(queue)
+            bits[k + ".CAPTURE"] = await self.recv(queue)
         return bits
 
-    def get_changes(self, include_errors=False):
+    async def get_changes(self, include_errors=False):
+        """Return a list of (field, value) for everything that has changed
+
+        This used to be a generator, but a coroutine cannot be iterated
+        lazily by a sync caller, so it collects the changes and returns them.
+        """
+        changes = []
         table_queues = {}
-        for line in self.send_recv("*CHANGES?\n"):
+        for line in await self.send_recv("*CHANGES?\n"):
             if "=" in line:
                 field, val = line.split("=", 1)
             elif line[-1] == "<":
@@ -316,14 +317,15 @@ class PandABlocksClient:
             else:
                 log.warning("Can't parse line %r of changes", line)
                 continue
-            yield field, val
+            changes.append((field, val))
         for field, q in table_queues.items():
-            yield field, self.recv(q)
+            changes.append((field, await self.recv(q)))
+        return changes
 
-    def get_table_fields(self, block, field):
+    async def get_table_fields(self, block, field):
         fields = OrderedDict()
         enum_queues = {}
-        for line in self.send_recv(f"{block}.{field}.FIELDS?\n"):
+        for line in await self.send_recv(f"{block}.{field}.FIELDS?\n"):
             split = line.split()
             name = split[1].strip()
             signed = False
@@ -341,41 +343,41 @@ class PandABlocksClient:
         )
         for name, (bits_str, signed) in fields.items():
             bits_hi, bits_lo = [int(x) for x in bits_str.split(":")]
-            description = strip_ok(self.recv(desc_queues[name]))
+            description = strip_ok(await self.recv(desc_queues[name]))
             if name in enum_queues:
-                labels = self.recv(enum_queues[name])
+                labels = await self.recv(enum_queues[name])
             else:
                 labels = None
             fields[name] = TableFieldData(bits_hi, bits_lo, description, labels, signed)
         return fields
 
-    def get_field(self, block, field):
+    async def get_field(self, block, field):
         try:
-            resp = self.send_recv(f"{block}.{field}?\n")
+            resp = await self.send_recv(f"{block}.{field}?\n")
         except ValueError as e:
             raise ValueError(f"Error getting {block}.{field}: {e}")
         else:
             return strip_ok(resp)
 
-    def set_field(self, block, field, value):
-        self.set_fields({f"{block}.{field}": value})
+    async def set_field(self, block, field, value):
+        await self.set_fields({f"{block}.{field}": value})
 
-    def set_fields(self, field_values):
+    async def set_fields(self, field_values):
         queues = OrderedDict()
         for field, value in field_values.items():
             message = f"{field}={value}\n"
             queues[(field, value)] = self.send(message)
         for (field, value), queue in queues.items():
             try:
-                resp = self.recv(queue)
+                resp = await self.recv(queue)
             except ValueError as e:
                 raise ValueError(f"Error setting {field} to {value!r}: {e}")
             else:
                 assert resp == "OK", f"Expected OK, got {resp!r}"
 
-    def set_table(self, block, field, int_values):
+    async def set_table(self, block, field, int_values):
         lines = [f"{block}.{field}<\n"]
         lines += [f"{int_value}\n" for int_value in int_values]
         lines += ["\n"]
-        resp = self.send_recv("".join(lines))
+        resp = await self.send_recv("".join(lines))
         assert resp == "OK", f"Expected OK, got {resp!r}"

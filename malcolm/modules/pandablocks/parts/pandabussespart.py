@@ -103,7 +103,7 @@ class PandABussesPart(Part):
                             update_column(column_changes, k, old)[j] = new_value
         return column_changes
 
-    def set_bits(self, value: BitsTable) -> None:
+    async def set_bits(self, value: BitsTable) -> None:
         assert self.bits, "No bits"
         column_changes = self.get_column_changes(self.bits.value, value)
         if "capture" in column_changes:
@@ -119,11 +119,11 @@ class PandABussesPart(Part):
                 else:
                     # If not already set, set it to No
                     field_values.setdefault(capture_field, "No")
-            self._client.set_fields(field_values)
+            await self._client.set_fields(field_values)
         new_value = make_updated_table(self.bits.value, column_changes)
         self.bits.set_value(new_value)
 
-    def set_positions(self, value: PositionsTable) -> None:
+    async def set_positions(self, value: PositionsTable) -> None:
         assert self.positions, "No positions"
         column_changes = self.get_column_changes(self.positions.value, value)
         for attr in ("capture", "scale", "offset", "units"):
@@ -137,7 +137,7 @@ class PandABussesPart(Part):
                         # Convert Enum to string value for capture string
                         value = value.value
                     field_values[field] = value
-                self._client.set_fields(field_values)
+                await self._client.set_fields(field_values)
         new_value = make_updated_table(self.positions.value, column_changes)
         self.positions.set_value(new_value)
 

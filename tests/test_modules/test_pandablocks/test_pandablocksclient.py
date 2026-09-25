@@ -13,6 +13,8 @@ from malcolm.modules.pandablocks.pandablocksclient import (
     PandABlocksClient,
 )
 
+from ...loop import on_loop
+
 
 class FakeWriter:
     """Stands in for the StreamWriter of a connection to a PandA
@@ -42,7 +44,7 @@ class PandABoxControlTest(unittest.TestCase):
     def setUp(self):
         self.c = PandABlocksClient("h", "p")
 
-    def start(self, messages=None):
+    async def start(self, messages=None):
         if messages is None:
             messages = []
         elif not isinstance(messages, list):
@@ -62,7 +64,7 @@ class PandABoxControlTest(unittest.TestCase):
         )
         self.patch.start()
         self.addCleanup(self.patch.stop)
-        self.c.start(lambda func: Spawned(func, (), {}))
+        await self.c.start(lambda func: Spawned(func, (), {}))
 
     @property
     def written(self):
@@ -73,7 +75,7 @@ class PandABoxControlTest(unittest.TestCase):
 
     def tearDown(self):
         if self.c.started:
-            self.c.stop()
+            Spawned(self.c.stop, (), {}).get(10)
 
     def test_send_and_recv_loops_are_coroutines(self):
         # They are awaited on the event loop rather than each taking a thread,
@@ -81,7 +83,8 @@ class PandABoxControlTest(unittest.TestCase):
         assert inspect.iscoroutinefunction(PandABlocksClient._send_loop)
         assert inspect.iscoroutinefunction(PandABlocksClient._recv_loop)
 
-    def test_connect_failure_raises_connection_error(self):
+    @on_loop
+    async def test_connect_failure_raises_connection_error(self):
         # Bind a port, then drop it, so there is nothing listening there
         s = socket.socket()
         s.bind(("127.0.0.1", 0))
@@ -89,41 +92,46 @@ class PandABoxControlTest(unittest.TestCase):
         s.close()
         c = PandABlocksClient("127.0.0.1", port)
         with self.assertRaises(ConnectionError) as cm:
-            c.start(lambda func: Spawned(func, (), {}))
+            await c.start(lambda func: Spawned(func, (), {}))
         assert "did all services on the PandA start correctly?" in str(cm.exception)
         assert c.started is False
 
-    def test_stop_then_start_again(self):
-        self.start(["OK =1\n"])
-        assert self.c.send_recv("") == "OK =1"
-        self.c.stop()
+    @on_loop
+    async def test_stop_then_start_again(self):
+        await self.start(["OK =1\n"])
+        assert await self.c.send_recv("") == "OK =1"
+        await self.c.stop()
         assert self.c.started is False
-        self.start(["OK =2\n"])
-        assert self.c.send_recv("") == "OK =2"
+        await self.start(["OK =2\n"])
+        assert await self.c.send_recv("") == "OK =2"
         assert self.written == [call(b"")]
 
-    def test_multiline_response_good(self):
+    @on_loop
+    async def test_multiline_response_good(self):
         messages = ["!TTLIN 6\n", "!OUTENC 4\n!CAL", "C 2\n.\nblah"]
-        self.start(messages)
-        resp = list(self.c.send_recv(""))
-        self.c.stop()
+        await self.start(messages)
+        resp = list(await self.c.send_recv(""))
+        await self.c.stop()
         expected = ["TTLIN 6", "OUTENC 4", "CALC 2"]
         assert resp == expected
 
-    def test_two_resp(self):
+    @on_loop
+    async def test_two_resp(self):
         messages = ["OK =mm\n", "OK =232\n"]
-        self.start(messages)
-        assert self.c.send_recv("") == "OK =mm"
-        assert self.c.send_recv("") == "OK =232"
+        await self.start(messages)
+        assert await self.c.send_recv("") == "OK =mm"
+        assert await self.c.send_recv("") == "OK =232"
 
-    def test_bad_good(self):
+    @on_loop
+    async def test_bad_good(self):
         messages = ["ERR Invalid bit value\n", "OK =232\n"]
-        self.start(messages)
+        await self.start(messages)
         with self.assertRaises(ValueError):
-            self.c.send_recv("")
-        assert self.c.send_recv("") == "OK =232"
+            await self.c.send_recv("")
+        assert await self.c.send_recv("") == "OK =232"
 
-    def test_block_data(self):
+    @on_loop
+    async def test_block_data(self):
         messages = [
             "!TTLIN 6\n!TTLOUT 10\n.\n",
             "OK =TTL input\n",
@@ -137,9 +145,9 @@ class PandABoxControlTest(unittest.TestCase):
             "OK =TTL output value\n",
             "!ZERO\n!TTLIN1.VAL\n!TTLIN2.VAL\n.\n",
         ]
-        self.start(messages)
-        block_data = self.c.get_blocks_data()
-        self.c.stop()
+        await self.start(messages)
+        block_data = await self.c.get_blocks_data()
+        await self.c.stop()
         assert self.written == [
             call(b"*BLOCKS?\n"),
             call(b"*DESC.TTLIN?\n"),
@@ -168,7 +176,8 @@ class PandABoxControlTest(unittest.TestCase):
         )
         assert block_data["TTLOUT"] == (BlockData(10, "TTL output", out_fields))
 
-    def test_changes(self):
+    @on_loop
+    async def test_changes(self):
         messages = [
             """!PULSE0.WIDTH=1.43166e+09
 !PULSE1.WIDTH=1.43166e+09
@@ -187,9 +196,9 @@ class PandABoxControlTest(unittest.TestCase):
 .
 """,
         ]
-        self.start(messages)
-        changes = list(self.c.get_changes(include_errors=True))
-        self.c.stop()
+        await self.start(messages)
+        changes = list(await self.c.get_changes(include_errors=True))
+        await self.c.stop()
         assert self.written == [
             call(b"*CHANGES?\n"),
             call(b"SEQ1.TABLE?\n"),
@@ -206,7 +215,8 @@ class PandABoxControlTest(unittest.TestCase):
         expected["PULSE3.INP"] = Exception
         assert OrderedDict(changes) == expected
 
-    def test_get_pcap_bits_fields(self):
+    @on_loop
+    async def test_get_pcap_bits_fields(self):
         messages = (
             ["!BITS1 1 ext_out bits\n!BITS0 0 ext_out bits\n.\n"]
             + ["!B%d\n" % i for i in range(32)]
@@ -215,48 +225,52 @@ class PandABoxControlTest(unittest.TestCase):
             + ["!\n" * 12]
             + [".\n"]
         )
-        self.start(messages)
+        await self.start(messages)
         expected = {
             "PCAP.BITS0.CAPTURE": ["B%d" % i for i in range(32)],
             "PCAP.BITS1.CAPTURE": ["B%d" % i for i in range(32, 52)] + [""] * 12,
         }
-        assert self.c.get_pcap_bits_fields() == expected
-        self.c.stop()
+        assert await self.c.get_pcap_bits_fields() == expected
+        await self.c.stop()
         assert self.written == [
             call(b"PCAP.*?\n"),
             call(b"PCAP.BITS0.BITS?\n"),
             call(b"PCAP.BITS1.BITS?\n"),
         ]
 
-    def test_get_field(self):
+    @on_loop
+    async def test_get_field(self):
         messages = "OK =32\n"
-        self.start(messages)
-        assert self.c.get_field("PULSE0", "WIDTH") == "32"
-        self.c.stop()
+        await self.start(messages)
+        assert await self.c.get_field("PULSE0", "WIDTH") == "32"
+        await self.c.stop()
         self.assert_written_once(b"PULSE0.WIDTH?\n")
 
-    def test_set_field(self):
+    @on_loop
+    async def test_set_field(self):
         messages = "OK\n"
-        self.start(messages)
-        self.c.set_field("PULSE0", "WIDTH", 0)
-        self.c.stop()
+        await self.start(messages)
+        await self.c.set_field("PULSE0", "WIDTH", 0)
+        await self.c.stop()
         self.assert_written_once(b"PULSE0.WIDTH=0\n")
 
-    def test_set_fields(self):
+    @on_loop
+    async def test_set_fields(self):
         messages = "OK\nOK\n"
-        self.start(messages)
-        self.c.set_fields({"PULSE0.WIDTH": 0, "PULSE0.DELAY": 5})
-        self.c.stop()
+        await self.start(messages)
+        await self.c.set_fields({"PULSE0.WIDTH": 0, "PULSE0.DELAY": 5})
+        await self.c.stop()
         assert sorted(self.written) == [
             call(b"PULSE0.DELAY=5\n"),
             call(b"PULSE0.WIDTH=0\n"),
         ]
 
-    def test_set_table(self):
+    @on_loop
+    async def test_set_table(self):
         messages = "OK\n"
-        self.start(messages)
-        self.c.set_table("SEQ1", "TABLE", [1, 2, 3])
-        self.c.stop()
+        await self.start(messages)
+        await self.c.set_table("SEQ1", "TABLE", [1, 2, 3])
+        await self.c.stop()
         self.assert_written_once(
             b"""SEQ1.TABLE<
 1
@@ -266,7 +280,8 @@ class PandABoxControlTest(unittest.TestCase):
 """
         )
 
-    def test_table_fields(self):
+    @on_loop
+    async def test_table_fields(self):
         messages = [
             """!31:0    REPEATS
 !32:32   USE_INPA
@@ -284,9 +299,9 @@ class PandABoxControlTest(unittest.TestCase):
             "OK =Stuff\n",
             "OK =Inp B\n",
         ]
-        self.start(messages)
-        fields = self.c.get_table_fields("SEQ1", "TABLE")
-        self.c.stop()
+        await self.start(messages)
+        fields = await self.c.get_table_fields("SEQ1", "TABLE")
+        await self.c.stop()
         assert self.written == [
             call(b"SEQ1.TABLE.FIELDS?\n"),
             call(b"*ENUMS.SEQ1.TABLE[].INPB?\n"),

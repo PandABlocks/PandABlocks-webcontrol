@@ -31,9 +31,9 @@ class HTTPServerComms(builtin.controllers.ServerComms):
         # Hooks
         self.register_hooked(ProcessPublishHook, self.publish)
 
-    def do_init(self):
-        super().do_init()
-        part_info = self.run_hooks(
+    async def do_init(self):
+        await super().do_init()
+        part_info = await self.run_hooks(
             ReportHandlersHook(part) for part in self.parts.values()
         )
         handler_infos = HandlerInfo.filter_values(part_info)
@@ -56,12 +56,12 @@ class HTTPServerComms(builtin.controllers.ServerComms):
             IOLoopHelper.call(self._server.stop)
             self._server_started = False
 
-    def do_disable(self):
-        super().do_disable()
+    async def do_disable(self):
+        await super().do_disable()
         self._stop_server()
 
-    def do_reset(self):
-        super().do_reset()
+    async def do_reset(self):
+        await super().do_reset()
         self._start_server()
 
     @add_call_types

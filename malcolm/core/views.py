@@ -75,9 +75,9 @@ class Attribute(View):
     def value(self):
         return self._context.make_view(self._controller, self._data, "value")
 
-    def put_value(self, value, timeout=None):
+    async def put_value(self, value, timeout=None):
         """Put a value to the Attribute and wait for completion"""
-        self._context.put(self._data.path + ["value"], value, timeout=timeout)
+        await self._context.put(self._data.path + ["value"], value, timeout=timeout)
 
     def put_value_async(self, value):
         fs = self._context.put_async(self._data.path + ["value"], value)
@@ -113,9 +113,9 @@ class Method(View):
             kwargs[name] = v
         return kwargs
 
-    def post(self, *args, **kwargs):
+    async def post(self, *args, **kwargs):
         kwargs = self._add_positional_args(args, kwargs)
-        result = self._context.post(self._data.path, kwargs)
+        result = await self._context.post(self._data.path, kwargs)
         return result
 
     __call__ = post
@@ -179,13 +179,13 @@ class Block(View):
             futures.append(future)
         return futures
 
-    def put_attribute_values(self, params, timeout=None, event_timeout=None):
+    async def put_attribute_values(self, params, timeout=None, event_timeout=None):
         futures = self.put_attribute_values_async(params)
-        self._context.wait_all_futures(
+        await self._context.wait_all_futures(
             futures, timeout=timeout, event_timeout=event_timeout
         )
 
-    def when_value_matches(
+    async def when_value_matches(
         self,
         attr,
         good_value,
@@ -194,7 +194,7 @@ class Block(View):
         event_timeout=None,
     ):
         future = self.when_value_matches_async(attr, good_value, bad_values)
-        self._context.wait_all_futures(
+        await self._context.wait_all_futures(
             future, timeout=timeout, event_timeout=event_timeout
         )
 

@@ -101,6 +101,15 @@ class EventLoop:
             func = functools.partial(func, **kwargs)
         cls.get().call_soon_threadsafe(func, *args)
 
+    @classmethod
+    def run(cls, coro, timeout: float = None) -> Any:
+        """Run a coroutine on the loop from another thread, returning its result
+
+        For code that isn't on the loop and has a coroutine in hand, like the
+        interactive console: run(block.save(designName="mine")).
+        """
+        return asyncio.run_coroutine_threadsafe(coro, cls.get()).result(timeout)
+
     @staticmethod
     def _run_forever(loop: asyncio.AbstractEventLoop) -> None:
         # Tornado's IOLoop.current() picks the loop up from here, so that
@@ -145,9 +154,17 @@ class Spawned:
             self.catching_function(), EventLoop.get()
         )
 
+    @staticmethod
+    def _is_async(func: Callable[..., Any]) -> bool:
+        # A View's method is a plain object with an async __call__, which
+        # iscoroutinefunction doesn't see on its own
+        return inspect.iscoroutinefunction(func) or inspect.iscoroutinefunction(
+            getattr(func, "__call__", None)
+        )
+
     async def catching_function(self) -> None:
         try:
-            if inspect.iscoroutinefunction(self._function):
+            if self._is_async(self._function):
                 self._result = await self._function(*self._args, **self._kwargs)
             else:
                 call = functools.partial(self._function, *self._args, **self._kwargs)

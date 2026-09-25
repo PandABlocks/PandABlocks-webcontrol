@@ -24,8 +24,9 @@ class BasicController(Controller):
 
     def update_label(self, _: object, info: LabelInfo) -> None:
         """Set the label of the Block Meta object"""
-        with self._lock:
-            self._block.meta.set_label(info.label)
+        # No lock needed: this awaits nothing, so on one event loop it cannot
+        # be interleaved with
+        self._block.meta.set_label(info.label)
 
     def update_health(self, reporter: object, info: HealthInfo) -> None:
         """Set the health attribute. Called from part"""

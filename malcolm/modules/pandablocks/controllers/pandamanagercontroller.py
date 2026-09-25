@@ -1,10 +1,11 @@
+import asyncio
 import json
 import re
 import time
 from typing import Any, Dict, Sequence, Set, Tuple
 
 from malcolm.annotypes import Anno
-from malcolm.core import Display, NumberMeta, Queue, TimeoutError, TimeStamp, Widget
+from malcolm.core import Display, NumberMeta, TimeStamp, Widget
 from malcolm.modules import builtin
 from malcolm.modules.builtin.util import LayoutTable
 
@@ -67,11 +68,11 @@ class PandAManagerController(builtin.controllers.ManagerController):
         # The child controllers we have created
         self._child_controllers: Dict[str, PandABlockController] = {}
         # The PandABlock client that does the comms
-        self._client = PandABlocksClient(hostname, port, Queue)
+        self._client = PandABlocksClient(hostname, port)
         # The json layout stored in PandA
         self._json_layout: Dict[str, Dict[str, float]] = {}
         # Filled in on reset
-        self._stop_queue = None
+        self._stopping = None
         self._poll_spawned = None
         # Poll period reporting
         self.last_poll_period = NumberMeta(
@@ -85,33 +86,30 @@ class PandAManagerController(builtin.controllers.ManagerController):
         self.busses: PandABussesPart = self._make_busses()
         self.add_part(self.busses)
 
-    def do_init(self):
+    async def do_init(self):
         # start the poll loop and make block parts first to fill in our parts
         # before calling _set_block_children()
-        self.start_poll_loop()
-        super().do_init()
+        await self.start_poll_loop()
+        await super().do_init()
 
-    def start_poll_loop(self):
-        # queue to listen for stop events
+    async def start_poll_loop(self):
         if not self._client.started:
-            self._stop_queue = Queue()
-            if self._client.started:
-                self._client.stop()
-            self._client.start(self.process.spawn)
+            self._stopping = asyncio.Event()
+            await self._client.start(self.process.spawn)
         if not self._child_controllers:
-            self._make_child_controllers()
+            await self._make_child_controllers()
         if self._poll_spawned is None:
             self._poll_spawned = self.process.spawn(self._poll_loop)
 
-    def do_disable(self):
-        super().do_disable()
-        self.stop_poll_loop()
+    async def do_disable(self):
+        await super().do_disable()
+        await self.stop_poll_loop()
 
-    def do_reset(self):
-        self.start_poll_loop()
-        super().do_reset()
+    async def do_reset(self):
+        await self.start_poll_loop()
+        await super().do_reset()
 
-    def _poll_loop(self):
+    async def _poll_loop(self):
         """At self.poll_period poll for changes"""
         last_poll_update = time.time()
         next_poll = time.time() + self._poll_period
@@ -129,13 +127,14 @@ class PandAManagerController(builtin.controllers.ManagerController):
                 else:
                     last_poll_period = self._poll_period
                 try:
-                    # If told to stop, we will get something here and return
-                    return self._stop_queue.get(timeout=sleep_for)
-                except TimeoutError:
+                    # If told to stop, the Event is set and we return
+                    await asyncio.wait_for(self._stopping.wait(), sleep_for)
+                    return
+                except (asyncio.TimeoutError, TimeoutError):
                     # No stop, no problem
                     pass
                 # Poll for changes
-                self.handle_changes(self._client.get_changes())
+                await self.handle_changes(await self._client.get_changes())
                 if (
                     last_poll_period != self.last_poll_period.value
                     and next_poll - last_poll_update > POLL_PERIOD_REPORT
@@ -147,20 +146,20 @@ class PandAManagerController(builtin.controllers.ManagerController):
             self.go_to_error_state(e)
             raise
 
-    def stop_poll_loop(self):
+    async def stop_poll_loop(self):
         if self._poll_spawned:
-            self._stop_queue.put(None)
-            self._poll_spawned.wait()
+            self._stopping.set()
+            await self._poll_spawned.wait_async()
             self._poll_spawned = None
         if self._client.started:
-            self._client.stop()
+            await self._client.stop()
 
-    def _make_child_controllers(self):
+    async def _make_child_controllers(self):
         self._child_controllers = {}
         controllers = []
         child_parts = []
         pos_names = []
-        blocks_data = self._client.get_blocks_data()
+        blocks_data = await self._client.get_blocks_data()
         for block_rootname, block_data in blocks_data.items():
             block_names = []
             if block_data.number == 1:
@@ -174,8 +173,18 @@ class PandAManagerController(builtin.controllers.ManagerController):
                     if field_data.field_type == "pos_out":
                         pos_names.append(f"{block_name}.{field_name}")
 
+                # Read the column data for any table fields up front, as the
+                # parts that need it can't do IO in their constructors
+                table_fields = {}
+                for field_name, field_data in block_data.fields.items():
+                    if field_data.field_type == "table":
+                        table_fields[field_name] = await self._client.get_table_fields(
+                            block_name, field_name
+                        )
                 # Make the child controller and add it to the process
-                controller, child_part = self._make_child_block(block_name, block_data)
+                controller, child_part = self._make_child_block(
+                    block_name, block_data, table_fields
+                )
                 controllers += [controller]
                 child_parts += [child_part]
                 self._child_controllers[block_name] = controller
@@ -184,12 +193,12 @@ class PandAManagerController(builtin.controllers.ManagerController):
                 if block_data.number == 1:
                     self._child_controllers[block_name + "1"] = controller
 
-        self.process.add_controllers(controllers)
+        await self.process.add_controllers_async(controllers)
         for part in child_parts:
             self.add_part(part)
 
         # Create the busses from their initial sets of values
-        pcap_bit_fields = self._client.get_pcap_bits_fields()
+        pcap_bit_fields = await self._client.get_pcap_bits_fields()
         self.busses.create_busses(pcap_bit_fields, pos_names)
         # Handle the pos_names that busses needs
         self._bus_fields = set(pos_names)
@@ -204,9 +213,9 @@ class PandAManagerController(builtin.controllers.ManagerController):
         for capture_field in pcap_bit_fields:
             self._bus_fields.add(capture_field)
         # Handle the initial set of changes to get an initial value
-        self.handle_changes(self._client.get_changes())
+        await self.handle_changes(await self._client.get_changes())
         # Then once more to let bit_outs toggle back
-        self.handle_changes(())
+        await self.handle_changes(())
         assert (
             not self._bit_out_changes
         ), f"There are still bit_out changes {self._bit_out_changes}"
@@ -214,9 +223,14 @@ class PandAManagerController(builtin.controllers.ManagerController):
     def _make_busses(self) -> PandABussesPart:
         return PandABussesPart("busses", self._client)
 
-    def _make_child_block(self, block_name, block_data):
+    def _make_child_block(self, block_name, block_data, table_fields=None):
         controller = PandABlockController(
-            self._client, self.mri, block_name, block_data, self._doc_url_base
+            self._client,
+            self.mri,
+            block_name,
+            block_data,
+            self._doc_url_base,
+            table_fields,
         )
         if block_name == "PCAP":
             controller.add_part(
@@ -235,6 +249,7 @@ class PandAManagerController(builtin.controllers.ManagerController):
         return controller, child_part
 
     def _handle_change(self, k, v, bus_changes, block_changes, bit_out_changes):
+        # Sync: only sorts the change into the right bucket, no IO
         # Handle bit changes
         try:
             current_v = self._bit_outs[k]
@@ -275,15 +290,19 @@ class PandAManagerController(builtin.controllers.ManagerController):
                 # possible deletion
                 self._json_layout = json.loads("".join(v))
                 if self.layout.value.name:
-                    # Only set the layout after the initial call to set_layout
-                    self.set_layout(LayoutTable([], [], [], [], []))
+                    # Only set the layout after the initial call to set_layout.
+                    # Spawned rather than awaited: _handle_change is sync, and
+                    # this writes the layout back to the PandA
+                    self.process.spawn(
+                        self.set_layout, LayoutTable([], [], [], [], [])
+                    )
                 return
             else:
                 # Don't support any non-label metadata fields at the moment
                 return
         block_changes.setdefault(block_name, {})[field_name] = v
 
-    def handle_changes(self, changes: Sequence[Tuple[str, str]]) -> None:
+    async def handle_changes(self, changes: Sequence[Tuple[str, str]]) -> None:
         ts = TimeStamp()
         # {block_name: {field_name: field_value}}
         block_changes: Dict[str, Any] = {}
@@ -307,9 +326,11 @@ class PandAManagerController(builtin.controllers.ManagerController):
         if bus_changes:
             self.busses.handle_changes(bus_changes, ts)
         for block_name, block_changes_values in block_changes.items():
-            self._child_controllers[block_name].handle_changes(block_changes_values, ts)
+            await self._child_controllers[block_name].handle_changes(
+                block_changes_values, ts
+            )
 
-    def set_layout(self, value):
+    async def set_layout(self, value):
         if not value.name:
             # Blank layout table means read from PandA provided json layout
             # Called when PandA supplies a layout
@@ -320,7 +341,7 @@ class PandAManagerController(builtin.controllers.ManagerController):
                 x.append(self._json_layout.get(name, {"x": 0.0})["x"])
                 y.append(self._json_layout.get(name, {"y": 0.0})["y"])
             value = LayoutTable(names, names, x, y, visible)
-        super().set_layout(value)
+        await super().set_layout(value)
         old_json_layout = self._json_layout.copy()
         for name, _, x, y, visible in self.layout.value.rows():
             if visible:
@@ -330,4 +351,4 @@ class PandAManagerController(builtin.controllers.ManagerController):
         if self._json_layout != old_json_layout:
             # Custom encoding so the lines aren't too long and there aren't too many
             lines = re.split(r'(?<=,) (?!"y")', json.dumps(self._json_layout))
-            self._client.set_table("*METADATA", "LAYOUT", lines)
+            await self._client.set_table("*METADATA", "LAYOUT", lines)

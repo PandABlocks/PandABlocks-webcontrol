@@ -145,27 +145,27 @@ class ManagerController(StatefulController):
         # Create the save method
         self.set_writeable_in(self.field_registry.add_method_model(self.save), ss.READY)
 
-    def do_init(self):
-        super().do_init()
+    async def do_init(self):
+        await super().do_init()
         # List the config_dir and add to choices
         self._set_layout_names()
         # If given a default config, load this
         if self.initial_design:
-            self.do_load(self.initial_design, init=True)
+            await self.do_load(self.initial_design, init=True)
         else:
             # This will trigger all parts to report their layout, making sure
             # the layout table has a valid value. This will also call
             # self._update_block_endpoints()
-            self.set_default_layout()
+            await self.set_default_layout()
 
-    def set_default_layout(self):
-        self.set_layout(LayoutTable([], [], [], [], []))
+    async def set_default_layout(self):
+        await self.set_layout(LayoutTable([], [], [], [], []))
 
-    def set_layout(self, value):
+    async def set_layout(self, value):
         """Set the layout table value. Called on attribute put"""
-        # Can't do this with changes_squashed as it will call update_modified
-        # from another thread and deadlock. Need RLock.is_owned() from update_*
-        part_info = self.run_hooks(
+        # The hooks are run outside changes_squashed, as they call back in to
+        # update_modified
+        part_info = await self.run_hooks(
             LayoutHook(p, c, self.port_info, value)
             for p, c in self.create_part_contexts(only_visible=False).items()
         )
@@ -190,13 +190,13 @@ class ManagerController(StatefulController):
                 # even if there weren't any visible
                 visibility_changed = True
             if visibility_changed:
-                self.update_modified()
-                self.update_exportable()
+                await self.update_modified()
+                await self.update_exportable()
                 # Part visibility changed, might have attributes or methods
                 # that we need to hide or show
-                self.update_block_endpoints()
+                await self.update_block_endpoints()
 
-    def set_exports(self, value):
+    async def set_exports(self, value):
         # Validate
         for export_name in value.export:
             assert CAMEL_RE.match(
@@ -204,10 +204,12 @@ class ManagerController(StatefulController):
             ), f"Field {export_name!r} is not camelCase"
         with self.changes_squashed:
             self.exports.set_value(value)
-            self.update_modified()
-            self.update_block_endpoints()
+            await self.update_modified()
+            await self.update_block_endpoints()
 
-    def update_modified(self, part: Part = None, info: PartModifiedInfo = None) -> None:
+    async def update_modified(
+        self, part: Part = None, info: PartModifiedInfo = None
+    ) -> None:
         with self.changes_squashed:
             if part:
                 assert info, "No info to update part"
@@ -249,7 +251,7 @@ class ManagerController(StatefulController):
             else:
                 self.modified.set_value(False)
 
-    def update_exportable(
+    async def update_exportable(
         self, part: Part = None, info: PartExportableInfo = None
     ) -> None:
         with self.changes_squashed:
@@ -275,15 +277,15 @@ class ManagerController(StatefulController):
                 # Update the block endpoints if anything currently exported is
                 # added or deleted
                 if changed_exports:
-                    self.update_block_endpoints()
+                    await self.update_block_endpoints()
 
-    def update_block_endpoints(self):
+    async def update_block_endpoints(self):
         if self._current_part_fields:
             for name, child, _, _ in self._current_part_fields:
                 self._block.remove_endpoint(name)
                 for state, state_writeable in self._children_writeable.items():
                     state_writeable.pop(child, None)
-        self._current_part_fields = tuple(self._get_current_part_fields())
+        self._current_part_fields = tuple(await self._get_current_part_fields())
         for name, child, writeable_func, needs_context in self._current_part_fields:
             self.add_block_field(name, child, writeable_func, needs_context)
 
@@ -306,7 +308,8 @@ class ManagerController(StatefulController):
         ]:
             self.add_block_field(name, child, writeable_func, needs_context)
 
-    def _get_current_part_fields(self):
+    async def _get_current_part_fields(self):
+        fields = []
         # Clear out the current subscriptions
         for subscription in self._subscriptions:
             controller = self.process.get_controller(subscription.path[0])
@@ -330,7 +333,7 @@ class ManagerController(StatefulController):
         for part_name, part in self.parts.items():
             if part_name not in invisible:
                 for data in self.field_registry.fields.get(part, []):
-                    yield data
+                    fields.append(data)
 
         # Add exported fields from visible parts
         for source, export_name in self.exports.value.rows():
@@ -341,10 +344,13 @@ class ManagerController(StatefulController):
             if mri and attr_name in self.part_exportable.get(part, []):
                 if not export_name:
                     export_name = attr_name
-                export, setter = self._make_export_field(mri, attr_name, export_name)
-                yield export_name, export, setter, False
+                export, setter = await self._make_export_field(
+                    mri, attr_name, export_name
+                )
+                fields.append((export_name, export, setter, False))
+        return fields
 
-    def _make_export_field(self, mri, attr_name, export_name):
+    async def _make_export_field(self, mri, attr_name, export_name):
         controller = self.process.get_controller(mri)
         path = [mri, attr_name]
         label = camel_to_title(export_name)
@@ -360,9 +366,9 @@ class ManagerController(StatefulController):
                 export = deserialize_object(response.changes[0][1])
                 if isinstance(export, AttributeModel):
 
-                    def setter(v):
+                    async def setter(v):
                         context = Context(self.process)
-                        context.put(path, v)
+                        await context.put(path, v)
 
                     # Strip out tags that we shouldn't export
                     # TODO: need to strip out port tags too...
@@ -373,9 +379,9 @@ class ManagerController(StatefulController):
                     ret["setter"] = setter
                 else:
 
-                    def setter_star_args(*args):
+                    async def setter_star_args(*args):
                         context = Context(self.process)
-                        context.post(path, *args)
+                        await context.post(path, *args)
 
                     ret["setter"] = setter_star_args
 
@@ -393,7 +399,7 @@ class ManagerController(StatefulController):
         self._subscriptions.append(subscription)
         # When we have waited for the subscription, the first update_field
         # will have been called
-        controller.handle_request(subscription).wait()
+        await controller.handle_request(subscription).wait_async()
         return ret["export"], ret["setter"]
 
     def create_part_contexts(self, only_visible=True):
@@ -415,11 +421,13 @@ class ManagerController(StatefulController):
     # Allow CamelCase for arguments as they will be exposed in the Block Method
     # noinspection PyPep8Naming
     @add_call_types
-    def save(self, designName: ASaveDesign = "") -> None:
+    async def save(self, designName: ASaveDesign = "") -> None:
         """Save the current design to file"""
-        self.try_stateful_function(ss.SAVING, ss.READY, self.do_save, designName)
+        await self.try_stateful_function(
+            ss.SAVING, ss.READY, self.do_save, designName
+        )
 
-    def do_save(self, design=""):
+    async def do_save(self, design=""):
         if not design:
             design = self.design.value
         assert design, "Please specify save design name when saving from new"
@@ -442,7 +450,7 @@ class ManagerController(StatefulController):
         for name, attribute in self.our_config_attributes.items():
             attributes[name] = attribute.value
         # Add any structure that a child part wants to save
-        structure["children"] = self.run_hooks(
+        structure["children"] = await self.run_hooks(
             SaveHook(p, c)
             for p, c in self.create_part_contexts(only_visible=False).items()
         )
@@ -454,7 +462,7 @@ class ManagerController(StatefulController):
             f.write(text)
         # Run a sync command to make sure we flush this file to disk
         subprocess.call("sync")
-        self._mark_clean(design)
+        await self._mark_clean(design)
 
     def _set_layout_names(self, extra_name=None):
         names = [""]
@@ -504,11 +512,11 @@ class ManagerController(StatefulController):
             pass
         return dir_name
 
-    def set_design(self, value):
+    async def set_design(self, value):
         value = self.design.meta.validate(value)
-        self.try_stateful_function(ss.LOADING, ss.READY, self.do_load, value)
+        await self.try_stateful_function(ss.LOADING, ss.READY, self.do_load, value)
 
-    def do_load(self, design: str, init: bool = False) -> None:
+    async def do_load(self, design: str, init: bool = False) -> None:
         """Load a design name, running the child LoadHooks.
 
         Args:
@@ -534,7 +542,7 @@ class ManagerController(StatefulController):
             x.append(d["x"])
             y.append(d["y"])
             visible.append(d["visible"])
-        self.set_layout(LayoutTable(name, mri, x, y, visible))
+        await self.set_layout(LayoutTable(name, mri, x, y, visible))
         # Set the exports table
         source, export = [], []
         for source_name, export_name in attributes.get("exports", {}).items():
@@ -546,15 +554,15 @@ class ManagerController(StatefulController):
             k: v for k, v in attributes.items() if k in self.our_config_attributes
         }
         block = self.block_view()
-        block.put_attribute_values(our_values)
+        await block.put_attribute_values(our_values)
         # Run the load hook to get parts to load their own structure
-        self.run_hooks(
+        await self.run_hooks(
             LoadHook(p, c, children.get(p.name, {}), init)
             for p, c in self.create_part_contexts(only_visible=False).items()
         )
-        self._mark_clean(design, init)
+        await self._mark_clean(design, init)
 
-    def _mark_clean(self, design, init=False):
+    async def _mark_clean(self, design, init=False):
         with self.changes_squashed:
             self.saved_visibility = self.layout.value.visible
             self.saved_exports = self.exports.value
@@ -563,7 +571,7 @@ class ManagerController(StatefulController):
                 # Don't clear at init, because some things may not be
                 # clean at init
                 self.part_modified = {}
-            self.update_modified()
+            await self.update_modified()
             self._set_layout_names(design)
             self.design.set_value(design)
-            self.update_block_endpoints()
+            await self.update_block_endpoints()

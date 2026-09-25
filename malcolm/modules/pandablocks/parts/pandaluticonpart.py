@@ -82,9 +82,12 @@ def get_lut_icon_elements(fnum: int) -> Set[str]:
 class PandALutIconPart(PandAIconPart):
     update_fields = {"FUNC", "TYPEA", "TYPEB", "TYPEC", "TYPED", "TYPEE"}
 
-    def update_icon(self, icon: builtin.util.SVGIcon, field_values: dict) -> None:
+    async def update_icon(
+        self, icon: builtin.util.SVGIcon, field_values: dict
+    ) -> None:
         """Update the icon using the given field values"""
-        fnum = int(self.client.get_field(self.block_name, "FUNC.RAW"), 0)
+        raw = await self.client.get_field(self.block_name, "FUNC.RAW")
+        fnum = int(raw, 0)
         invis = get_lut_icon_elements(fnum)
         icon.remove_elements(invis)
         for inp in "ABCDE":

@@ -1,3 +1,5 @@
+import asyncio
+import inspect
 from contextlib import contextmanager
 from typing import TYPE_CHECKING, Any, Callable, Dict, List, Tuple
 
@@ -125,10 +127,23 @@ class Notifier(Loggable):
     def _callback_responses(self, responses: "CallbackResponses") -> None:
         for cb, response in responses:
             try:
-                cb(response)
+                result = cb(response)
             except Exception:
                 self.log.exception(f"Exception notifying {response}")
                 raise
+            if inspect.isawaitable(result):
+                # A coroutine callback, which we can't await: changes_squashed
+                # is a plain context manager, and making it async would mean
+                # every attr.set_value() had to be awaited. Schedule it on the
+                # loop instead and log if it fails
+                task = asyncio.ensure_future(result)
+                task.add_done_callback(self._log_callback_exception)
+
+    def _log_callback_exception(self, task: "asyncio.Future") -> None:
+        if not task.cancelled() and task.exception() is not None:
+            self.log.exception(
+                "Exception in notify callback", exc_info=task.exception()
+            )
 
 
 class NotifierNode:

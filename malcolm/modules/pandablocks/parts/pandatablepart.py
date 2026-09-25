@@ -12,8 +12,13 @@ from malcolm.core import (
     snake_to_camel,
 )
 
+from malcolm.annotypes import Anno
+
 from ..pandablocksclient import TableFieldData
 from .pandafieldpart import ABlockName, AClient, AFieldName, AMeta, PandAFieldPart
+
+with Anno("The TableFieldData for each column, as read from the PandA"):
+    ATableFields = dict
 
 
 def get_dtype(nbits, signed):
@@ -56,11 +61,12 @@ class PandATablePart(PandAFieldPart):
         meta: AMeta,
         block_name: ABlockName,
         field_name: AFieldName,
+        fields: ATableFields,
     ) -> None:
-        # Fill in the meta object with the correct headers
+        # Fill in the meta object with the correct headers. The fields are
+        # passed in because fetching them is IO, which __init__ can't await
         columns = OrderedDict()
         self.field_data = OrderedDict()
-        fields = client.get_table_fields(block_name, field_name)
         if not fields:
             # Didn't put any metadata in, make some up
             fields["VALUE"] = TableFieldData(31, 0, "The Value", None, True)
@@ -97,9 +103,9 @@ class PandATablePart(PandAFieldPart):
         value = self.table_from_list(value)
         self.attr.set_value_alarm_ts(value, Alarm.ok, ts)
 
-    def set_field(self, value):
+    async def set_field(self, value):
         int_values = self.list_from_table(value)
-        self.client.set_table(self.block_name, self.field_name, int_values)
+        await self.client.set_table(self.block_name, self.field_name, int_values)
 
     def list_from_table(self, table):
         # Create a bit array we can contribute to

@@ -15,5 +15,7 @@ class PandAIconPart(builtin.parts.IconPart):
         self.client = client
         self.block_name = block_name
 
-    def update_icon(self, icon: builtin.util.SVGIcon, field_values: dict) -> None:
+    async def update_icon(
+        self, icon: builtin.util.SVGIcon, field_values: dict
+    ) -> None:
         """Update the icon using the given field values"""
