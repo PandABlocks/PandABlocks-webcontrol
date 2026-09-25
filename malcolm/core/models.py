@@ -628,6 +628,26 @@ _dtype_strings = [
 _dtype_string_lookup = {getattr(np, dtype): dtype for dtype in _dtype_strings}
 _dtype_string_lookup.update({int: "int64", float: "float64"})
 
+def _wrap_to_dtype(value: int, np_type: type) -> int:
+    """Reduce an out-of-range integer to the value its bits stand for
+
+    numpy 1 did this implicitly; numpy 2 raises OverflowError instead. These
+    are hardware register fields, so keep wrapping rather than reject: a uint32
+    given -22 means the bit pattern 0xFFFFFFEA, as it always has here.
+
+    Applied to every integer, which is where this stops being a bug-for-bug
+    copy of numpy 1. numpy 1 reached the value through a C long and so raised
+    once past 2**63 - except for uint32 and uint64, which it wrapped. That
+    inconsistency is an artefact of how it converted rather than anything
+    meant, and no register field is going to be handed 2**63, so one rule for
+    all of them is easier to rely on than a faithful copy of the old one.
+    """
+    bits = 8 * np.dtype(np_type).itemsize
+    wrapped = value & ((1 << bits) - 1)
+    if np.issubdtype(np_type, np.signedinteger) and wrapped >= 1 << (bits - 1):
+        wrapped -= 1 << bits
+    return wrapped
+
 
 @Serializable.register_subclass("malcolm:core/NumberMeta:1.0")
 @VMeta.register_annotype_converter(list(_dtype_string_lookup))
@@ -675,8 +695,15 @@ class NumberMeta(VMeta):
         """Check if the value is valid returns it"""
         if value is None:
             value = 0
-        cast = self._np_type(value)
-        return cast
+        try:
+            return self._np_type(value)
+        except OverflowError:
+            # numpy 2 refuses an out-of-range Python int where numpy 1 wrapped
+            # it round. Keep wrapping, but only where numpy 1 did: integer
+            # dtypes, and values it could convert from in the first place
+            if not np.issubdtype(self._np_type, np.integer):
+                raise
+            return self._np_type(_wrap_to_dtype(int(value), self._np_type))
 
     def doc_type_string(self) -> str:
         return f"{self.dtype}"

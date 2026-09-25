@@ -66,6 +66,13 @@ Understand these five and the rest follows:
   `Alarm` and `TimeStamp`. `Notifier` (`notifier.py`) turns model mutations into
   `Delta`/`Update` responses for subscribers. `views.py` wraps models in
   user-friendly `Block`/`Attribute`/`Method` views used through a `Context`.
+  `NumberMeta.validate` wraps an out-of-range integer to its bit pattern
+  rather than rejecting it — a `uint32` given `-22` yields `0xFFFFFFEA`, these
+  being register fields. numpy 1 did that implicitly and numpy 2 raises
+  `OverflowError`, so `_wrap_to_dtype` does it explicitly now, for every
+  integer. That is deliberately *not* bug-for-bug: numpy 1 raised past 2**63
+  except for `uint32` and `uint64`, an artefact not worth reproducing. Float
+  dtypes have no bit pattern to fall back on and still raise.
 
 **Tags drive the GUI.** `core/tags.py` defines `Widget` (`textinput`, `led`,
 `table`, `flowgraph`, `icon`, `help`, …), `Port` (`sourcePort:`/`sinkPort:` tags
@@ -337,10 +344,6 @@ locally.
   `annotypes`. The latter is a different, undeclared package; where it was used
   (six test modules and the `py3_examples`) those files failed at *collection*,
   which aborts the whole pytest run rather than failing one test.
-- One test fails out of the box, and only on numpy 2:
-  `test_models.py::test_unsigned_validates` expects numpy 1's silent
-  wrap-around where numpy 2 raises `OverflowError`. Measured on 2.5.3 (fails)
-  and 1.26.4 (passes, so the suite is green there).
 - Don't wait for a subscription with a fixed sleep. `test_managercontroller.py`
   used to `await context.sleep(0.1)` and then assert the callback had fired,
   which failed intermittently on a loaded machine; it now polls with a

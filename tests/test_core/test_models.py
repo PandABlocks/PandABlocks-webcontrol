@@ -540,6 +540,25 @@ class TestNumberMeta(unittest.TestCase):
         assert nm.validate("22") == 22
         assert nm.validate(-22) == 2**32 - 22
 
+    def test_out_of_range_ints_wrap_to_their_bit_pattern(self):
+        # numpy 1 wrapped these implicitly and numpy 2 raises OverflowError,
+        # so NumberMeta does the wrapping itself. These are register fields:
+        # -22 put in a uint32 means the bit pattern 0xFFFFFFEA
+        assert NumberMeta("uint32").validate(-22) == 0xFFFFFFEA
+        assert NumberMeta("uint8").validate(-1) == 255
+        assert NumberMeta("uint32").validate(2**32 + 5) == 5
+        assert NumberMeta("int8").validate(200) == -56
+        assert NumberMeta("int32").validate(2**40) == 0
+        # However the value arrives
+        assert NumberMeta("uint32").validate("-22") == 0xFFFFFFEA
+        assert NumberMeta("uint32").validate(-22.0) == 0xFFFFFFEA
+
+    def test_a_float_dtype_still_rejects_what_it_cannot_hold(self):
+        # Wrapping is for the integer dtypes. A float has no bit pattern to
+        # fall back on, so this stays the error it has always been
+        with self.assertRaises(OverflowError):
+            NumberMeta("float64").validate(2**2000)
+
     def setUp(self):
         self.serialized = OrderedDict()
         self.serialized["typeid"] = "malcolm:core/NumberMeta:1.0"
