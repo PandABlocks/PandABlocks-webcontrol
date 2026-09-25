@@ -6,7 +6,6 @@ import inspect
 import logging
 import queue as queue_module
 import threading
-import time
 from typing import Any, Callable, Dict, Optional, Tuple, TypeVar, Union
 
 from .errors import TimeoutError
@@ -16,9 +15,6 @@ T = TypeVar("T")
 
 # Make a module level logger
 log = logging.getLogger(__name__)
-
-# Re-export
-sleep = time.sleep
 
 
 async def maybe_await(result: Any) -> Any:

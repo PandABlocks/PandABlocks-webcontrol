@@ -1,14 +1,7 @@
 # Make a nice namespace
 from .alarm import Alarm, AlarmSeverity, AlarmStatus
 from .camel import CAMEL_RE, camel_to_title, snake_to_camel
-from .concurrency import (
-    EventLoop,
-    Queue,
-    Spawned,
-    maybe_await,
-    run_blocking,
-    sleep,
-)
+from .concurrency import EventLoop, Queue, Spawned, maybe_await, run_blocking
 from .context import Context
 from .controller import DEFAULT_TIMEOUT, ADescription, AMri, Controller
 from .errors import (
