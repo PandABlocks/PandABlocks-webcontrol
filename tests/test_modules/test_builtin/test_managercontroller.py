@@ -42,6 +42,25 @@ class TestManagerStates(unittest.TestCase):
         assert self.o._allowed == expected
 
 
+async def wait_until(context, predicate, timeout=10):
+    """Wait for a condition instead of sleeping a fixed time
+
+    Everything shares one event loop, so how long a subscription takes to come
+    back depends on what else is on it. A sleep long enough on an idle machine
+    is not long enough on a loaded one, which made the tests below flaky, and
+    sizing it for the worst case would slow every run down.
+
+    It has to be `context.sleep`, not `asyncio.sleep`: a Context's responses
+    land in a queue of its own and the subscription callbacks only run when
+    something drains it, which is exactly what Context.sleep does. Polling with
+    asyncio.sleep would stop the thing we are waiting for from ever happening.
+    """
+    deadline = time.monotonic() + timeout
+    while not predicate():
+        assert time.monotonic() < deadline, f"Timed out after {timeout}s waiting"
+        await context.sleep(0.01)
+
+
 class MyPart(Part):
     attr = None
 
@@ -79,7 +98,9 @@ class TestManagerController(unittest.TestCase):
         assert self.c.state.value == "Ready"
 
     def tearDown(self):
-        self.p.stop(timeout=1)
+        # Generous: this is cleanup, not something under test, and a tight
+        # bound here just turns a slow machine into a failing test
+        self.p.stop(timeout=10)
         shutil.rmtree(self.config_dir)
 
     @on_loop
@@ -150,8 +171,8 @@ class TestManagerController(unittest.TestCase):
         c = Context(self.p)
         li = []
         c.subscribe(["mainBlock", "design", "meta"], li.append)
-        # Wait for long enough for the other process to get a look in
-        await c.sleep(0.1)
+        # Wait for the subscription's initial Update to come back
+        await wait_until(c, lambda: li)
         assert len(li) == 1
         assert li.pop()["choices"] == [""]
         b = c.block_view("mainBlock")
@@ -260,7 +281,7 @@ class TestManagerController(unittest.TestCase):
         m = MagicMock()
         b.childAttr.subscribe_value(m)
         # allow a subscription to come through
-        await context.sleep(0.1)
+        await wait_until(context, lambda: m.called)
         m.assert_called_once_with("defaultv")
         m.reset_mock()
         self.c_part.attr.set_value("newv")
@@ -271,7 +292,7 @@ class TestManagerController(unittest.TestCase):
             self.c.modified.alarm.message == "part2.attr.value = 'newv' not 'defaultv'"
         )
         # allow a subscription to come through
-        await context.sleep(0.1)
+        await wait_until(context, lambda: m.called)
         m.assert_called_once_with("newv")
         await b.childAttr.put_value("again")
         assert b.childAttr.value == "again"

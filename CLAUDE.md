@@ -295,6 +295,13 @@ setting `design` runs `LoadHook`. Read-only template designs live in
   `await` it, or you stall the loop that has to deliver the response. Mock a
   coroutine with `AsyncMock`, or patch a whole class with `autospec=True`, which
   picks `AsyncMock` for its coroutine methods automatically.
+- **`Context.sleep` is a pump, not a sleep.** A `Context` routes its responses
+  into a queue of its own (`subscribe` sets the request callback to
+  `self._q.put_nowait`), and the callback you passed only runs when something
+  drains that queue — which is what `sleep` and `wait_all_futures` do, via
+  `_service_futures`. So waiting on a Context's subscription with
+  `asyncio.sleep` stops the thing you are waiting for from ever happening. Poll
+  with `context.sleep` instead.
 
 ## Development
 
@@ -334,9 +341,10 @@ Python tests are not run in CI**, so run them locally.
   one passes); and `test_pandablockcontroller.py::test_block_fields_pulse`
   still expects the old help-URL format (`/docs/build/pulse_doc.html`) that
   commit 5941a9d5 replaced with `/docs/pulse-doc/`.
-- `test_managercontroller.py` tears down with `self.p.stop(timeout=1)`, tight
-  enough that `test_save` fails intermittently on a loaded machine and passes in
-  isolation. Re-run before believing a failure there.
+- Don't wait for a subscription with a fixed sleep. `test_managercontroller.py`
+  used to `await context.sleep(0.1)` and then assert the callback had fired,
+  which failed intermittently on a loaded machine; it now polls with a
+  `wait_until(context, predicate)` helper, which is both robust and faster.
 - `test_request_response.py` asserts the serialized `to_dict()` shapes the
   browser parses. Those expected dicts were read from `docs/reference/json/`
   until the docs restructure deleted it; they are now inlined, copied from the
