@@ -1,9 +1,10 @@
+import asyncio
 import fcntl
 import logging
 import os
 import socket
 import struct
-from typing import Dict
+from typing import Dict, Optional
 
 from tornado.websocket import WebSocketError, WebSocketHandler
 
@@ -15,7 +16,6 @@ from malcolm.annotypes import (
     json_encode,
 )
 from malcolm.core import (
-    Delta,
     Error,
     FieldError,
     Part,
@@ -26,7 +26,6 @@ from malcolm.core import (
     Response,
     Subscribe,
     Unsubscribe,
-    Update,
 )
 from malcolm.modules import builtin
 
@@ -65,37 +64,50 @@ def get_ip_validator(ifname):
 # For some reason tornado doesn't make us implement all abstract methods
 # noinspection PyAbstractClass
 class MalcWebSocketHandler(WebSocketHandler):
+    # How many responses may be waiting to go out to one client before we give
+    # up on it. A client that can't keep up would otherwise grow Tornado's
+    # write buffer without limit, and dropping the odd response is not an
+    # option: Deltas only mean anything applied in order and in full
+    MAX_QUEUED_RESPONSES = 1000
+
     _registrar: PartRegistrar
     _id_to_mri: Dict[int, str]
+    _responses: "asyncio.Queue"
+    _writer: Optional["asyncio.Future"] = None
     _validators = None
-    _writeable = None
+    # Left False until open() works it out, so the safe answer wins if we are
+    # ever asked before then
+    _writeable = False
+    _closed = False
 
     def initialize(self, registrar=None, validators=()):
         self._registrar = registrar
         # {id: mri}
         self._id_to_mri = {}
         self._validators = validators
+        self._responses = asyncio.Queue(maxsize=self.MAX_QUEUED_RESPONSES)
 
-    def on_message(self, message):
-        # called in tornado's thread
-        if self._writeable is None:
-            ipv4_ip = self.request.remote_ip
-            if ipv4_ip == "::1":
-                # Special case IPV6 loopback
-                ipv4_ip = "127.0.0.1"
-            remoteaddr = struct.unpack("!I", socket.inet_aton(ipv4_ip))[0]
-            if self._validators:
-                # Work out if the remote ip is within the netmask of any of our
-                # interfaces. If not, Put and Post are forbidden
-                self._writeable = max(v(remoteaddr) for v in self._validators)
-            else:
-                self._writeable = True
-            log.info(
-                "Puts and Posts are %s from %s",
-                "allowed" if self._writeable else "forbidden",
-                self.request.remote_ip,
-            )
+    def open(self, *args, **kwargs):
+        # Work out once, when the connection opens, whether the remote ip is
+        # within the netmask of any of our interfaces. If not, Put and Post are
+        # forbidden for the life of the connection
+        ipv4_ip = self.request.remote_ip
+        if ipv4_ip == "::1":
+            # Special case IPV6 loopback
+            ipv4_ip = "127.0.0.1"
+        remoteaddr = struct.unpack("!I", socket.inet_aton(ipv4_ip))[0]
+        if self._validators:
+            self._writeable = any(v(remoteaddr) for v in self._validators)
+        else:
+            self._writeable = True
+        log.info(
+            "Puts and Posts are %s from %s",
+            "allowed" if self._writeable else "forbidden",
+            self.request.remote_ip,
+        )
 
+    async def on_message(self, message):
+        # called on the event loop
         msg_id = -1
         try:
             d = json_decode(message)
@@ -106,12 +118,14 @@ class MalcWebSocketHandler(WebSocketHandler):
             request = deserialize_object(d, Request)
             request.set_callback(self.on_response)
             if isinstance(request, Subscribe):
-                assert msg_id not in self._id_to_mri, (
-                    "Duplicate subscription ID %d" % msg_id
-                )
+                if msg_id in self._id_to_mri:
+                    raise FieldError(f"Duplicate subscription ID {msg_id}")
                 self._id_to_mri[msg_id] = request.path[0]
             if isinstance(request, Unsubscribe):
-                mri = self._id_to_mri[msg_id]
+                # An Unsubscribe carries no path, so the mri comes from the
+                # Subscribe it cancels. Take the entry out as we go: the id is
+                # the client's to reuse once it has unsubscribed
+                mri = self._id_to_mri.pop(msg_id)
             else:
                 mri = request.path[0]
             if isinstance(request, (Put, Post)) and not self._writeable:
@@ -119,41 +133,79 @@ class MalcWebSocketHandler(WebSocketHandler):
             self._registrar.report(builtin.infos.RequestInfo(request, mri))
         except Exception as e:
             log.exception("Error handling message:\n%s", message)
-            error = Error(msg_id, e)
-            error_message = error.to_dict()
-            self.write_message(json_encode(error_message))
+            # Out through the queue like any other response, so an error can't
+            # overtake the responses that were produced before it
+            self.on_response(Error(msg_id, e))
 
-    def on_response(self, response):
-        # Called on the event loop, which is the one Tornado runs on, so write
-        # from here directly. This used to hand the write to the IOLoop and
-        # then block every 10 messages until those writes had completed, which
-        # was safe when it ran on a worker thread. On the loop it would be the
-        # loop waiting for work only the loop can do: it deadlocks, and the
-        # client stops getting updates after the tenth response.
-        self._on_response(response)
-
-    def _on_response(self, response: Response) -> None:
-        # called on the event loop
-        message = json_encode(response)
+    def on_response(self, response: Response) -> None:
+        # Called on the event loop, by the Controller that handled a request or
+        # by the Notifier when a value changed. Queue the response rather than
+        # writing it here: awaiting the write is what gives us flow control,
+        # and this is called from sync code that cannot await. Writing straight
+        # from here left nothing bounding the write buffer for a slow client
+        if self._closed:
+            # Nothing to write to, and the subscriptions are being torn down
+            return
+        if self._writer is None:
+            self._writer = asyncio.ensure_future(self._write_responses())
         try:
-            self.write_message(message)
-        except WebSocketError:
-            # The websocket is dead. If the response was a Delta or Update, then
-            # unsubscribe so the local controller doesn't keep on trying to
-            # respond
-            if isinstance(response, (Delta, Update)):
-                # Websocket is dead so we can clear the subscription key.
-                # Subsequent updates may come in before the unsubscribe, but
-                # ignore them as we can't do anything about it
-                mri = self._id_to_mri.pop(response.id, None)
-                if mri:
-                    log.info("WebSocket Error: unsubscribing from stale handle")
-                    unsubscribe = Unsubscribe(response.id)
-                    unsubscribe.set_callback(self.on_response)
-                    if self._registrar:
-                        self._registrar.report(
-                            builtin.infos.RequestInfo(unsubscribe, mri)
-                        )
+            self._responses.put_nowait(response)
+        except asyncio.QueueFull:
+            # This client is too far behind to catch up. Deltas are only
+            # meaningful in order and in full, so dropping responses would
+            # silently desync its model: drop the connection and let it
+            # reconnect, which resubscribes from a known state
+            log.warning(
+                "Closing websocket: %d responses queued and unsent",
+                self._responses.qsize(),
+            )
+            self._closed = True
+            self.close(1011, "Client too slow to keep up")
+
+    async def _write_responses(self) -> None:
+        # One writer per connection, so responses go out in the order they were
+        # produced, and awaiting each write means a slow client slows the queue
+        # down rather than growing the write buffer without limit
+        while True:
+            response = await self._responses.get()
+            try:
+                await self.write_message(json_encode(response))
+            except WebSocketError:
+                # The websocket is dead. Awaiting the write catches this
+                # whether it failed straight away or once the write was under
+                # way, which writing without awaiting did not
+                log.info("WebSocket write failed, dropping the connection")
+                self._closed = True
+                self._unsubscribe_all()
+                return
+            finally:
+                self._responses.task_done()
+
+    def on_close(self) -> None:
+        self._closed = True
+        self._unsubscribe_all()
+        if self._writer is not None:
+            self._writer.cancel()
+            self._writer = None
+
+    def _unsubscribe_all(self) -> None:
+        """Unsubscribe everything this connection still holds a subscription to
+
+        Otherwise the Controllers keep producing Deltas for a socket nobody is
+        reading. This used to happen only when a write failed, which missed
+        both a clean close and a write that failed after it had started.
+        """
+        if not self._registrar:
+            return
+        while self._id_to_mri:
+            msg_id, mri = self._id_to_mri.popitem()
+            log.info("Unsubscribing %s from %s for a closed websocket", msg_id, mri)
+            unsubscribe = Unsubscribe(msg_id)
+            # The Notifier matches a subscription on (callback, id), so this
+            # has to carry the same callback the Subscribe did. on_response
+            # drops the Return it produces, as we are closed by now
+            unsubscribe.set_callback(self.on_response)
+            self._registrar.report(builtin.infos.RequestInfo(unsubscribe, mri))
 
     # http://stackoverflow.com/q/24851207
     # TODO: remove this when the web gui is hosted from the box
@@ -182,11 +234,7 @@ class WebsocketServerPart(Part):
     @staticmethod
     def is_interface_up(ifname: str) -> bool:
         with open(os.path.join(SYSNET, ifname, "operstate")) as f:
-            state = str(f.read())
-        if state != "down\n":
-            return True
-        else:
-            return False
+            return f.read() != "down\n"
 
     @add_call_types
     def on_report_handlers(self) -> UHandlerInfos:
@@ -199,9 +247,11 @@ class WebsocketServerPart(Part):
                         validators.append(get_ip_validator(ifname))
                     except OSError as exception_message:
                         # Ignore any interfaces that fail
-                        print(
-                            f"{self.name} - failed to create IP validator for {ifname}"
-                            f" (skipping): {exception_message}"
+                        log.warning(
+                            "%s - failed to create IP validator for %s (skipping): %s",
+                            self.name,
+                            ifname,
+                            exception_message,
                         )
             # Check we have at least one created validator
             assert len(validators) > 0, "Failed to create any IP validators!"

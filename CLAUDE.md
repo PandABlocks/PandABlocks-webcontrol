@@ -93,14 +93,20 @@ controllers, waits for the PandA TCP port to open (`wait_for_port`), then starts
 **Everything runs on one event loop**: `core/concurrency.py:EventLoop`, on a
 daemon thread called `malcolm-event-loop`. There are no worker threads — a
 running server is MainThread plus that loop. Tornado shares it (an IOLoop is
-only a wrapper round an asyncio loop), so `web/util.py:IOLoopHelper` is a thin
-adapter that puts server callbacks on `EventLoop`; `EventLoop` is owned by
-`core`, and nothing in `web` starts or stops it.
+only a wrapper round an asyncio loop); `EventLoop` is owned by `core`, and
+nothing in `web` starts or stops it. `web` calls onto the loop directly —
+`HTTPServerComms` calls `listen()`/`stop()` from `do_init`/`do_disable`/
+`do_reset`, which are coroutines and so already on it. There used to be a
+`web/util.py:IOLoopHelper` adapter for dispatching those from off the loop;
+deferring them meant `do_init` returned before the port was bound, and a bind
+failure went to the loop's exception handler instead of faulting the Block.
 
 The request path, the hooks, `Context`, the PandA client and the poll loop are
 all coroutines. `Spawned` still exists: it schedules a coroutine on the loop and
 hands back something you can `wait()` on, and it will still put a plain blocking
-function on a thread if you give it one.
+function on a thread if you give it one. Called *from* the loop it schedules the
+task directly rather than paying for `run_coroutine_threadsafe`, which is the
+common case now that every request and every hook spawns from the loop.
 
 **Locking.** `Controller._lock` is an `asyncio.Lock`, and it is what serialises
 whole requests, so two clients putting to the same Attribute can't interleave.
@@ -131,11 +137,29 @@ blocking facades over `start_async()`/`stop_async()` for the same reason; from
 browser → `/ws` (`MalcWebSocketHandler.on_message`) → JSON deserialized into a
 `Request` → `registrar.report(RequestInfo(request, mri))` →
 `ServerComms.update_request_received` → `process.get_controller(mri)
-.handle_request(...)` (spawns a worker thread) → responses come back via the
-request callback → `IOLoopHelper.call` → `write_message`. `Put`/`Post` are
-rejected unless the client IP is inside a local interface's subnet, unless
-subnet validation is disabled (`--optionsdir` containing `no-subnet-validation`).
-There is no REST surface: the WebSocket is the only API.
+.handle_request(...)` (schedules a coroutine on the loop and doesn't wait for
+it) → responses come back via the request callback, `on_response`.
+
+`on_response` is called from sync code (a Controller, or the `Notifier` when a
+value changed) so it cannot await, and writing from there directly left nothing
+bounding Tornado's write buffer. It puts the response on a bounded per-
+connection `asyncio.Queue` instead, drained by one `_write_responses` task that
+*awaits* each `write_message`: that is the flow control, and one writer is what
+keeps Deltas in order. A client that fills the queue is closed rather than
+silently desynced, and `on_close` unsubscribes everything in `_id_to_mri` so the
+Controllers stop producing for a socket nobody reads.
+
+An mri of `"."` means the `ServerComms` Block itself rather than one of the
+Process' controllers, and `ServerComms.update_request_received` special-cases
+it. It is not dead: the web GUI Gets `[".", "blocks"]` to discover what Blocks
+exist, so removing it breaks startup with "No controller registered for mri
+'.'". It is spelled `[".","blocks"]` inside the minified bundle, which is easy
+to miss when grepping.
+
+`Put`/`Post` are rejected unless the client IP is inside a local interface's
+subnet (worked out once in `open()`), unless subnet validation is disabled
+(`--optionsdir` containing `no-subnet-validation`). There is no REST surface:
+the WebSocket is the only API.
 
 ### PandA path
 

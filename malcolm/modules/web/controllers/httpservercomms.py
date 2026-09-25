@@ -4,12 +4,12 @@ from tornado.httpserver import HTTPServer
 from tornado.web import Application
 
 from malcolm.annotypes import Anno, add_call_types
-from malcolm.core import APublished, Part, ProcessPublishHook, TableMeta
+from malcolm.core import APublished, ProcessPublishHook, TableMeta
 from malcolm.modules import builtin
 
 from ..hooks import ReportHandlersHook
 from ..infos import HandlerInfo
-from ..util import BlockTable, IOLoopHelper
+from ..util import BlockTable
 
 with Anno("TCP port number to run up under"):
     APort = int
@@ -47,13 +47,18 @@ class HTTPServerComms(builtin.controllers.ServerComms):
         self._start_server()
 
     def _start_server(self):
+        # do_init/do_reset are coroutines, so we are already on the event loop
+        # Tornado runs on: listen() binds the socket there and then, rather
+        # than do_init returning before the port is up, and a bind failure
+        # comes back out of here instead of into the loop's exception handler
         if not self._server_started:
-            IOLoopHelper.call(self._server.listen, int(self.port))
+            self._server.listen(int(self.port))
             self._server_started = True
 
     def _stop_server(self):
+        # Likewise on the loop, called from do_disable
         if self._server_started:
-            IOLoopHelper.call(self._server.stop)
+            self._server.stop()
             self._server_started = False
 
     async def do_disable(self):
@@ -74,14 +79,3 @@ class HTTPServerComms(builtin.controllers.ServerComms):
                 label = mri
             rows.append((mri, label))
         self.blocks.set_value(BlockTable.from_rows(rows))
-
-    def update_request_received(
-        self, part: Part, info: builtin.infos.RequestInfo
-    ) -> None:
-        if info.mri == ".":
-            # This is for us
-            controller = self
-        else:
-            assert self.process, "No attached process"
-            controller = self.process.get_controller(info.mri)
-        controller.handle_request(info.request)

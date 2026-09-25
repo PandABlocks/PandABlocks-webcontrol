@@ -1,4 +1,4 @@
-from malcolm.core import Part
+from malcolm.core import Controller, Part
 
 from ..infos import RequestInfo
 from .statefulcontroller import ADescription, AMri, StatefulController
@@ -16,7 +16,12 @@ class ServerComms(StatefulController):
         self.info_registry.add_reportable(RequestInfo, self.update_request_received)
 
     def update_request_received(self, _: Part, info: RequestInfo) -> None:
-        assert self.process, "No process"
-        controller = self.process.get_controller(info.mri)
+        if info.mri == ".":
+            # This is for us. The web GUI asks for [".", "blocks"] to find out
+            # what Blocks there are, so this route is how it starts up
+            controller: Controller = self
+        else:
+            assert self.process, "No process"
+            controller = self.process.get_controller(info.mri)
         # Don't wait for the server to actually handle the request, just return
         controller.handle_request(info.request)

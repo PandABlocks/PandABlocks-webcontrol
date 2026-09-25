@@ -82,8 +82,9 @@ class EventLoop:
 
     It lives on its own daemon thread, so that work can be put on it from, and
     waited on by, ordinary blocking code in any thread. Both `Spawned` and the
-    Tornado server (via `web.util.IOLoopHelper`) use it: a Tornado IOLoop is a
-    wrapper around an asyncio loop, so the web server needs no loop of its own.
+    Tornado server run on it: a Tornado IOLoop is a wrapper around an asyncio
+    loop, so the web server needs no loop of its own and calls straight onto
+    this one.
     """
 
     _loop: Optional[asyncio.AbstractEventLoop] = None
@@ -169,6 +170,20 @@ class EventLoop:
             loop.close()
 
 
+# Strong references to work scheduled straight onto the loop. asyncio only
+# keeps a weak reference to a Task, so one that nothing else holds on to can be
+# garbage collected mid-flight
+_PENDING_TASKS: "set" = set()
+
+
+def _schedule_on_loop(coro) -> "asyncio.Future":
+    """Schedule a coroutine on the loop the caller is already running on"""
+    task = asyncio.ensure_future(coro)
+    _PENDING_TASKS.add(task)
+    task.add_done_callback(_PENDING_TASKS.discard)
+    return task
+
+
 class Spawned:
     """Internal object keeping track of a spawned function
 
@@ -179,14 +194,27 @@ class Spawned:
 
     NO_RESULT = object()
 
+    # An asyncio Task when the work was scheduled from the loop, a
+    # concurrent Future when it was handed over from another thread
+    _future: Union["asyncio.Future", concurrent.futures.Future]
+
     def __init__(self, func: Callable[..., Any], args: Tuple, kwargs: Dict) -> None:
         self._result: Union[Any, Exception] = self.NO_RESULT
         self._function = func
         self._args = args
         self._kwargs = kwargs
-        self._future = asyncio.run_coroutine_threadsafe(
-            self.catching_function(), EventLoop.get()
-        )
+        # Set once the work has finished, so a caller on another thread can
+        # block on it whichever of the two ways it was scheduled
+        self._done = threading.Event()
+        coro = self.catching_function()
+        if EventLoop.is_current_thread():
+            # We are already on the loop, so schedule directly.
+            # run_coroutine_threadsafe would cost a concurrent Future and a
+            # self-pipe wakeup here, and every request from the web UI spawns
+            self._future = _schedule_on_loop(coro)
+        else:
+            self._future = asyncio.run_coroutine_threadsafe(coro, EventLoop.get())
+        self._future.add_done_callback(lambda _: self._done.set())
 
     @staticmethod
     def _is_async(func: Callable[..., Any]) -> bool:
@@ -226,14 +254,12 @@ class Spawned:
         wait_async(), or they would block the loop they are running on.
         """
         EventLoop.check_not_on_loop("Spawned.wait()")
-        try:
-            # exception() returns the error rather than raising it: wait() only
-            # reports that we finished, get() is what re-raises
-            self._future.exception(timeout)
-        except concurrent.futures.TimeoutError:
+        # Wait on the Event rather than the future: work scheduled from the
+        # loop is an asyncio Task, which isn't safe to touch from here. A
+        # cancelled task still fires its callbacks, so this returns for one
+        # too - wait() only reports that we finished, get() is what re-raises
+        if not self._done.wait(timeout):
             raise TimeoutError(f"Spawned function didn't finish within {timeout}s")
-        except concurrent.futures.CancelledError:
-            pass
 
     async def wait_async(self, timeout: float = None) -> None:
         """Wait from the event loop for the function to finish
@@ -241,7 +267,10 @@ class Spawned:
         Like wait(), but for callers that are themselves coroutines. Shielded,
         so that timing out here doesn't cancel the work, matching wait().
         """
-        waitable = asyncio.shield(asyncio.wrap_future(self._future))
+        if isinstance(self._future, asyncio.Future):
+            waitable = asyncio.shield(self._future)
+        else:
+            waitable = asyncio.shield(asyncio.wrap_future(self._future))
         try:
             await asyncio.wait_for(waitable, timeout)
         except (asyncio.TimeoutError, TimeoutError):
@@ -258,8 +287,9 @@ class Spawned:
         self.wait(timeout)
         if self._result is self.NO_RESULT:
             # We never stored a result, so the coroutine was cancelled or hit a
-            # BaseException. Asking the future re-raises whatever that was.
-            self._future.result(0)
+            # BaseException. Asking the future re-raises whatever that was, and
+            # it has finished by now, so this doesn't block for either kind
+            self._future.result()
         if isinstance(self._result, Exception):
             raise self._result
         return self._result
