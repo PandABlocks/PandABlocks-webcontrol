@@ -242,7 +242,7 @@ class ChildPart(Part):
             await child.put_attribute_values(to_set)
         if init and "design" in child:
             # We might not have cleared the changes so report here
-            await self.send_modified_info_if_not_equal("design", child.design.value)
+            self.send_modified_info_if_not_equal("design", child.design.value)
 
     @add_call_types
     async def on_save(self, context: AContext) -> AStructure:
@@ -336,15 +336,15 @@ class ChildPart(Part):
             self.registrar.report(PartExportableInfo(new_fields, port_infos))
         )
 
-    async def update_part_modified(self, response: Response) -> None:
+    def update_part_modified(self, response: Response) -> None:
         if isinstance(response, Update):
             subscribe = self.config_subscriptions[response.id]
             name = subscribe.path[-2]
-            await self.send_modified_info_if_not_equal(name, response.value)
+            self.send_modified_info_if_not_equal(name, response.value)
         elif not isinstance(response, Return):
             self.log.warning("Got unexpected response {response}")
 
-    async def send_modified_info_if_not_equal(self, name, new_value):
+    def send_modified_info_if_not_equal(self, name, new_value):
         # If we did a save or load then we will have an original value,
         # otherwise it will be None
         original_value = self.saved_structure.get(name, None)
@@ -365,7 +365,7 @@ class ChildPart(Part):
             else:
                 self.modified_messages.pop(name, None)
             info = PartModifiedInfo(self.modified_messages.copy())
-            await maybe_await(self.registrar.report(info))
+            self.registrar.report(info)
 
     def _get_flowgraph_ports(self, ports: APortMap, typ: Type[TP]) -> Dict[str, TP]:
         ret = {}

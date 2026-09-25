@@ -5,16 +5,22 @@ from collections import OrderedDict
 
 from mock import ANY, patch
 
-from malcolm.core import AlarmSeverity, Process, Queue, Subscribe
+import asyncio
+
+from malcolm.core import AlarmSeverity, Process, Subscribe
 from malcolm.modules.pandablocks.controllers import PandAManagerController
 from malcolm.modules.pandablocks.pandablocksclient import BlockData, FieldData
 from malcolm.modules.pandablocks.util import BitsTable, PositionCapture
 
+from ...loop import on_loop
+
 
 class PandABlocksManagerControllerTest(unittest.TestCase):
+    # autospec so the client's coroutine methods are mocked as AsyncMocks
     @patch(
         "malcolm.modules.pandablocks.controllers."
-        "pandamanagercontroller.PandABlocksClient"
+        "pandamanagercontroller.PandABlocksClient",
+        autospec=True,
     )
     def setUp(self, mock_client):
         self.process = Process()
@@ -68,13 +74,15 @@ class PandABlocksManagerControllerTest(unittest.TestCase):
         self.process.stop()
         shutil.rmtree(self.config_dir)
 
-    def test_no_connection(self):
+    @on_loop
+    async def test_no_connection(self):
         o = PandAManagerController(
             mri="MRI",
             config_dir=self.config_dir,
             hostname="non-existant-hostname",
         )
-        self.process.add_controller(o)
+        # The process is running, so adding starts it, which is the async path
+        await self.process.add_controllers_async([o])
         health = self.process.block_view("MRI").health
         assert (
             health.value == "Can't connect to 'non-existant-hostname:8888', "
@@ -82,7 +90,8 @@ class PandABlocksManagerControllerTest(unittest.TestCase):
         )
         assert health.alarm.severity == AlarmSeverity.MAJOR_ALARM
 
-    def test_initial_changes(self):
+    @on_loop
+    async def test_initial_changes(self):
         assert self.process.mri_list == [
             "P",
             "P:PCOMP",
@@ -108,104 +117,108 @@ class PandABlocksManagerControllerTest(unittest.TestCase):
         assert counter.out.value == 0.0
         assert ttlin.val.value is False
 
-    def test_toggling_bit_outs(self):
+    @on_loop
+    async def test_toggling_bit_outs(self):
         ttlin = self.process.block_view("P:TTLIN1")
         assert ttlin.val.value is False
 
         # Change to a different value, should change once and stick
-        self.o.handle_changes([("TTLIN1.VAL", "1")])
+        await self.o.handle_changes([("TTLIN1.VAL", "1")])
         assert ttlin.val.value is True
-        self.o.handle_changes(())
+        await self.o.handle_changes(())
         assert ttlin.val.value is True
-        self.o.handle_changes(())
+        await self.o.handle_changes(())
         assert ttlin.val.value is True
 
         # Change to same value, should toggle once
-        self.o.handle_changes([("TTLIN1.VAL", "1")])
+        await self.o.handle_changes([("TTLIN1.VAL", "1")])
         assert ttlin.val.value is False
-        self.o.handle_changes(())
+        await self.o.handle_changes(())
         assert ttlin.val.value is True
-        self.o.handle_changes(())
+        await self.o.handle_changes(())
         assert ttlin.val.value is True
 
         # Change back, should change once and stick
-        self.o.handle_changes([("TTLIN1.VAL", "0")])
+        await self.o.handle_changes([("TTLIN1.VAL", "0")])
         assert ttlin.val.value is False
-        self.o.handle_changes(())
+        await self.o.handle_changes(())
         assert ttlin.val.value is False
-        self.o.handle_changes(())
+        await self.o.handle_changes(())
         assert ttlin.val.value is False
 
         # Change to same value, should toggle once
-        self.o.handle_changes([("TTLIN1.VAL", "0")])
+        await self.o.handle_changes([("TTLIN1.VAL", "0")])
         assert ttlin.val.value is True
-        self.o.handle_changes(())
+        await self.o.handle_changes(())
         assert ttlin.val.value is False
-        self.o.handle_changes(())
+        await self.o.handle_changes(())
         assert ttlin.val.value is False
 
         # Change to same value, then get the opposite next tick
-        self.o.handle_changes([("TTLIN1.VAL", "0")])
+        await self.o.handle_changes([("TTLIN1.VAL", "0")])
         assert ttlin.val.value is True
-        self.o.handle_changes([("TTLIN1.VAL", "1")])
+        await self.o.handle_changes([("TTLIN1.VAL", "1")])
         assert ttlin.val.value is False
-        self.o.handle_changes(())
+        await self.o.handle_changes(())
         assert ttlin.val.value is True
-        self.o.handle_changes(())
+        await self.o.handle_changes(())
         assert ttlin.val.value is True
 
-    def test_constant_toggling_bit_outs(self):
+    @on_loop
+    async def test_constant_toggling_bit_outs(self):
         ttlin = self.process.block_view("P:TTLIN1")
         assert ttlin.val.value is False
 
         # Constant updates, should toggle each time
-        self.o.handle_changes([("TTLIN1.VAL", "0")])
+        await self.o.handle_changes([("TTLIN1.VAL", "0")])
         assert ttlin.val.value is True
-        self.o.handle_changes([("TTLIN1.VAL", "1")])
+        await self.o.handle_changes([("TTLIN1.VAL", "1")])
         assert ttlin.val.value is False
-        self.o.handle_changes([("TTLIN1.VAL", "1")])
+        await self.o.handle_changes([("TTLIN1.VAL", "1")])
         assert ttlin.val.value is True
-        self.o.handle_changes([("TTLIN1.VAL", "1")])
+        await self.o.handle_changes([("TTLIN1.VAL", "1")])
         assert ttlin.val.value is False
-        self.o.handle_changes([("TTLIN1.VAL", "1")])
+        await self.o.handle_changes([("TTLIN1.VAL", "1")])
         assert ttlin.val.value is True
-        self.o.handle_changes([("TTLIN1.VAL", "0")])
+        await self.o.handle_changes([("TTLIN1.VAL", "0")])
         assert ttlin.val.value is False
-        self.o.handle_changes([("TTLIN1.VAL", "0")])
+        await self.o.handle_changes([("TTLIN1.VAL", "0")])
         assert ttlin.val.value is True
-        self.o.handle_changes([("TTLIN1.VAL", "1")])
+        await self.o.handle_changes([("TTLIN1.VAL", "1")])
         assert ttlin.val.value is False
-        self.o.handle_changes([("TTLIN1.VAL", "0")])
+        await self.o.handle_changes([("TTLIN1.VAL", "0")])
         assert ttlin.val.value is True
-        self.o.handle_changes(())
+        await self.o.handle_changes(())
         assert ttlin.val.value is False
-        self.o.handle_changes(())
+        await self.o.handle_changes(())
         assert ttlin.val.value is False
 
-    def test_table_deltas(self):
-        queue = Queue()
+    @on_loop
+    async def test_table_deltas(self):
+        queue: asyncio.Queue = asyncio.Queue()
         subscribe = Subscribe(path=["P"], delta=True)
-        subscribe.set_callback(queue.put)
+        subscribe.set_callback(queue.put_nowait)
         self.o.handle_request(subscribe)
-        delta = queue.get()
+        delta = await queue.get()
         table = delta.changes[0][1]["bits"]["value"]
         assert table.name == ["TTLIN1.VAL", "TTLIN2.VAL", "PCOMP.OUT"]
         assert table.value == [False, False, False]
         assert table.capture == [False, False, False]
 
-        self.o.handle_changes([("TTLIN1.VAL", "1")])
-        delta = queue.get()
+        await self.o.handle_changes([("TTLIN1.VAL", "1")])
+        delta = await queue.get()
         assert delta.changes == [
             [["bits", "value", "value"], [True, False, False]],
             [["bits", "timeStamp"], ANY],
         ]
 
-    def test_pos_table_deltas(self):
-        queue = Queue()
+    @on_loop
+    async def test_pos_table_deltas(self):
+        queue: asyncio.Queue = asyncio.Queue()
         subscribe = Subscribe(path=["P"], delta=True)
-        subscribe.set_callback(queue.put)
+        subscribe.set_callback(queue.put_nowait)
         self.o.handle_request(subscribe)
-        delta = queue.get()
+        delta = await queue.get()
         capture_enums = delta.changes[0][1]["positions"]["meta"]["elements"]["capture"][
             "choices"
         ]
@@ -217,47 +230,50 @@ class PandABlocksManagerControllerTest(unittest.TestCase):
         assert table.offset == [0.0]
         assert table.capture == [PositionCapture.NO]
 
-        self.o.handle_changes([("COUNTER.OUT", "20")])
-        delta = queue.get()
+        await self.o.handle_changes([("COUNTER.OUT", "20")])
+        delta = await queue.get()
         assert delta.changes == [
             [["positions", "value", "value"], [20.0]],
             [["positions", "timeStamp"], ANY],
         ]
 
-        self.o.handle_changes([("COUNTER.OUT", "5"), ("COUNTER.OUT.SCALE", 0.5)])
-        delta = queue.get()
+        await self.o.handle_changes([("COUNTER.OUT", "5"), ("COUNTER.OUT.SCALE", 0.5)])
+        delta = await queue.get()
         assert delta.changes == [
             [["positions", "value", "value"], [2.5]],
             [["positions", "value", "scale"], [0.5]],
             [["positions", "timeStamp"], ANY],
         ]
 
-    def test_change_pcap_bits(self):
+    @on_loop
+    async def test_change_pcap_bits(self):
         b = self.process.block_view("P")
         assert b.bits.value.capture == [False, False, False]
-        b.bits.put_value(BitsTable(name=["TTLIN1.VAL"], value=[False], capture=[True]))
+        await b.bits.put_value(BitsTable(name=["TTLIN1.VAL"], value=[False], capture=[True]))
         assert b.bits.value.capture == [True, False, False]
         self.client.set_fields.assert_called_once_with({"PCAP.BITS0.CAPTURE": "Value"})
         self.client.set_fields.reset_mock()
-        self.o.handle_changes([("PCAP.BITS0.CAPTURE", "Value")])
+        await self.o.handle_changes([("PCAP.BITS0.CAPTURE", "Value")])
         assert b.bits.value.capture == [True, True, True]
-        b.bits.put_value(BitsTable(name=["TTLIN1.VAL"], value=[False], capture=[False]))
+        await b.bits.put_value(BitsTable(name=["TTLIN1.VAL"], value=[False], capture=[False]))
         assert b.bits.value.capture == [False, True, True]
         self.client.set_fields.assert_called_once_with({"PCAP.BITS0.CAPTURE": "No"})
-        self.o.handle_changes([("PCAP.BITS0.CAPTURE", "No")])
+        await self.o.handle_changes([("PCAP.BITS0.CAPTURE", "No")])
         assert b.bits.value.capture == [False, False, False]
 
-    def test_label_change(self):
+    @on_loop
+    async def test_label_change(self):
         pcomp = self.process.block_view("P:PCOMP")
         assert pcomp.label.value == "Position Compare"
-        self.o.handle_changes([("*METADATA.LABEL_PCOMP1", "New Label")])
+        await self.o.handle_changes([("*METADATA.LABEL_PCOMP1", "New Label")])
         assert pcomp.label.value == "New Label"
-        pcomp.label.put_value("Very new")
+        await pcomp.label.put_value("Very new")
         self.client.set_field.assert_called_once_with(
             "*METADATA", "LABEL_PCOMP1", "Very new"
         )
 
-    def test_layout(self):
+    @on_loop
+    async def test_layout(self):
         panda = self.process.block_view("P")
         layout = panda.layout.value
         assert layout.name == ["PCOMP", "COUNTER", "TTLIN1", "TTLIN2", "PCAP"]
@@ -265,7 +281,7 @@ class PandABlocksManagerControllerTest(unittest.TestCase):
         assert layout.y == [0.0, 0.0, 0.0, 0.0, 0.0]
         assert layout.visible == [False, False, False, False, False]
         # Change coming from PandA with an extra block in it
-        self.o.handle_changes(
+        await self.o.handle_changes(
             [
                 (
                     "*METADATA.LAYOUT",
@@ -285,7 +301,7 @@ class PandABlocksManagerControllerTest(unittest.TestCase):
         layout = panda.layout.value
         layout.visible = [False, True, True, False, False]
         layout.y = [0.0, 2.3, 5.6, 0.0, 0.0]
-        panda.layout.put_value(layout)
+        await panda.layout.put_value(layout)
         self.client.set_table.assert_called_once_with(
             "*METADATA",
             "LAYOUT",

@@ -1,7 +1,9 @@
 import unittest
 from collections import OrderedDict
 
-from mock import ANY, Mock
+from mock import ANY, AsyncMock, Mock
+
+import asyncio
 
 from malcolm.core import (
     Alarm,
@@ -9,7 +11,6 @@ from malcolm.core import (
     ChoiceMeta,
     NumberMeta,
     Process,
-    Queue,
     StringMeta,
     Subscribe,
     TimeStamp,
@@ -19,17 +20,20 @@ from malcolm.modules.pandablocks.controllers.pandablockcontroller import (
 )
 from malcolm.modules.pandablocks.pandablocksclient import BlockData, FieldData
 
+from ...loop import on_loop
+
 
 class PandABoxBlockMakerTest(unittest.TestCase):
     def setUp(self):
-        self.client = Mock()
+        self.client = Mock(get_field=AsyncMock(), set_field=AsyncMock())
         self.process = Process()
         self.process.start()
 
     def tearDown(self):
         self.process.stop()
 
-    def test_block_fields_adder(self):
+    @on_loop
+    async def test_block_fields_adder(self):
         fields = OrderedDict()
         block_data = BlockData(2, "Adder description", fields)
         fields["INPA"] = FieldData("pos_mux", "", "Input A", ["A.OUT", "B.OUT"])
@@ -41,7 +45,7 @@ class PandABoxBlockMakerTest(unittest.TestCase):
         fields["HEALTH"] = FieldData("read", "enum", "What's wrong", ["OK", "Very Bad"])
 
         o = PandABlockController(self.client, "MRI", "ADDER1", block_data, "/docs")
-        self.process.add_controller(o)
+        await self.process.add_controllers_async([o])
         b = self.process.block_view("MRI:ADDER1")
 
         assert list(b) == [
@@ -72,7 +76,7 @@ class PandABoxBlockMakerTest(unittest.TestCase):
             "config:1",
         ]
         assert inpa.meta.choices == ["A.OUT", "B.OUT"]
-        inpa.put_value("A.OUT")
+        await inpa.put_value("A.OUT")
         self.client.set_field.assert_called_once_with("ADDER1", "INPA", "A.OUT")
         self.client.reset_mock()
 
@@ -92,44 +96,45 @@ class PandABoxBlockMakerTest(unittest.TestCase):
             "widget:textupdate",
         ]
 
-        queue = Queue()
+        queue: asyncio.Queue = asyncio.Queue()
         subscribe = Subscribe(path=["MRI:ADDER1", "out"], delta=True)
-        subscribe.set_callback(queue.put)
+        subscribe.set_callback(queue.put_nowait)
         o.handle_request(subscribe)
-        delta = queue.get(timeout=1)
+        delta = await asyncio.wait_for(queue.get(), 1)
         assert delta.changes[0][1]["value"] == 0
 
         ts = TimeStamp()
-        o.handle_changes({"OUT": "145"}, ts)
-        delta = queue.get(timeout=1)
+        await o.handle_changes({"OUT": "145"}, ts)
+        delta = await asyncio.wait_for(queue.get(), 1)
         assert delta.changes == [
             [["value"], 145],
             [["timeStamp"], ts],
         ]
 
         subscribe = Subscribe(path=["MRI:ADDER1", "health"], delta=True)
-        subscribe.set_callback(queue.put)
+        subscribe.set_callback(queue.put_nowait)
         o.handle_request(subscribe)
-        delta = queue.get(timeout=1)
+        delta = await asyncio.wait_for(queue.get(), 1)
         assert delta.changes[0][1]["value"] == "OK"
 
         ts = TimeStamp()
-        o.handle_changes({"HEALTH": "Very Bad"}, ts)
-        delta = queue.get(timeout=1)
+        await o.handle_changes({"HEALTH": "Very Bad"}, ts)
+        delta = await asyncio.wait_for(queue.get(), 1)
         assert delta.changes == [
             [["value"], "Very Bad"],
             [["alarm"], Alarm.major("Very Bad")],
             [["timeStamp"], ts],
         ]
-        o.handle_changes({"HEALTH": "OK"}, ts)
-        delta = queue.get(timeout=1)
+        await o.handle_changes({"HEALTH": "OK"}, ts)
+        delta = await asyncio.wait_for(queue.get(), 1)
         assert delta.changes == [
             [["value"], "OK"],
             [["alarm"], Alarm.ok],
             [["timeStamp"], ts],
         ]
 
-    def test_block_fields_pulse(self):
+    @on_loop
+    async def test_block_fields_pulse(self):
         fields = OrderedDict()
         block_data = BlockData(4, "Pulse description", fields)
         fields["DELAY"] = FieldData("time", "", "Time", [])
@@ -138,7 +143,7 @@ class PandABoxBlockMakerTest(unittest.TestCase):
         fields["ERR_PERIOD"] = FieldData("read", "bit", "Error", [])
 
         o = PandABlockController(self.client, "MRI", "PULSE2", block_data, "/docs")
-        self.process.add_controller(o)
+        await self.process.add_controllers_async([o])
         b = self.process.block_view("MRI:PULSE2")
 
         assert list(b) == [
@@ -163,7 +168,7 @@ class PandABoxBlockMakerTest(unittest.TestCase):
         assert b.label.value == "Pulse description 2"
 
         # check setting label
-        b.label.put_value("A new label")
+        await b.label.put_value("A new label")
         assert b.meta.label == "A new label"
         assert b.label.value == "A new label"
         self.client.set_field.assert_called_once_with(
@@ -172,13 +177,13 @@ class PandABoxBlockMakerTest(unittest.TestCase):
         self.client.set_field.reset_mock()
 
         # check updated with nothing
-        o.handle_changes(dict(LABEL=""), ts=TimeStamp())
+        await o.handle_changes(dict(LABEL=""), ts=TimeStamp())
         assert b.meta.label == "Pulse description 2"
         assert b.label.value == "Pulse description 2"
         self.client.set_field.assert_not_called()
 
         # check updated with something from the server
-        o.handle_changes(dict(LABEL="A server label"), ts=TimeStamp())
+        await o.handle_changes(dict(LABEL="A server label"), ts=TimeStamp())
         assert b.meta.label == "A server label"
         assert b.label.value == "A server label"
         self.client.set_field.assert_not_called()
@@ -230,16 +235,16 @@ class PandABoxBlockMakerTest(unittest.TestCase):
         assert err.meta.typeid == BooleanMeta.typeid
         assert err.meta.tags == ["group:readbacks", "widget:led"]
 
-        queue = Queue()
+        queue: asyncio.Queue = asyncio.Queue()
         subscribe = Subscribe(path=["MRI:PULSE2", "inp"], delta=True)
-        subscribe.set_callback(queue.put)
+        subscribe.set_callback(queue.put_nowait)
         o.handle_request(subscribe)
-        delta = queue.get()
+        delta = await queue.get()
         assert delta.changes[0][1]["value"] == "ZERO"
 
         ts = TimeStamp()
-        o.handle_changes({"INP": "X.OUT"}, ts)
-        delta = queue.get()
+        await o.handle_changes({"INP": "X.OUT"}, ts)
+        delta = await queue.get()
         assert delta.changes == [
             [["value"], "X.OUT"],
             [["timeStamp"], ts],
@@ -256,13 +261,14 @@ class PandABoxBlockMakerTest(unittest.TestCase):
             ],
         ]
 
-    def test_block_fields_lut(self):
+    @on_loop
+    async def test_block_fields_lut(self):
         fields = OrderedDict()
         block_data = BlockData(8, "Lut description", fields)
         fields["FUNC"] = FieldData("param", "lut", "Function", [])
 
         o = PandABlockController(self.client, "MRI", "LUT3", block_data, "/docs")
-        self.process.add_controller(o)
+        await self.process.add_controllers_async([o])
         b = self.process.block_view("MRI:LUT3")
 
         func = b.func
@@ -270,20 +276,20 @@ class PandABoxBlockMakerTest(unittest.TestCase):
         assert func.meta.typeid == StringMeta.typeid
         assert func.meta.tags == ["group:parameters", "widget:textinput", "config:1"]
 
-        queue = Queue()
+        queue: asyncio.Queue = asyncio.Queue()
         subscribe = Subscribe(path=["MRI:LUT3"], delta=True)
-        subscribe.set_callback(queue.put)
+        subscribe.set_callback(queue.put_nowait)
         o.handle_request(subscribe)
-        delta = queue.get()
+        delta = await queue.get()
         assert delta.changes[0][1]["func"]["value"] == ""
         assert '<path id="OR"' in delta.changes[0][1]["icon"]["value"]
 
         # This is the correct FUNC.RAW value for !A&!B&!C&!D&!E
         self.client.get_field.return_value = "1"
         ts = TimeStamp()
-        o.handle_changes({"FUNC": "!A&!B&!C&!D&!E"}, ts)
+        await o.handle_changes({"FUNC": "!A&!B&!C&!D&!E"}, ts)
         self.client.get_field.assert_called_once_with("LUT3", "FUNC.RAW")
-        delta = queue.get()
+        delta = await queue.get()
         assert delta.changes == [
             [["func", "value"], "!A&!B&!C&!D&!E"],
             [["func", "timeStamp"], ts],

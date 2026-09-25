@@ -69,6 +69,8 @@ class PandAManagerController(builtin.controllers.ManagerController):
         self._child_controllers: Dict[str, PandABlockController] = {}
         # The PandABlock client that does the comms
         self._client = PandABlocksClient(hostname, port)
+        # Set when the PandA hands us a layout that we need to apply
+        self._layout_needs_set = False
         # The json layout stored in PandA
         self._json_layout: Dict[str, Dict[str, float]] = {}
         # Filled in on reset
@@ -291,11 +293,9 @@ class PandAManagerController(builtin.controllers.ManagerController):
                 self._json_layout = json.loads("".join(v))
                 if self.layout.value.name:
                     # Only set the layout after the initial call to set_layout.
-                    # Spawned rather than awaited: _handle_change is sync, and
-                    # this writes the layout back to the PandA
-                    self.process.spawn(
-                        self.set_layout, LayoutTable([], [], [], [], [])
-                    )
+                    # _handle_change is sync, so flag it for handle_changes to
+                    # apply once it has finished sorting the changes
+                    self._layout_needs_set = True
                 return
             else:
                 # Don't support any non-label metadata fields at the moment
@@ -321,6 +321,11 @@ class PandAManagerController(builtin.controllers.ManagerController):
         # Work out which change is needed for which block
         for key, value in changes:
             self._handle_change(key, value, bus_changes, block_changes, bit_out_changes)
+
+        # The PandA gave us a layout while we were sorting the changes
+        if self._layout_needs_set:
+            self._layout_needs_set = False
+            await self.set_layout(LayoutTable([], [], [], [], []))
 
         # Notify the Blocks that they need to handle these changes
         if bus_changes:

@@ -17,12 +17,15 @@ from malcolm.modules.builtin.hooks import (
 )
 from malcolm.modules.builtin.util import StatefulStates
 
+from ...loop import on_loop
+
 
 class TestStates(unittest.TestCase):
     def setUp(self):
         self.o = StatefulStates()
 
-    def test_init(self):
+    @on_loop
+    async def test_init(self):
         expected = OrderedDict()
         expected["Resetting"] = {"Ready", "Fault", "Disabling"}
         expected["Ready"] = {"Fault", "Disabling"}
@@ -31,11 +34,13 @@ class TestStates(unittest.TestCase):
         expected["Disabled"] = {"Resetting"}
         assert self.o._allowed == expected
 
-    def test_transition_allowed(self):
+    @on_loop
+    async def test_transition_allowed(self):
         assert self.o.transition_allowed("Ready", "Resetting") is False
         assert self.o.transition_allowed("Ready", "Disabling")
 
-    def test_set_allowed(self):
+    @on_loop
+    async def test_set_allowed(self):
         assert self.o.transition_allowed("Ready", "Resetting") is False
         self.o.set_allowed("Ready", "Resetting")
         assert self.o.transition_allowed("Ready", "Resetting")
@@ -77,62 +82,68 @@ class TestStatefulController(unittest.TestCase):
         self.process.add_controller(self.o)
         self.b = self.process.block_view("MyMRI")
 
-    def start_process(self):
-        self.process.start()
+    async def start_process(self):
+        # start_async, not the blocking start() facade: these tests run on the
+        # event loop, where blocking would deadlock
+        await self.process.start_async()
         self.addCleanup(self.stop_process)
 
     def stop_process(self):
         if self.process.state:
             self.process.stop(timeout=1)
 
-    def test_process_init(
-        self,
-    ):
+    @on_loop
+    async def test_process_init(self):
         assert not self.part.started
-        self.start_process()
+        await self.start_process()
         assert self.part.started
 
-    def test_process_stop(self):
-        self.start_process()
+    @on_loop
+    async def test_process_stop(self):
+        await self.start_process()
         assert not self.part.halted
-        self.process.stop(timeout=1)
+        await self.process.stop_async(timeout=1)
         assert self.part.halted
 
-    def test_init(self):
+    @on_loop
+    async def test_init(self):
         assert self.b.state.value == "Disabled"
-        self.start_process()
+        await self.start_process()
         assert list(self.b) == ["meta", "health", "state", "disable", "reset"]
         assert self.b.state.value == "Ready"
         assert self.b.disable.meta.writeable is True
         assert self.b.reset.meta.writeable is False
 
-    def test_reset_fails_from_ready(self):
-        self.start_process()
+    @on_loop
+    async def test_reset_fails_from_ready(self):
+        await self.start_process()
         with self.assertRaises(TypeError):
-            self.o.reset()
+            await self.o.reset()
         assert not self.part.reset_done
 
-    def test_disable(self):
-        self.start_process()
+    @on_loop
+    async def test_disable(self):
+        await self.start_process()
         assert not self.part.disable_done
-        self.b.disable()
+        await self.b.disable()
         assert self.part.disable_done
         assert self.b.state.value == "Disabled"
         with self.assertRaises(NotWriteableError) as cm:
-            self.b.disable()
+            await self.b.disable()
         assert str(cm.exception) == (
             "Field ['MyMRI', 'disable'] is not writeable, maybe because Block "
             "state = Disabled"
         )
         assert not self.part.reset_done
-        self.b.reset()
+        await self.b.reset()
         assert self.part.reset_done
         assert self.b.state.value == "Ready"
 
-    def test_run_hook(self):
-        self.start_process()
+    @on_loop
+    async def test_run_hook(self):
+        await self.start_process()
         part_contexts = self.o.create_part_contexts()
-        result = self.o.run_hooks(SaveHook(p, c) for p, c in part_contexts.items())
+        result = await self.o.run_hooks(SaveHook(p, c) for p, c in part_contexts.items())
         assert set(result) == {"testpart", "testpart2"}
         assert result["testpart"] == dict(foo="bartestpart")
         assert result["testpart2"] == dict(foo="bartestpart2")
@@ -142,17 +153,18 @@ class TestStatefulController(unittest.TestCase):
         del part_contexts
         gc.collect()
         with self.assertRaises(ReferenceError):
-            self.part.context.sleep(0)
+            await self.part.context.sleep(0)
 
-    def test_run_hook_raises(self):
-        self.start_process()
+    @on_loop
+    async def test_run_hook_raises(self):
+        await self.start_process()
 
         class MyException(Exception):
             pass
 
         self.part.exception = MyException()
         with self.assertRaises(Exception) as cm:
-            self.o.run_hooks(
+            await self.o.run_hooks(
                 SaveHook(p, c) for p, c in self.o.create_part_contexts().items()
             )
         self.assertIs(self.part.context, None)

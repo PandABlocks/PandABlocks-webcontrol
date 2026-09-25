@@ -377,10 +377,23 @@ class Context:
             timeout = until - time.time()
             if timeout < 0:
                 timeout = 0
-        try:
-            response = await asyncio.wait_for(self._q.get(), timeout)
-        except (asyncio.TimeoutError, TimeoutError):
-            raise TimeoutError(f"Timeout waiting for {self._describe_futures(futures)}")
+        if timeout is not None and timeout <= 0:
+            # asyncio.wait_for(..., 0) cancels rather than taking an item that
+            # is already queued, where Queue.get(timeout=0) would return it, so
+            # service whatever is waiting and then time out
+            try:
+                response = self._q.get_nowait()
+            except asyncio.QueueEmpty:
+                raise TimeoutError(
+                    f"Timeout waiting for {self._describe_futures(futures)}"
+                )
+        else:
+            try:
+                response = await asyncio.wait_for(self._q.get(), timeout)
+            except (asyncio.TimeoutError, TimeoutError):
+                raise TimeoutError(
+                    f"Timeout waiting for {self._describe_futures(futures)}"
+                )
         if response is self._sentinel_stop:
             self._sentinel_stop = None
         elif response is self.STOP:

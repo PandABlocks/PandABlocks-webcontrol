@@ -24,6 +24,9 @@ with Anno("The return value"):
     AWorld = str
 
 
+from ..loop import on_loop  # noqa: E402
+
+
 class MyPart(Part):
     my_attribute = None
     exception = None
@@ -70,13 +73,14 @@ class TestController(unittest.TestCase):
             "would overwrite one made by MyPart(name='test_part')"
         )
 
-    def test_make_view(self):
+    @on_loop
+    async def test_make_view(self):
         b = self.process.block_view("mri")
         method_view = b.method
         attribute_view = b.myAttribute
         dict_view = b.method.meta.returns.elements
         list_view = b.method.meta.returns.required
-        assert method_view() == "world"
+        assert await method_view() == "world"
         assert attribute_view.value == "hello_block"
         assert dict_view["return"].description == "The return value"
         assert list_view[0] == "return"

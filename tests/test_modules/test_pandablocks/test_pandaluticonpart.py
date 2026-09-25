@@ -2,7 +2,7 @@ import os
 import unittest
 from xml.etree import cElementTree as ET
 
-from mock import MagicMock
+from mock import AsyncMock, MagicMock
 
 from malcolm.modules.builtin.util import SVGIcon
 from malcolm.modules.pandablocks.parts.pandaluticonpart import (
@@ -11,13 +11,16 @@ from malcolm.modules.pandablocks.parts.pandaluticonpart import (
 )
 from malcolm.modules.pandablocks.util import SVG_DIR
 
+from ...loop import on_loop
+
 
 class PandABLutIconTest(unittest.TestCase):
     def setUp(self):
         svg_path = os.path.join(SVG_DIR, "LUT.svg")
         self.o = PandALutIconPart(MagicMock(), "LUT1", svg_path)
 
-    def test_lut_elements(self):
+    @on_loop
+    async def test_lut_elements(self):
         # LUT symbol
         assert get_lut_icon_elements(0) == {
             "AND",
@@ -106,11 +109,12 @@ class PandABLutIconTest(unittest.TestCase):
             "edgeE",
         }
 
-    def test_symbol(self):
+    @on_loop
+    async def test_symbol(self):
         # !A&!B&!C&!D
-        self.o.client.get_field.return_value = "0x00000003"
+        self.o.client.get_field = AsyncMock(return_value="0x00000003")
         icon = SVGIcon(self.o.svg_text)
-        self.o.update_icon(
+        await self.o.update_icon(
             icon,
             dict(
                 FUNC="~A&~B&~C&~D",

@@ -190,7 +190,7 @@ class ManagerController(StatefulController):
                 # even if there weren't any visible
                 visibility_changed = True
             if visibility_changed:
-                await self.update_modified()
+                self.update_modified()
                 await self.update_exportable()
                 # Part visibility changed, might have attributes or methods
                 # that we need to hide or show
@@ -204,10 +204,10 @@ class ManagerController(StatefulController):
             ), f"Field {export_name!r} is not camelCase"
         with self.changes_squashed:
             self.exports.set_value(value)
-            await self.update_modified()
+            self.update_modified()
             await self.update_block_endpoints()
 
-    async def update_modified(
+    def update_modified(
         self, part: Part = None, info: PartModifiedInfo = None
     ) -> None:
         with self.changes_squashed:
@@ -571,7 +571,7 @@ class ManagerController(StatefulController):
                 # Don't clear at init, because some things may not be
                 # clean at init
                 self.part_modified = {}
-            await self.update_modified()
+            self.update_modified()
             self._set_layout_names(design)
             self.design.set_value(design)
             await self.update_block_endpoints()

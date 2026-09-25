@@ -16,6 +16,8 @@ from malcolm.modules.builtin.infos import SinkPortInfo, SourcePortInfo
 from malcolm.modules.builtin.parts import ChildPart
 from malcolm.modules.builtin.util import AVisibleArray, LayoutTable
 
+from ...loop import on_loop
+
 sm = ManagerController.state_set
 
 
@@ -75,7 +77,8 @@ class TestChildPart(unittest.TestCase):
         self.p.stop(timeout=1)
         shutil.rmtree(self.config_dir)
 
-    def test_init(self):
+    @on_loop
+    async def test_init(self):
         for controller in (self.c1, self.c2, self.c3):
             b = self.p.block_view(controller.mri)
             assert b.sourceportConnector.value == ""
@@ -106,7 +109,8 @@ class TestChildPart(unittest.TestCase):
         assert info_out.connected_value == "Connector1"
         assert self.c.block_view().layout.value.visible == [True, True, True]
 
-    def test_layout(self):
+    @on_loop
+    async def test_layout(self):
         b = self.p.block_view("mainBlock")
 
         new_layout = LayoutTable(
@@ -116,7 +120,7 @@ class TestChildPart(unittest.TestCase):
             y=[20, 21, 22],
             visible=[True, True, True],
         )
-        b.layout.put_value(new_layout)
+        await b.layout.put_value(new_layout)
         assert self.c.parts["partchild1"].x == 10
         assert self.c.parts["partchild1"].y == 20
         assert self.c.parts["partchild1"].visible == AVisibleArray(True)
@@ -128,29 +132,31 @@ class TestChildPart(unittest.TestCase):
         assert self.c.parts["partchild3"].visible == AVisibleArray(True)
 
         new_layout.visible = [True, False, True]
-        b.layout.put_value(new_layout)
+        await b.layout.put_value(new_layout)
         assert self.c.parts["partchild1"].visible == AVisibleArray(True)
         assert self.c.parts["partchild2"].visible == AVisibleArray(False)
         assert self.c.parts["partchild3"].visible == AVisibleArray(True)
 
-    def test_sever_all_sink_ports(self):
+    @on_loop
+    async def test_sever_all_sink_ports(self):
         b = self.p.block_view("mainBlock")
         b1, b2, b3 = (self.c1.block_view(), self.c2.block_view(), self.c3.block_view())
         new_layout = dict(name=["partchild1"], mri=[""], x=[0], y=[0], visible=[False])
-        b.layout.put_value(new_layout)
+        await b.layout.put_value(new_layout)
         assert b1.sinkportConnector.value == ""
         assert b2.sinkportConnector.value == ""
         assert b3.sinkportConnector.value == "Connector2"
 
-    def test_load_save(self):
+    @on_loop
+    async def test_load_save(self):
         b1 = self.c1.block_view()
         context = Context(self.p)
-        structure1 = self.p1.on_save(context)
+        structure1 = await self.p1.on_save(context)
         expected = dict(sinkportConnector="Connector3")
         assert structure1 == expected
-        b1.sinkportConnector.put_value("blah")
-        structure2 = self.p1.on_save(context)
+        await b1.sinkportConnector.put_value("blah")
+        structure2 = await self.p1.on_save(context)
         expected = dict(sinkportConnector="blah")
         assert structure2 == expected
-        self.p1.on_load(context, dict(sinkportConnector="blah_again"))
+        await self.p1.on_load(context, dict(sinkportConnector="blah_again"))
         assert b1.sinkportConnector.value == "blah_again"

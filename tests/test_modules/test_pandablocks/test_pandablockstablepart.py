@@ -19,10 +19,9 @@ class PandABoxTablePartTest(unittest.TestCase):
         fields["OUTA1"] = TableFieldData(20, 20, "Out1", None, False)
         fields["TIME2"] = TableFieldData(127, 96, "Time Phase B", None, False)
         fields["OUTA2"] = TableFieldData(26, 26, "Out2", None, False)
-        self.client.get_table_fields.return_value = fields
         self.meta = TableMeta("Seq table", writeable=True)
         self.o = PandATablePart(
-            self.client, self.meta, block_name="SEQ1", field_name="TABLE"
+            self.client, self.meta, block_name="SEQ1", field_name="TABLE", fields=fields
         )
 
     def assert_meta(self, meta, cls, **attrs):

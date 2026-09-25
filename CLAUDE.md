@@ -90,30 +90,41 @@ controllers, waits for the PandA TCP port to open (`wait_for_port`), then starts
 - `pandablocks.controllers.PandAManagerController(mri=--mri, …)` — the PandA
   itself.
 
-**There is one event loop in the process**: `core/concurrency.py:EventLoop`, on
-a daemon thread called `malcolm-event-loop`. Both users share it — a Tornado
-IOLoop is only a wrapper around an asyncio loop, so `web/util.py:IOLoopHelper`
-is a thin adapter that puts server callbacks on `EventLoop` rather than running
-a loop of its own. Anything touching Tornado (`server.listen`,
-`write_message`, …) must still go through `IOLoopHelper.call(...)`, since it has
-to happen on that thread. `EventLoop` is owned by `core`: nothing in `web`
-starts or stops it.
+**Everything runs on one event loop**: `core/concurrency.py:EventLoop`, on a
+daemon thread called `malcolm-event-loop`. There are no worker threads — a
+running server is MainThread plus that loop. Tornado shares it (an IOLoop is
+only a wrapper round an asyncio loop), so `web/util.py:IOLoopHelper` is a thin
+adapter that puts server callbacks on `EventLoop`; `EventLoop` is owned by
+`core`, and nothing in `web` starts or stops it.
 
-Background work goes through `core/concurrency.py:Spawned`, which runs it as a
-coroutine on that same loop. An `async def` callable is awaited there and costs
-no thread; a plain function is handed to a worker thread, since it is free to
-block. Each blocking callable gets its own thread rather than a slot in a pool —
-spawned work includes a loop that runs forever (the manager's poll loop) and
-hook functions that block waiting on *other* spawned work, so a bounded pool
-would run out of workers and deadlock. That re-entrancy is
-also why `Spawned.wait()`/`get()` are still blocking calls: callers reach them
-from sync code, including from inside other spawned work.
+The request path, the hooks, `Context`, the PandA client and the poll loop are
+all coroutines. `Spawned` still exists: it schedules a coroutine on the loop and
+hands back something you can `wait()` on, and it will still put a plain blocking
+function on a thread if you give it one.
 
-The corollary of one shared loop: **a spawned coroutine must not block or do
-heavy CPU work**, or it stalls HTTP and websocket serving along with everything
-else. Put anything that blocks in a plain function and let it have a thread.
-`Queue` and `RLock` remain the threading versions. `cothread` was removed in
-commit `111e0792`.
+**Locking.** `Controller._lock` is an `asyncio.Lock`, and it is what serialises
+whole requests, so two clients putting to the same Attribute can't interleave.
+It replaced an `RLock`, which was not a like-for-like swap: an `RLock` is
+re-entrant *per thread*, so once its holders are coroutines on one thread it
+silently stops excluding anything (two coroutines both enter). Everywhere else
+the lock simply went away — a block of code that awaits nothing cannot be
+interleaved with on a single loop, so `changes_squashed` is now just a nesting
+counter, and `block_view`/`make_view`/`update_label` take nothing at all.
+
+**What stayed synchronous, and why.** `models.py`, `notifier.py` and the view
+getters are sync, so `attr.set_value(...)` needs no `await` — making it async
+would have put an `await` in front of every assignment in every Part. The
+consequence is that `Notifier` delivers responses from a plain context manager,
+so a *coroutine* callback there is scheduled with `ensure_future` rather than
+awaited. Keep callbacks that must take effect immediately sync:
+`ManagerController.update_modified` is sync for exactly this reason, while
+`update_exportable` is a coroutine because it may rebuild the Block's endpoints.
+
+**Calling in from outside the loop**: `EventLoop.run(coro)` blocks and returns
+the result. That's what the `panda-webcontrol` console passes to the user as
+`run()`, since `block.save()` is a coroutine now. `Process.start()`/`stop()` are
+blocking facades over `start_async()`/`stop_async()` for the same reason; from
+*on* the loop you must use the async ones, or you deadlock.
 
 ### Request path
 
@@ -129,14 +140,14 @@ There is no REST surface: the WebSocket is the only API.
 ### PandA path
 
 `PandABlocksClient` (`modules/pandablocks/pandablocksclient.py`) keeps one
-connection with a send coroutine and a recv coroutine and a queue per in-flight
-request. The transport is `asyncio.open_connection`, so neither loop costs a
-thread: `_send_loop` awaits an `asyncio.Queue` that worker threads feed through
-`loop.call_soon_threadsafe` (`_queue_send`), and `_recv_loop` awaits
-`reader.readline()`. The per-request response queues stay *threading* queues,
-because that is where the loop hands results back to the blocking callers of
-`recv()`. The client remembers the loop it was started on, so it needs no import
-from `malcolm.core`. It knows the PandA protocol (`*BLOCKS?`, `*DESC.…?`, `*ENUMS.…?`, `<block>.*?`,
+connection over `asyncio.open_connection`, with a send coroutine, a recv
+coroutine and an `asyncio.Queue` per in-flight request. Its whole public API is
+async. `send()` stays sync and hands back the queue to await, so a caller can
+pipeline a batch of requests before awaiting any of them — `parameterized_send`
+and `get_blocks_data` depend on that. `get_changes` returns a list rather than
+being a generator, since a coroutine can't be iterated lazily. Table column
+metadata is read by the manager and passed to `PandATablePart`, because a
+constructor can't await. It knows the PandA protocol (`*BLOCKS?`, `*DESC.…?`, `*ENUMS.…?`, `<block>.*?`,
 `*CHANGES?`, `field=value`, `field<` table writes).
 
 `PandAManagerController`:
@@ -206,6 +217,15 @@ setting `design` runs `LoadHook`. Read-only template designs live in
 - Tests mirror the package layout and mostly drive a real `Process` with a
   `Mock()` client. Test-only helpers live in `tests/`, never in the shipped
   package.
+- **A test that touches the framework must run on its event loop**: decorate it
+  `@on_loop` (`tests/loop.py`) and make it `async`. Do not use
+  `IsolatedAsyncioTestCase` — it creates its own loop, and queues and locks
+  belong to the loop they were first used on, so the test would hand work to
+  coroutines waiting on a different one and hang. For the same reason, a test on
+  the loop must never block on a threading `Queue`: use an `asyncio.Queue` and
+  `await` it, or you stall the loop that has to deliver the response. Mock a
+  coroutine with `AsyncMock`, or patch a whole class with `autospec=True`, which
+  picks `AsyncMock` for its coroutine methods automatically.
 
 ## Development
 

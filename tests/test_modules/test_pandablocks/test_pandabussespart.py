@@ -1,16 +1,18 @@
 import unittest
 from collections import OrderedDict
 
-from mock import MagicMock, call
+from mock import AsyncMock, MagicMock, call
 
 from malcolm.core import TimeStamp
 from malcolm.modules.pandablocks.parts.pandabussespart import PandABussesPart
 from malcolm.modules.pandablocks.util import BitsTable, PositionCapture, PositionsTable
 
+from ...loop import on_loop
+
 
 class PandABussesPartTest(unittest.TestCase):
     def setUp(self):
-        self.o = PandABussesPart("busses", MagicMock())
+        self.o = PandABussesPart("busses", MagicMock(set_fields=AsyncMock()))
         self.o.setup(MagicMock())
         pcap_bits_fields = OrderedDict()
         pcap_bits_fields["PCAP.BITS0.CAPTURE"] = ["B1.B%d" % i for i in range(6)]
@@ -32,7 +34,8 @@ class PandABussesPartTest(unittest.TestCase):
         ]
         self.expected_pos_names = ["B1.P0", "B1.P1", "B1.P2", "B2.P33"]
 
-    def test_init(self):
+    @on_loop
+    async def test_init(self):
         assert list(self.o.bits.meta.elements) == ["name", "value", "capture"]
         assert self.o.bits.value.name == self.expected_bit_names
         assert self.o.bits.value.value == [False] * 9
@@ -55,7 +58,8 @@ class PandABussesPartTest(unittest.TestCase):
         assert self.o.positions.value.offset == [0.0] * 4
         assert self.o.positions.value.capture == [PositionCapture.NO] * 4
 
-    def test_scale_offset(self):
+    @on_loop
+    async def test_scale_offset(self):
         ts = TimeStamp()
         changes = {"B1.P0.SCALE": "32", "B1.P0.OFFSET": "0.1", "B1.P0": "100"}
         self.o.handle_changes(changes, ts)
@@ -87,7 +91,8 @@ class PandABussesPartTest(unittest.TestCase):
             PositionCapture.NO,
         ]
 
-    def test_pos_capture(self):
+    @on_loop
+    async def test_pos_capture(self):
         ts = TimeStamp()
         changes = {"B1.P2.CAPTURE": "Min Max Mean", "B1.P2.SCALE": "1", "B1.P2": "100"}
         self.o.handle_changes(changes, ts)
@@ -100,7 +105,8 @@ class PandABussesPartTest(unittest.TestCase):
             PositionCapture.MIN_MAX_MEAN,
         ]
 
-    def test_pos_set_capture(self):
+    @on_loop
+    async def test_pos_set_capture(self):
         value = PositionsTable(
             name=["B1.P2"],
             value=[23.0],
@@ -109,7 +115,7 @@ class PandABussesPartTest(unittest.TestCase):
             offset=[0.0],
             capture=[PositionCapture.MEAN],
         )
-        self.o.set_positions(value)
+        await self.o.set_positions(value)
         assert self.o.positions.value.name == self.expected_pos_names
         assert self.o.positions.value.value == [0.0] * 4
         assert self.o.positions.value.units == ["", "", "mm", ""]
@@ -148,7 +154,8 @@ class PandABussesPartTest(unittest.TestCase):
             ),
         ]
 
-    def test_bits(self):
+    @on_loop
+    async def test_bits(self):
         ts = TimeStamp()
         changes = {
             "B1.B1": True,
@@ -160,15 +167,17 @@ class PandABussesPartTest(unittest.TestCase):
         assert list(self.o.bits.value.rows())[2] == ["B1.B2", False, False]
         assert list(self.o.bits.value.rows())[3] == ["B1.B3", True, False]
 
-    def test_bit_capture_change(self):
+    @on_loop
+    async def test_bit_capture_change(self):
         ts = TimeStamp()
         changes = {"PCAP.BITS0.CAPTURE": "Value"}
         self.o.handle_changes(changes, ts)
         assert self.o.bits.value.capture == [True] * 6 + [False] * 3
 
-    def test_bit_set_capture(self):
+    @on_loop
+    async def test_bit_set_capture(self):
         value = BitsTable(name=["B1.B1"], value=[True], capture=[True])
-        self.o.set_bits(value)
+        await self.o.set_bits(value)
         assert self.o.bits.value.name == self.expected_bit_names
         assert self.o.bits.value.capture == [False, True] + [False] * 7
         assert self.o.bits.value.value == [False] * 9

@@ -1,7 +1,7 @@
 import unittest
 
 from annotypes import Anno, add_call_types
-from mock import Mock
+from mock import AsyncMock, Mock
 
 from malcolm.core import (
     Attribute,
@@ -15,6 +15,8 @@ from malcolm.core import (
 from malcolm.core.models import BlockMeta
 from malcolm.core.views import make_view
 
+from ..loop import on_loop
+
 
 class TestAttribute(unittest.TestCase):
     def setUp(self):
@@ -22,6 +24,10 @@ class TestAttribute(unittest.TestCase):
         self.data.set_notifier_path(Mock(), ["block", "attr"])
         self.controller = Mock()
         self.context = Mock()
+        # The views await these, so they need awaitable mocks
+        self.context.put = AsyncMock()
+        self.context.post = AsyncMock()
+        self.context.wait_all_futures = AsyncMock()
         self.o = Attribute(self.controller, self.context, self.data)
 
     def test_init(self):
@@ -30,8 +36,9 @@ class TestAttribute(unittest.TestCase):
         assert hasattr(self.o, "value")
         assert hasattr(self.o, "subscribe_value")
 
-    def test_put(self):
-        self.o.put_value(32)
+    @on_loop
+    async def test_put(self):
+        await self.o.put_value(32)
         self.context.put.assert_called_once_with(
             ["block", "attr", "value"], 32, timeout=None
         )
@@ -57,6 +64,10 @@ class TestBlock(unittest.TestCase):
         self.data.set_notifier_path(Mock(), ["block"])
         self.controller = Mock()
         self.context = Mock()
+        # The views await these, so they need awaitable mocks
+        self.context.put = AsyncMock()
+        self.context.post = AsyncMock()
+        self.context.wait_all_futures = AsyncMock()
         self.o = make_view(self.controller, self.context, self.data)
 
     def test_init(self):
@@ -64,8 +75,9 @@ class TestBlock(unittest.TestCase):
         assert hasattr(self.o, "method")
         assert hasattr(self.o, "method_async")
 
-    def test_put_attribute_values(self):
-        self.o.put_attribute_values(dict(attr=43))
+    @on_loop
+    async def test_put_attribute_values(self):
+        await self.o.put_attribute_values(dict(attr=43))
         self.context.put_async.assert_called_once_with(["block", "attr", "value"], 43)
         self.context.wait_all_futures.assert_called_once_with(
             [self.context.put_async.return_value], timeout=None, event_timeout=None
@@ -102,14 +114,17 @@ class TestMethod(unittest.TestCase):
     def tearDown(self):
         self.process.stop(timeout=1)
 
-    def test_post(self):
+    @on_loop
+    async def test_post(self):
         method_view = self.block.myMethod
-        result = method_view.post(param1="testPost", param2="y")
+        result = await method_view.post(param1="testPost", param2="y")
         assert result == "testPosty"
 
-    def test_post_async(self):
+    @on_loop
+    async def test_post_async(self):
         method_view = self.block.myMethod
         f = method_view.post_async("testAsync", "y")
+        await object.__getattribute__(method_view, "_context").wait_all_futures(f)
         assert f.result() == "testAsyncy"
 
 
@@ -119,6 +134,10 @@ class TestView(unittest.TestCase):
         self.data.set_notifier_path(Mock(), ["block", "meta"])
         self.controller = Mock()
         self.context = Mock()
+        # The views await these, so they need awaitable mocks
+        self.context.put = AsyncMock()
+        self.context.post = AsyncMock()
+        self.context.wait_all_futures = AsyncMock()
         self.o = make_view(self.controller, self.context, self.data)
 
     def test_init(self):

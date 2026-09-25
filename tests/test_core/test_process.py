@@ -14,6 +14,8 @@ from malcolm.core import (
 )
 from malcolm.core.controller import Controller
 
+from ..loop import on_loop
+
 
 class PublishController(Controller):
     published: List[APublished] = []
@@ -44,15 +46,18 @@ class TestProcess(unittest.TestCase):
     def tearDown(self):
         self.o.stop(timeout=1)
 
-    def test_init(self):
+    @on_loop
+    async def test_init(self):
         assert self.o.name == "proc"
 
-    def test_add_controller(self):
+    @on_loop
+    async def test_add_controller(self):
         controller = MagicMock(mri="mri")
-        self.o.add_controller(controller)
+        await self.o.add_controllers_async([controller])
         assert self.o.get_controller("mri") == controller
 
-    def test_init_controller(self):
+    @on_loop
+    async def test_init_controller(self):
         class InitController(Controller):
             init = False
 
@@ -61,14 +66,15 @@ class TestProcess(unittest.TestCase):
                     self.init = True
 
         c = InitController("mri")
-        self.o.add_controller(c)
+        await self.o.add_controllers_async([c])
         assert c.init is True
 
-    def test_publish_controller(self):
+    @on_loop
+    async def test_publish_controller(self):
         c = PublishController("mri")
-        self.o.add_controller(c)
+        await self.o.add_controllers_async([c])
         assert c.published == ["mri"]
-        self.o.add_controller(Controller(mri="mri2"))
+        await self.o.add_controllers_async([Controller(mri="mri2")])
         assert c.published == ["mri", "mri2"]
-        self.o.add_controller(UnpublishableController("mri3"))
+        await self.o.add_controllers_async([UnpublishableController("mri3")])
         assert c.published == ["mri", "mri2"]
