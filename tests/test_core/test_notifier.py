@@ -1,5 +1,4 @@
 import unittest
-from threading import RLock
 
 from annotypes import serialize_object
 from mock import Mock
@@ -30,9 +29,8 @@ class Dummy(object):
 
 class TestNotifier(unittest.TestCase):
     def setUp(self):
-        self.lock = RLock()
         self.block = Dummy()
-        self.o = Notifier("Notifier", self.lock, self.block)
+        self.o = Notifier("Notifier", self.block)
 
     def test_subscribe_no_data_then_set_data(self):
         # subscribe

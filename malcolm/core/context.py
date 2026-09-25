@@ -1,9 +1,10 @@
+import asyncio
 import logging
 import time
 import weakref
 from typing import TYPE_CHECKING, Any, Callable, Dict, List, Tuple, Union
 
-from .concurrency import Queue
+from .concurrency import maybe_await
 from .errors import AbortedError, BadValueError, TimeoutError
 from .future import Future
 from .request import Post, Put, Request, Subscribe, Unsubscribe
@@ -24,7 +25,9 @@ class Context:
     STOP = object()
 
     def __init__(self, process: "Process") -> None:
-        self._q = Queue()
+        # Responses arrive on the event loop, which is also where they are
+        # waited for, so this is an asyncio queue
+        self._q: asyncio.Queue = asyncio.Queue()
         # Func to call just before requests are dispatched
         self._notify_dispatch_request = None
         self._notify_args = ()
@@ -94,13 +97,13 @@ class Context:
     def ignore_stops_before_now(self):
         """Ignore any stops received before this point"""
         self._sentinel_stop = object()
-        self._q.put(self._sentinel_stop)
+        self._q.put_nowait(self._sentinel_stop)
 
     def stop(self):
         """Stops any wait_all_futures call with an AbortedError"""
-        self._q.put(self.STOP)
+        self._q.put_nowait(self.STOP)
 
-    def put(self, path, value, timeout=None, event_timeout=None):
+    async def put(self, path, value, timeout=None, event_timeout=None):
         """Puts a value to a path and returns when it completes
 
         Args:
@@ -115,7 +118,7 @@ class Context:
             The value after the put completes
         """
         future = self.put_async(path, value)
-        self.wait_all_futures(future, timeout=timeout, event_timeout=event_timeout)
+        await self.wait_all_futures(future, timeout=timeout, event_timeout=event_timeout)
         return future.result()
 
     def put_async(self, path, value):
@@ -129,11 +132,11 @@ class Context:
              Future: A single Future which will resolve to the result
         """
         request = Put(self._get_next_id(), path, value)
-        request.set_callback(self._q.put)
+        request.set_callback(self._q.put_nowait)
         future = self._dispatch_request(request)
         return future
 
-    def post(self, path, params=None, timeout=None, event_timeout=None):
+    async def post(self, path, params=None, timeout=None, event_timeout=None):
         """Synchronously calls a method
 
         Args:
@@ -148,7 +151,7 @@ class Context:
             the result from 'method'
         """
         future = self.post_async(path, params)
-        self.wait_all_futures(future, timeout=timeout, event_timeout=event_timeout)
+        await self.wait_all_futures(future, timeout=timeout, event_timeout=event_timeout)
         return future.result()
 
     def post_async(self, path, params=None):
@@ -162,7 +165,7 @@ class Context:
              Future: as single Future that will resolve to the result
         """
         request = Post(self._get_next_id(), path, params)
-        request.set_callback(self._q.put)
+        request.set_callback(self._q.put_nowait)
         future = self._dispatch_request(request)
         return future
 
@@ -174,7 +177,7 @@ class Context:
             Future: A single Future which will resolve to the result
         """
         request = Subscribe(self._get_next_id(), path, delta=False)
-        request.set_callback(self._q.put)
+        request.set_callback(self._q.put_nowait)
         # If self is in args, then make weak version of it
         saved_args = []
         for arg in args:
@@ -200,7 +203,7 @@ class Context:
         # Clear out the subscription
         self._subscriptions.pop(subscribe.id)
         request = Unsubscribe(subscribe.id)
-        request.set_callback(self._q.put)
+        request.set_callback(self._q.put_nowait)
         try:
             controller = self.get_controller(subscribe.path[0])
         except ValueError:
@@ -228,7 +231,7 @@ class Context:
         # Unsubscribe from anything that is still active
         self.unsubscribe_all(callback=True)
 
-    def when_matches(
+    async def when_matches(
         self, path, good_value, bad_values=None, timeout=None, event_timeout=None
     ):
         """Resolve when an path value equals value
@@ -243,7 +246,7 @@ class Context:
                 event, wait forever if None
         """
         future = self.when_matches_async(path, good_value, bad_values)
-        self.wait_all_futures(future, timeout=timeout, event_timeout=event_timeout)
+        await self.wait_all_futures(future, timeout=timeout, event_timeout=event_timeout)
 
     def when_matches_async(self, path, good_value, bad_values=None):
         """Wait for an attribute to become a given value
@@ -265,7 +268,7 @@ class Context:
         when.set_future_context(future, weakref.proxy(self))
         return future
 
-    def wait_all_futures(
+    async def wait_all_futures(
         self,
         futures: Union[List[Future], Future, None],
         timeout: float = None,
@@ -311,9 +314,9 @@ class Context:
                     until = min(until, end)
             else:
                 until = end
-            self._service_futures(filtered_futures, until)
+            await self._service_futures(filtered_futures, until)
 
-    def sleep(self, seconds):
+    async def sleep(self, seconds):
         """Services all futures while waiting
 
         Args:
@@ -322,7 +325,7 @@ class Context:
         until = time.time() + seconds
         try:
             while True:
-                self._service_futures([], until)
+                await self._service_futures([], until)
         except TimeoutError:
             return
 
@@ -361,7 +364,7 @@ class Context:
         else:
             return "[]"
 
-    def _service_futures(self, futures, until=None):
+    async def _service_futures(self, futures, until=None):
         """Service futures
 
         Args:
@@ -375,8 +378,8 @@ class Context:
             if timeout < 0:
                 timeout = 0
         try:
-            response = self._q.get(timeout)
-        except TimeoutError:
+            response = await asyncio.wait_for(self._q.get(), timeout)
+        except (asyncio.TimeoutError, TimeoutError):
             raise TimeoutError(f"Timeout waiting for {self._describe_futures(futures)}")
         if response is self._sentinel_stop:
             self._sentinel_stop = None
@@ -390,7 +393,7 @@ class Context:
             # This is an update for a subscription
             if response.id in self._subscriptions:
                 func, args = self._subscriptions[response.id]
-                func(response.value, *args)
+                await maybe_await(func(response.value, *args))
             # func() may call wait_for_futures() which may call set_result on
             # some futures that aren't known to it. This means that some of
             # our futures list are now concluded, so filter them out. If we

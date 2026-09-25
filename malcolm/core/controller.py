@@ -1,4 +1,5 @@
-from contextlib import contextmanager
+import asyncio
+from contextlib import asynccontextmanager
 from typing import TYPE_CHECKING, Any, Callable, Dict, Iterable, List, Tuple, Union
 
 from malcolm.annotypes import Anno, stringify_error
@@ -6,7 +7,7 @@ from malcolm.compat import OrderedDict
 
 from .alarm import Alarm
 from .camel import camel_to_title
-from .concurrency import Queue, RLock, Spawned
+from .concurrency import Queue, Spawned, maybe_await
 from .context import Context
 from .errors import FieldError, NotWriteableError, UnexpectedError
 from .hook import Hook, Hookable, start_hooks, wait_hooks
@@ -44,12 +45,14 @@ class Controller(Hookable):
         self.name = mri
         self.mri = mri
         self.parts: Dict[str, Part] = OrderedDict()
-        self._lock = RLock()
+        # Serialises whole requests against each other, so that two clients
+        # putting to the same Attribute can't interleave
+        self._lock = asyncio.Lock()
         self._block = BlockModel()
         self._block.meta.set_description(description)
         self._block.meta.set_label(mri)
         self._block.meta.set_tags([version_tag()])
-        self._notifier = Notifier(mri, self._lock, self._block)
+        self._notifier = Notifier(mri, self._block)
         self._block.set_notifier_path(self._notifier, [mri])
         self._write_functions: Dict[str, Callable[..., Any]] = {}
         self.field_registry = FieldRegistry()
@@ -93,13 +96,14 @@ class Controller(Hookable):
                 self.add_block_field(name, child, writeable_func, needs_context)
 
     @property  # type: ignore
-    @contextmanager
-    def lock_released(self):
+    @asynccontextmanager
+    async def lock_released(self):
+        """Release the request lock around a long call to a Part"""
         self._lock.release()
         try:
             yield
         finally:
-            self._lock.acquire()
+            await self._lock.acquire()
 
     @property
     def changes_squashed(self):
@@ -109,25 +113,24 @@ class Controller(Hookable):
         if context is None:
             assert self.process, "No process for context."
             context = Context(self.process)
-        with self._lock:
-            child_view = make_view(self, context, self._block)
+        # No lock needed: this only reads the Block and awaits nothing
+        child_view = make_view(self, context, self._block)
         return child_view
 
     def make_view(self, context: Context, data: Model, child_name: str) -> Any:
         """Make a child View of data[child_name]"""
-        with self._lock:
-            child = data[child_name]
-            child_view = make_view(self, context, child)
+        child = data[child_name]
+        child_view = make_view(self, context, child)
         return child_view
 
     def handle_request(self, request: Request) -> Spawned:
-        """Spawn a new thread that handles Request"""
+        """Run _handle_request as a coroutine on the event loop"""
         assert self.process, "No process to handle request"
         return self.process.spawn(self._handle_request, request)
 
-    def _handle_request(self, request: Request) -> None:
+    async def _handle_request(self, request: Request) -> None:
         responses = []
-        with self._lock:
+        async with self._lock:
             if isinstance(request, Get):
                 handler = self._handle_get
             elif isinstance(request, Put):
@@ -141,7 +144,10 @@ class Controller(Hookable):
             else:
                 raise UnexpectedError(f"Unexpected request {request}")
             try:
-                responses += handler(request)
+                # Put and Post are coroutines, as they call out to a Part which
+                # may do IO. Get, Subscribe and Unsubscribe only touch the
+                # Block, so they stay sync
+                responses += await maybe_await(handler(request))
             except Exception as e:
                 responses.append(request.error_response(e))
         for cb, response in responses:
@@ -179,7 +185,7 @@ class Controller(Hookable):
     def get_put_function(self, attribute_name):
         return self._write_functions[attribute_name]
 
-    def _handle_put(self, request: Put) -> CallbackResponses:
+    async def _handle_put(self, request: Put) -> CallbackResponses:
         """Called with the lock taken"""
         attribute_name = request.path[1]
 
@@ -196,8 +202,8 @@ class Controller(Hookable):
         put_function = self.get_put_function(attribute_name)
         value = attribute.meta.validate(request.value)
 
-        with self.lock_released:
-            result = put_function(value)
+        async with self.lock_released:
+            result = await maybe_await(put_function(value))
 
         if request.get and result is None:
             # We asked for a Get, and didn't get given a return, so do return
@@ -236,7 +242,7 @@ class Controller(Hookable):
                 )
             )
 
-    def _handle_post(self, request: Post) -> CallbackResponses:
+    async def _handle_post(self, request: Post) -> CallbackResponses:
         """Called with the lock taken"""
         method_name = request.path[1]
 
@@ -257,8 +263,8 @@ class Controller(Hookable):
         returned_value = {}
 
         try:
-            with self.lock_released:
-                result = post_function(**took_value)
+            async with self.lock_released:
+                result = await maybe_await(post_function(**took_value))
             if method_return_unpacked() in method.meta.tags:
                 # Single element, wrap in a dict
                 returned_value = {"return": result}
@@ -291,10 +297,10 @@ class Controller(Hookable):
         assert self.process, "No process for starting hooks"
         for hook in hooks:
             hook.set_spawn(self.process.spawn)
-        # Take the lock so that no hook abort can come in between now and
-        # the spawn of the context
-        with self._lock:
-            hook_queue, hook_spawned = start_hooks(hooks)
+        # This used to take the lock so that no hook abort could come in
+        # between now and the spawn of the context. Nothing is awaited here, so
+        # on one event loop it cannot be interleaved with anyway
+        hook_queue, hook_spawned = start_hooks(hooks)
         return hook_queue, hook_spawned
 
     def wait_hooks(

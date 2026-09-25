@@ -1,3 +1,4 @@
+import asyncio
 import inspect
 import logging
 import time
@@ -18,7 +19,7 @@ from typing import (
 from malcolm.annotypes import Anno, WithCallTypes
 from malcolm.compat import OrderedDict
 
-from .concurrency import Queue, Spawned
+from .concurrency import Queue, Spawned, maybe_await
 from .errors import AbortedError
 from .info import Info
 from .loggable import Loggable
@@ -114,7 +115,7 @@ class Hook(Generic[T], WithCallTypes):
         self._spawn = spawn
         return self
 
-    def set_queue(self, queue: Queue) -> "Hook":
+    def set_queue(self, queue: "asyncio.Queue") -> "Hook":
         self._queue = queue
         return self
 
@@ -141,10 +142,11 @@ class Hook(Generic[T], WithCallTypes):
         assert self._spawn, "No spawned function"
         self.spawned = self._spawn(self._run, func, kwargs)
 
-    def _run(self, func: Callable[..., T], kwargs: Dict[str, Any]) -> None:
+    async def _run(self, func: Callable[..., T], kwargs: Dict[str, Any]) -> None:
         result: Union[T, Exception]
         try:
-            result = func(**kwargs)
+            # A hooked function may be a coroutine or a plain function
+            result = await maybe_await(func(**kwargs))
             result = self.validate_return(result)
         except AbortedError as e:
             log.info("%s: %s has been aborted", self.child, func)
@@ -155,7 +157,7 @@ class Hook(Generic[T], WithCallTypes):
             )
             result = e
         assert self._queue, "No queue to put result"
-        self._queue.put((self, result))
+        self._queue.put_nowait((self, result))
 
     def stop(self) -> None:
         """Override this if we can stop"""
@@ -168,9 +170,10 @@ class Hook(Generic[T], WithCallTypes):
         return None
 
 
-def start_hooks(hooks: List[Hook]) -> Tuple[Queue, List[Hook]]:
-    # This queue will hold (part, result) tuples
-    hook_queue = Queue()
+def start_hooks(hooks: List[Hook]) -> Tuple["asyncio.Queue", List[Hook]]:
+    # This queue will hold (part, result) tuples. Hook._run puts to it from the
+    # event loop, and wait_hooks awaits it there too
+    hook_queue: asyncio.Queue = asyncio.Queue()
     hook_spawned = []
     # now start them off
     for hook in hooks:
@@ -181,9 +184,9 @@ def start_hooks(hooks: List[Hook]) -> Tuple[Queue, List[Hook]]:
     return hook_queue, hook_spawned
 
 
-def wait_hooks(
+async def wait_hooks(
     logger: Optional[logging.Logger],
-    hook_queue: Queue,
+    hook_queue: "asyncio.Queue",
     hook_spawned: List[Hook],
     timeout: float = None,
     exception_check: bool = True,
@@ -199,11 +202,11 @@ def wait_hooks(
     while hook_spawned_set:
         hook: Hook
         ret: Any
-        hook, ret = hook_queue.get()
+        hook, ret = await hook_queue.get()
         hook_spawned_set.remove(hook)
-        # Wait for the process to terminate
+        # Wait for the coroutine to terminate
         assert hook.spawned, "No spawned process"
-        hook.spawned.wait(timeout)
+        await hook.spawned.wait_async(timeout)
         duration = time.time() - start
         if logger:
             if hook_spawned_set:
@@ -233,7 +236,7 @@ def wait_hooks(
             # Wait for them to finish
             for h in hook_spawned:
                 assert h.spawned, "No spawned functions"
-                h.spawned.wait(timeout)
+                await h.spawned.wait_async(timeout)
             raise ret
         else:
             return_dict[hook.child.name] = ret

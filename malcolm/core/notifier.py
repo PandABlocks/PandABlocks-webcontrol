@@ -3,7 +3,6 @@ from typing import TYPE_CHECKING, Any, Callable, Dict, List, Tuple
 
 from malcolm.annotypes import Array, FrozenOrderedDict
 
-from .concurrency import RLock
 from .loggable import Loggable
 from .request import Subscribe, Unsubscribe
 from .response import Response
@@ -49,10 +48,9 @@ def freeze(o):
 class Notifier(Loggable):
     """Object that can service callbacks on given endpoints"""
 
-    def __init__(self, mri: str, lock: RLock, block: "BlockModel") -> None:
+    def __init__(self, mri: str, block: "BlockModel") -> None:
         self.set_logger(mri=mri)
         self._tree = NotifierNode(block)
-        self._lock = lock
         # Incremented every time we do with changes_squashed
         self._squashed_count = 0
         self._squashed_changes: List[List] = []
@@ -101,8 +99,14 @@ class Notifier(Loggable):
         self._squashed_changes.append([path[1:]])
 
     def __enter__(self):
-        """So we can use this as a context manager for squashing changes"""
-        self._lock.acquire()
+        """So we can use this as a context manager for squashing changes
+
+        This only counts the nesting depth. It used to take the Controller's
+        lock as well, relying on it being an RLock so that nested blocks could
+        re-acquire it. Everything now runs on one event loop, so a block that
+        awaits nothing cannot be interleaved with and needs no lock; the
+        Controller's asyncio.Lock is what serialises whole requests.
+        """
         self._squashed_count += 1
 
     def __exit__(self, exc_type=None, exc_val=None, exc_tb=None):
@@ -116,7 +120,6 @@ class Notifier(Loggable):
                 # TODO: squash intermediate deltas here?
                 responses += self._tree.notify_changes(changes)
         finally:
-            self._lock.release()
             self._callback_responses(responses)
 
     def _callback_responses(self, responses: "CallbackResponses") -> None:

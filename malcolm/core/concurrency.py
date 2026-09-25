@@ -22,6 +22,17 @@ sleep = time.sleep
 RLock = threading.RLock
 
 
+async def maybe_await(result: Any) -> Any:
+    """Await result if it needs awaiting, otherwise pass it straight back
+
+    Lets a caller on the event loop accept either a coroutine function or a
+    plain one, so the two can be converted independently.
+    """
+    if inspect.isawaitable(result):
+        return await result
+    return result
+
+
 class _ThreadPerTaskExecutor(concurrent.futures.Executor):
     """Executor that runs each callable on its own daemon thread.
 
@@ -166,6 +177,20 @@ class Spawned:
         except concurrent.futures.TimeoutError:
             raise TimeoutError(f"Spawned function didn't finish within {timeout}s")
         except concurrent.futures.CancelledError:
+            pass
+
+    async def wait_async(self, timeout: float = None) -> None:
+        """Wait from the event loop for the function to finish
+
+        Like wait(), but for callers that are themselves coroutines. Shielded,
+        so that timing out here doesn't cancel the work, matching wait().
+        """
+        waitable = asyncio.shield(asyncio.wrap_future(self._future))
+        try:
+            await asyncio.wait_for(waitable, timeout)
+        except (asyncio.TimeoutError, TimeoutError):
+            raise TimeoutError(f"Spawned function didn't finish within {timeout}s")
+        except asyncio.CancelledError:
             pass
 
     def ready(self) -> bool:

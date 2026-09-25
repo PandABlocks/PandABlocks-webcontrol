@@ -72,6 +72,14 @@ class Process(Loggable):
         self._spawn_count = 0
 
     def start(self, timeout=DEFAULT_TIMEOUT):
+        """Start the process going, blocking until it has started
+
+        For callers that are not on the event loop, like the interactive
+        console. Coroutines should await start_async() instead.
+        """
+        Spawned(self.start_async, (timeout,), {}).get()
+
+    async def start_async(self, timeout=DEFAULT_TIMEOUT):
         """Start the process going
 
         Args:
@@ -80,16 +88,18 @@ class Process(Loggable):
         """
         assert self.state == STOPPED, "Process already started"
         self.state = STARTING
-        should_publish = self._start_controllers(self._controllers.values(), timeout)
+        should_publish = await self._start_controllers(
+            self._controllers.values(), timeout
+        )
         if should_publish:
-            self._publish_controllers(timeout)
+            await self._publish_controllers(timeout)
         self.state = STARTED
 
-    def _start_controllers(
+    async def _start_controllers(
         self, controller_list: List[Controller], timeout: float = None
     ) -> bool:
         # Start just the given controller_list
-        infos = self._run_hook(ProcessStartHook, controller_list, timeout=timeout)
+        infos = await self._run_hook(ProcessStartHook, controller_list, timeout=timeout)
         info: UnpublishedInfo
         new_unpublished = set()
         for info in UnpublishedInfo.filter_values(infos):
@@ -100,7 +110,7 @@ class Process(Loggable):
         else:
             return False
 
-    def _publish_controllers(self, timeout):
+    async def _publish_controllers(self, timeout):
         tree = OrderedDict()
         is_child = set()
 
@@ -136,9 +146,9 @@ class Process(Loggable):
 
         walk(tree, not_at_this_level=is_child)
 
-        self._run_hook(ProcessPublishHook, timeout=timeout, published=published)
+        await self._run_hook(ProcessPublishHook, timeout=timeout, published=published)
 
-    def _run_hook(self, hook, controller_list=None, timeout=None, **kwargs):
+    async def _run_hook(self, hook, controller_list=None, timeout=None, **kwargs):
         # Run the given hook waiting til all hooked functions are complete
         # but swallowing any errors
         if controller_list is None:
@@ -148,7 +158,7 @@ class Process(Loggable):
             for controller in controller_list
         ]
         hook_queue, hook_spawned = start_hooks(hooks)
-        infos = wait_hooks(
+        infos = await wait_hooks(
             self.log, hook_queue, hook_spawned, timeout, exception_check=False
         )
         problems = [mri for mri, e in infos.items() if isinstance(e, Exception)]
@@ -157,6 +167,14 @@ class Process(Loggable):
         return infos
 
     def stop(self, timeout=DEFAULT_TIMEOUT):
+        """Stop the process and wait for it to finish, blocking until done
+
+        For callers that are not on the event loop, like the interactive
+        console. Coroutines should await stop_async() instead.
+        """
+        Spawned(self.stop_async, (timeout,), {}).get()
+
+    async def stop_async(self, timeout=DEFAULT_TIMEOUT):
         """Stop the process and wait for it to finish
 
         Args:
@@ -166,14 +184,14 @@ class Process(Loggable):
         assert self.state == STARTED, "Process not started"
         self.state = STOPPING
         # Allow every controller a chance to clean up
-        self._run_hook(ProcessStopHook, timeout=timeout)
+        await self._run_hook(ProcessStopHook, timeout=timeout)
         for s in self._spawned:
             if not s.ready():
                 self.log.debug(
                     "Waiting for %s *%s **%s", s._function, s._args, s._kwargs
                 )
             try:
-                s.wait(timeout=timeout)
+                await s.wait_async(timeout=timeout)
             except TimeoutError:
                 self.log.warning(
                     "Timeout waiting for %s *%s **%s", s._function, s._args, s._kwargs
@@ -211,29 +229,44 @@ class Process(Loggable):
         self._spawn_count = 0
         self._spawned = [s for s in self._spawned if not s.ready()]
 
-    def add_controllers(
-        self, controllers: List[Controller], timeout: float = None
-    ) -> None:
-        """Add many controllers to be hosted by this process
-
-        Args:
-            controllers (List[Controller]): List of its controller
-            timeout (float): Maximum amount of time to wait for each spawned
-                object. None means forever
-        """
+    def _register_controllers(self, controllers: List[Controller]) -> None:
         for controller in controllers:
             assert (
                 controller.mri not in self._controllers
             ), f"Controller already exists for {controller.mri}"
             self._controllers[controller.mri] = controller
             controller.setup(self)
+
+    async def add_controllers_async(
+        self, controllers: List[Controller], timeout: float = None
+    ) -> None:
+        """Add many controllers to be hosted by this process, starting them if
+        we are already running
+
+        Args:
+            controllers (List[Controller]): List of its controller
+            timeout (float): Maximum amount of time to wait for each spawned
+                object. None means forever
+        """
+        self._register_controllers(controllers)
         if self.state:
-            should_publish = self._start_controllers(controllers, timeout)
+            should_publish = await self._start_controllers(controllers, timeout)
             if self.state == STARTED and should_publish:
-                self._publish_controllers(timeout)
+                await self._publish_controllers(timeout)
+
+    def add_controllers(
+        self, controllers: List[Controller], timeout: float = None
+    ) -> None:
+        """Register many controllers before the process starts
+
+        Once the process is running, controllers are added from the event loop,
+        so use add_controllers_async() from there instead.
+        """
+        assert not self.state, "Process started, use add_controllers_async()"
+        self._register_controllers(controllers)
 
     def add_controller(self, controller: Controller, timeout: float = None) -> None:
-        """Add a controller to be hosted by this process
+        """Register a controller before the process starts
 
         Args:
             controller (Controller): Its controller
