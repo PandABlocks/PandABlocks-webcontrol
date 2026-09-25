@@ -3,7 +3,7 @@ import logging
 import os
 import socket
 import struct
-from typing import Dict, Optional
+from typing import Dict
 
 from tornado.websocket import WebSocketError, WebSocketHandler
 
@@ -22,7 +22,6 @@ from malcolm.core import (
     PartRegistrar,
     Post,
     Put,
-    Queue,
     Request,
     Response,
     Subscribe,
@@ -33,7 +32,6 @@ from malcolm.modules import builtin
 
 from ..hooks import ReportHandlersHook, UHandlerInfos
 from ..infos import HandlerInfo
-from ..util import IOLoopHelper
 
 # Create a module level logger
 log = logging.getLogger(__name__)
@@ -71,16 +69,12 @@ class MalcWebSocketHandler(WebSocketHandler):
     _id_to_mri: Dict[int, str]
     _validators = None
     _writeable = None
-    _queue: Optional[Queue] = None
-    _counter = None
 
     def initialize(self, registrar=None, validators=()):
         self._registrar = registrar
         # {id: mri}
         self._id_to_mri = {}
         self._validators = validators
-        self._queue = Queue()
-        self._counter = 0
 
     def on_message(self, message):
         # called in tornado's thread
@@ -130,16 +124,16 @@ class MalcWebSocketHandler(WebSocketHandler):
             self.write_message(json_encode(error_message))
 
     def on_response(self, response):
-        # called from a worker thread
-        IOLoopHelper.call(self._on_response, response)
-        # Wait for completion once every 10 message
-        self._counter += 1
-        if self._counter % 10 == 0:
-            for _ in range(10):
-                self._queue.get()
+        # Called on the event loop, which is the one Tornado runs on, so write
+        # from here directly. This used to hand the write to the IOLoop and
+        # then block every 10 messages until those writes had completed, which
+        # was safe when it ran on a worker thread. On the loop it would be the
+        # loop waiting for work only the loop can do: it deadlocks, and the
+        # client stops getting updates after the tenth response.
+        self._on_response(response)
 
     def _on_response(self, response: Response) -> None:
-        # called from tornado thread
+        # called on the event loop
         message = json_encode(response)
         try:
             self.write_message(message)
@@ -160,9 +154,6 @@ class MalcWebSocketHandler(WebSocketHandler):
                         self._registrar.report(
                             builtin.infos.RequestInfo(unsubscribe, mri)
                         )
-        finally:
-            assert self._queue, "No queue"
-            self._queue.put(None)
 
     # http://stackoverflow.com/q/24851207
     # TODO: remove this when the web gui is hosted from the box
