@@ -24,6 +24,9 @@ on:
     tags: ['*']            # '*' never matches '/'
 
 jobs:
+  test:   # Local reusable workflow: the test suite, run with uv
+    uses: ./.github/workflows/_test.yml
+
   docs:   # Call the docs building workflow directly
     uses: DiamondLightSource/myst-version-switcher-plugin/.github/workflows/docs.yml@v0.28.0
     with:

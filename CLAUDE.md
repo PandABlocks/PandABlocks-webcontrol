@@ -314,6 +314,7 @@ setting `design` runs `LoadHook`. Read-only template designs live in
 ## Development
 
 ```bash
+uv sync --extra dev                    # .venv from uv.lock; then `uv run <cmd>`
 python -m pytest tests                 # test suite (needs the dev extras)
 ruff check . && ruff format --check .  # lint and formatting
 mypy malcolm                           # type check
@@ -329,10 +330,18 @@ replaced black, flake8 and isort, so there is no `[tool.isort]` section and no
 B/C4/E/F/W/I/UP). Mypy keeps `[tool.mypy]` with `ignore_missing_imports`. Docs
 need no Python packages at all, `make docs` runs mystmd through npx.
 
-CI (`.github/workflows/ci.yml`) currently only builds, releases and publishes
-the docs via the shared `DiamondLightSource/myst-version-switcher-plugin`
-reusable workflows — **the Python tests are not run in CI**, so run them
-locally.
+Dependencies are locked in `uv.lock`; re-lock with `uv sync` after editing
+`pyproject.toml` or CI will reject the change.
+
+CI (`.github/workflows/ci.yml`) runs the tests and builds, releases and
+publishes the docs. The tests are a local reusable workflow,
+`.github/workflows/_test.yml`, which syncs with `uv sync --extra dev --locked`
+and runs pytest — `--locked` is what makes an unlocked dependency change fail
+rather than be quietly re-resolved. No Python version is pinned; uv picks one
+matching `requires-python`, and the suite passes on 3.10 through 3.13. The
+docs half uses the shared `DiamondLightSource/myst-version-switcher-plugin`
+reusable workflows. Lint and type checking are deliberately not gated yet, see
+Rough edges.
 
 ## Rough edges (verified, as of this writing)
 

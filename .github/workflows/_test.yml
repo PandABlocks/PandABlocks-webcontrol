@@ -1,0 +1,33 @@
+name: Test
+
+# Local reusable workflow, called by ci.yml. Runs the Python test suite with
+# uv, which is what the project locks its dependencies with (uv.lock).
+#
+# No Python version is pinned: uv picks one satisfying pyproject's
+# requires-python. The suite passes on 3.10 through 3.13.
+#
+# Tests only. `ruff check` and `ruff format --check` are not gated here yet:
+# the checked-in formatting predates the current ruff, so both fail on files
+# nobody has touched. Add them once that has been dealt with in one pass.
+on:
+  workflow_call:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Install the locked dependencies
+        # --locked fails if uv.lock has drifted from pyproject.toml instead of
+        # quietly re-resolving, so a dependency change has to be locked to land
+        run: uv sync --extra dev --locked
+
+      - name: Run the tests
+        run: uv run --extra dev pytest tests
