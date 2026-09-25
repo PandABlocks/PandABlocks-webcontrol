@@ -30,7 +30,6 @@ Homepage = "https://github.com/PandABlocks/PandABlocks-webcontrol"
 [project.optional-dependencies]
 # For development tests/docs
 dev = [
-    "mypy",
     "pytest",
     "pytest-cov",
     # test_context.py marks a test with @pytest.mark.timeout
@@ -60,15 +59,11 @@ malcolm = [
     "modules/web/www/static/media/*",
 ]
 
-[tool.mypy]
-# Ignore missing stubs for modules we use
-ignore_missing_imports = true
-
 [tool.pytest.ini_options]
 # Don't spam us with massive tracebacks on error. The --black and --mypy
 # checkers that used to run from here needed pytest-black and pytest-mypy,
 # both abandoned and neither installable, so pytest refused to start at all.
-# Run those tools directly instead: `ruff format --check` and `mypy malcolm`.
+# `ruff check` and `ruff format --check` do that job now, and run in CI.
 addopts = "--tb=native -vv --doctest-modules"
 
 [tool.ruff]

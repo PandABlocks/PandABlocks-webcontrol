@@ -317,18 +317,19 @@ setting `design` runs `LoadHook`. Read-only template designs live in
 uv sync --extra dev                    # .venv from uv.lock; then `uv run <cmd>`
 python -m pytest tests                 # test suite (needs the dev extras)
 ruff check . && ruff format --check .  # lint and formatting
-mypy malcolm                           # type check
 make docs                              # MyST build into docs/_build/html (npx mystmd)
 make docs-dev                          # live docs server
 panda-webcontrol --hostname <panda> --configdir <dir>   # run against a real box
 ```
 
-The `dev` extra is deliberately short — `mypy`, `pytest`, `pytest-cov`,
+The `dev` extra is deliberately short — `pytest`, `pytest-cov`,
 `pytest-timeout`, `ruff`. Ruff is the formatter *and* the linter, having
-replaced black, flake8 and isort, so there is no `[tool.isort]` section and no
-`[tool.black]`: its config all lives under `[tool.ruff]` (line length 88, rules
-B/C4/E/F/W/I/UP). Mypy keeps `[tool.mypy]` with `ignore_missing_imports`. Docs
-need no Python packages at all, `make docs` runs mystmd through npx.
+replaced black, flake8 and isort, so `[tool.ruff]` is the only tool config
+left (line length 88, rules B/C4/E/F/W/I/UP). There is no type checker: mypy
+had a backlog of errors nobody was acting on, so it was never gated and has
+been dropped rather than left to rot. A few `# type: ignore` comments survive
+in `core/`, inert but harmless. Docs need no Python packages at all, `make
+docs` runs mystmd through npx.
 
 Dependencies are locked in `uv.lock`; re-lock with `uv sync` after editing
 `pyproject.toml` or CI will reject the change.
@@ -352,7 +353,6 @@ per-file ignores for the `__init__.py` re-exports, which `submodule_all` builds
 at runtime where ruff cannot see them, and for the vendored annotypes, whose
 "unused" typing imports feed its `# type:` comments.
 
-Mypy is *not* gated: it still reports a backlog of pre-existing errors.
 
 ## Rough edges (verified, as of this writing)
 

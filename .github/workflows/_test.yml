@@ -6,7 +6,8 @@ name: Test
 # No Python version is pinned: uv picks one satisfying pyproject's
 # requires-python. The suite passes on 3.10 through 3.13.
 #
-# Lint and formatting are gated; mypy is not, it still has a backlog.
+# Lint and formatting are gated too. There is no type checker in this
+# project; see the note in CLAUDE.md.
 on:
   workflow_call:
 
