@@ -19,7 +19,6 @@ log = logging.getLogger(__name__)
 
 # Re-export
 sleep = time.sleep
-RLock = threading.RLock
 
 
 async def maybe_await(result: Any) -> Any:

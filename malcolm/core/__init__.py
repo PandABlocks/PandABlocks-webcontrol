@@ -4,7 +4,6 @@ from .camel import CAMEL_RE, camel_to_title, snake_to_camel
 from .concurrency import (
     EventLoop,
     Queue,
-    RLock,
     Spawned,
     maybe_await,
     run_blocking,
