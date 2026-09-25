@@ -108,14 +108,51 @@ function on a thread if you give it one. Called *from* the loop it schedules the
 task directly rather than paying for `run_coroutine_threadsafe`, which is the
 common case now that every request and every hook spawns from the loop.
 
-**Locking.** `Controller._lock` is an `asyncio.Lock`, and it is what serialises
-whole requests, so two clients putting to the same Attribute can't interleave.
-It replaced an `RLock`, which was not a like-for-like swap: an `RLock` is
-re-entrant *per thread*, so once its holders are coroutines on one thread it
-silently stops excluding anything (two coroutines both enter). Everywhere else
-the lock simply went away — a block of code that awaits nothing cannot be
-interleaved with on a single loop, so `changes_squashed` is now just a nesting
-counter, and `block_view`/`make_view`/`update_label` take nothing at all.
+**Locking.** There is exactly one lock on the message path: `Controller._lock`,
+an `asyncio.Lock`, one per Controller — so `PANDA:PULSE1` and `PANDA:SEQ1` never
+contend, and `WS` has its own. `asyncio.Lock` wakes waiters FIFO, which is the
+only thing making two requests from one client run in arrival order, since
+`handle_request` spawns and does not wait. It replaced an `RLock`, which was not
+a like-for-like swap: an `RLock` is re-entrant *per thread*, so once its holders
+are coroutines on one thread it silently stops excluding anything (two
+coroutines both enter).
+
+The lock is narrower than it looks, and it is worth knowing exactly where it is
+*not* held:
+
+- `_handle_request` holds it while it dispatches, and drops it before delivering
+  responses to callbacks.
+- `Get`/`Subscribe`/`Unsubscribe` never await under it, so they would be atomic
+  on one loop regardless; the lock is what makes a `Get`'s frozen snapshot
+  consistent.
+- `Put`/`Post` hand it *back* in the middle — `async with self.lock_released:`
+  around the call into the Part — because that is where the slow work is. So the
+  lock stops two Puts validating and dispatching at once, but it does **not**
+  make a Put atomic end to end, and two Parts can be running on one Block at
+  once. `lock_released` re-acquires on the way out, so a put function returning
+  may suspend again waiting to get the lock back.
+- Subscription updates take no lock at all: the PandA poll loop calls
+  `handle_changes` directly rather than through `_handle_request`.
+
+Everywhere else the lock simply went away — a block of code that awaits nothing
+cannot be interleaved with on a single loop, so `block_view`/`make_view`/
+`update_label` take nothing at all, and `changes_squashed` is now just a nesting
+counter. That last one comes with a rule.
+
+**A `changes_squashed` block must not span an `await`.** It reads like a lock
+and is not one any more. Because `lock_released` drops the Controller lock
+exactly where Parts run, and the poll loop holds no lock at all, a block that
+suspends lets a second operation squash into the same counter and change list.
+Neither one's changes are then published when its own block exits — only when
+the last one out takes the count to zero. The visible symptoms are a client
+being told its `Put` returned *before* being told the value changed, and two
+unrelated operations arriving in one `Delta`. Do the awaiting either side of the
+block; `update_block_endpoints` is the worked example, computing its new fields
+first and then mutating under its own batch. Six blocks got this wrong after the
+conversion, including one holding a batch open across a round trip to the PandA.
+`TestChangesSquashedNeverSpansAnAwait` (in the `test_managercontroller.py`
+tests) records the nesting depth at every await and asserts it is zero, under
+two concurrent Puts as well as sequential calls.
 
 **What stayed synchronous, and why.** `models.py`, `notifier.py` and the view
 getters are sync, so `attr.set_value(...)` needs no `await` — making it async
@@ -136,9 +173,10 @@ blocking facades over `start_async()`/`stop_async()` for the same reason; from
 
 browser → `/ws` (`MalcWebSocketHandler.on_message`) → JSON deserialized into a
 `Request` → `registrar.report(RequestInfo(request, mri))` →
-`ServerComms.update_request_received` → `process.get_controller(mri)
-.handle_request(...)` (schedules a coroutine on the loop and doesn't wait for
-it) → responses come back via the request callback, `on_response`.
+`ServerComms.update_request_received` →
+`process.get_controller(mri).handle_request(...)` (schedules a coroutine on the
+loop and doesn't wait for it) → responses come back via the request callback,
+`on_response`.
 
 `on_response` is called from sync code (a Controller, or the `Notifier` when a
 value changed) so it cannot await, and writing from there directly left nothing
@@ -212,6 +250,13 @@ Each block also gets an icon, a label and a help link: `PandAIconPart`
 response to field changes; `HelpPart` points at
 `<--doc-url-base>/<blocktype>-doc/`.
 
+`update_icon` is a coroutine because `PandALutIconPart` asks the box for
+`FUNC.RAW` to work out which elements to hide. That await is why
+`PandABlockController.handle_changes` publishes a poll's field changes and the
+icon in **two** `Delta`s: rendering happens outside `changes_squashed`, so the
+batch is not held open across a round trip to the PandA (see the
+`changes_squashed` rule above). `test_block_fields_lut` asserts both deltas.
+
 `PandABussesPart` owns the two big cross-block tables (`bits`, `positions`)
 shown at the PandA top level, including PCAP capture columns.
 
@@ -254,7 +299,7 @@ setting `design` runs `LoadHook`. Read-only template designs live in
 ## Development
 
 ```bash
-python -m pytest tests                 # test suite (needs the dev extras)
+python -m pytest tests -o addopts=""   # test suite; see Rough edges for why -o
 make docs                              # MyST build into docs/_build/html (npx mystmd)
 make docs-dev                          # live docs server
 panda-webcontrol --hostname <panda> --configdir <dir>   # run against a real box
@@ -276,13 +321,32 @@ Python tests are not run in CI**, so run them locally.
 - Runtime deps in `pyproject.toml` are `numpy` + `tornado`, which is now accurate
   for the package itself; the tests additionally import `mock`, which is only
   listed under the `dev` extra.
+- Seven test modules (`test_controller`, `test_models`, `test_notifier`,
+  `test_request_response`, `test_table`, `test_views`,
+  `test_statefulcontroller`) do `from annotypes import …` — the *top-level*
+  package, not the vendored `malcolm.annotypes`. `annotypes` is not a declared
+  dependency, so unless a real one is installed those seven fail at collection,
+  which aborts the whole run. A shim module doing
+  `sys.modules[__name__] = malcolm.annotypes` is enough to get the suite going.
 - 13 tests fail out of the box, all for pre-existing reasons: 11 in
   `test_request_response.py` read JSON fixtures from `docs/reference/json/`,
   which no longer exists; `test_models.py::test_unsigned_validates` expects
-  numpy 1 wrap-around where numpy 2 raises `OverflowError`; and
+  numpy 1 wrap-around where numpy 2 raises `OverflowError` (so it is 12 failures
+  on numpy 1.x, where that one passes); and
   `test_pandablockcontroller.py::test_block_fields_pulse` still expects the old
   help-URL format (`/docs/build/pulse_doc.html`) that commit 5941a9d5 replaced
   with `/docs/pulse-doc/`.
+- **`.gitignore` line 20 is `parts/`**, a buildout-era pattern that matches
+  `malcolm/modules/{builtin,pandablocks,web}/parts/`. The files already in there
+  are tracked, so nothing is actually excluded today — but a **new** file in a
+  `parts/` directory is invisible to `git status` and silently skipped by
+  `git add .`. Adding it by name at least errors (`git add -f` to override).
+  Remember this when adding a Part.
+- The checked-in formatting predates current ruff: `ruff format --check` wants
+  to rewrite files nobody has touched, and `ruff check` reports hundreds of
+  `UP`/`B` findings against the project's own rule selection. Don't reformat the
+  world — compare a changed file against its `HEAD` version and only care about
+  findings your edit introduced.
 - `malcolm/modules/web/www/` is a vendored malcolmjs build. Do not hand-edit it;
   `update_malcolmjs.sh` re-downloads a release tarball and regenerates
   `index-nav.html` (the nav-bar variant rendered by the Tornado template handler
