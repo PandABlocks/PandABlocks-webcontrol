@@ -1,12 +1,11 @@
 import os
 import unittest
 
-from mock import Mock, patch
-
 from malcolm.annotypes import json_decode
 from malcolm.core import Return
 from malcolm.modules.web.parts import WebsocketServerPart
 from malcolm.modules.web.parts.websocketserverpart import MalcWebSocketHandler
+from mock import Mock, patch
 
 from ...loop import on_loop
 

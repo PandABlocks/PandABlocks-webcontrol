@@ -1,11 +1,10 @@
 import unittest
 from collections import OrderedDict
 
-from mock import AsyncMock, MagicMock, call
-
 from malcolm.core import TimeStamp
 from malcolm.modules.pandablocks.parts.pandabussespart import PandABussesPart
 from malcolm.modules.pandablocks.util import BitsTable, PositionCapture, PositionsTable
+from mock import AsyncMock, MagicMock, call
 
 from ...loop import on_loop
 

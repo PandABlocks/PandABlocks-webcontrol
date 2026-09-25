@@ -1,8 +1,7 @@
 import unittest
 
-from mock import AsyncMock, MagicMock
-
 from malcolm.core.future import Future
+from mock import AsyncMock, MagicMock
 
 from ..loop import on_loop
 

@@ -1,11 +1,10 @@
 import unittest
 from collections import OrderedDict
 
-from mock import Mock
-
 from malcolm.core import BooleanArrayMeta, ChoiceArrayMeta, NumberArrayMeta, TableMeta
 from malcolm.modules.pandablocks.pandablocksclient import TableFieldData
 from malcolm.modules.pandablocks.parts.pandatablepart import PandATablePart
+from mock import Mock
 
 
 class PandABoxTablePartTest(unittest.TestCase):

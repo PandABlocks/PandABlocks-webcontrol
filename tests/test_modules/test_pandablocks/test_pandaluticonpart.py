@@ -2,14 +2,13 @@ import os
 import unittest
 from xml.etree import cElementTree as ET
 
-from mock import AsyncMock, MagicMock
-
 from malcolm.modules.builtin.util import SVGIcon
 from malcolm.modules.pandablocks.parts.pandaluticonpart import (
     PandALutIconPart,
     get_lut_icon_elements,
 )
 from malcolm.modules.pandablocks.util import SVG_DIR
+from mock import AsyncMock, MagicMock
 
 from ...loop import on_loop
 
