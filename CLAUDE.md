@@ -307,7 +307,7 @@ setting `design` runs `LoadHook`. Read-only template designs live in
 ## Development
 
 ```bash
-python -m pytest tests -o addopts=""   # test suite; see Rough edges for why -o
+python -m pytest tests                 # test suite (needs the dev extras)
 make docs                              # MyST build into docs/_build/html (npx mystmd)
 make docs-dev                          # live docs server
 panda-webcontrol --hostname <panda> --configdir <dir>   # run against a real box
@@ -322,10 +322,6 @@ Python tests are not run in CI**, so run them locally.
 
 ## Rough edges (verified, as of this writing)
 
-- `[tool.pytest.ini_options] addopts` still contains `--black --mypy`, which need
-  the abandoned `pytest-black`/`pytest-mypy` plugins. Without them pytest aborts
-  with "unrecognized arguments"; override with
-  `pytest -o addopts="--tb=native" …`.
 - Runtime deps in `pyproject.toml` are `numpy` + `tornado`, which is accurate
   for the package itself. The tests need only `pytest` on top of those: they
   use `unittest.mock` from the standard library, so there is no `mock`
