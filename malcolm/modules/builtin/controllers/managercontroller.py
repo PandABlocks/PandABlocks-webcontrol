@@ -30,6 +30,7 @@ from malcolm.core import (
     camel_to_title,
     config_tag,
     get_config_tag,
+    run_blocking,
     without_config_tags,
 )
 from malcolm.core.tags import Port, without_group_tags
@@ -458,11 +459,22 @@ class ManagerController(StatefulController):
         filename = self._validated_config_filename(design)
         if filename.startswith("/tmp"):
             self.log.warning(f"Saving to tmp directory {filename}")
+        # Writing the design and flushing it can take a while on the PandA's
+        # flash, and everything shares one event loop, so do it on a thread
+        await run_blocking(self._write_design, filename, text)
+        await self._mark_clean(design)
+
+    @staticmethod
+    def _write_design(filename: str, text: str) -> None:
         with open(filename, "w") as f:
             f.write(text)
         # Run a sync command to make sure we flush this file to disk
         subprocess.call("sync")
-        await self._mark_clean(design)
+
+    @staticmethod
+    def _read_design(filename: str) -> str:
+        with open(filename) as f:
+            return f.read()
 
     def _set_layout_names(self, extra_name=None):
         names = [""]
@@ -526,8 +538,7 @@ class ManagerController(StatefulController):
         """
         if design:
             filename = self._validated_config_filename(design)
-            with open(filename, "r") as f:
-                text = f.read()
+            text = await run_blocking(self._read_design, filename)
             structure = json_decode(text)
         else:
             structure = {}

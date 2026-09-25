@@ -1,8 +1,10 @@
 import unittest
 
-from mock import MagicMock
+from mock import AsyncMock, MagicMock
 
 from malcolm.core.future import Future
+
+from ..loop import on_loop
 
 
 class MyError(Exception):
@@ -28,32 +30,46 @@ class TestFuture(unittest.TestCase):
             f.result(timeout=0)
         assert f.exception() == e
 
-    def test_result(self):
+    def test_result_before_finished_raises(self):
+        # result() used to service the Context until the Future finished. The
+        # Context is a coroutine now, which a sync method can't wait on, so
+        # asking early is an error rather than a quietly wrong answer
+        f = Future(self.context)
+        with self.assertRaises(RuntimeError) as cm:
+            f.result()
+        assert "not finished" in str(cm.exception)
+        with self.assertRaises(RuntimeError):
+            f.exception()
+
+    @on_loop
+    async def test_await_result(self):
         f = Future(self.context)
 
-        def wait_all_futures(fs, timeout):
+        async def wait_all_futures(fs):
             fs[0].set_result(32)
 
-        self.context.wait_all_futures.side_effect = wait_all_futures
+        self.context.wait_all_futures = AsyncMock(side_effect=wait_all_futures)
 
-        assert f.result() == 32
-        self.context.wait_all_futures.assert_called_once_with([f], None)
+        assert await f == 32
+        self.context.wait_all_futures.assert_called_once_with([f])
         self.context.wait_all_futures.reset_mock()
-        assert f.result() == 32
+        # Finished now, so awaiting again doesn't go back to the Context
+        assert await f == 32
         self.context.wait_all_futures.assert_not_called()
 
-    def test_exception(self):
+    @on_loop
+    async def test_await_exception(self):
         f = Future(self.context)
 
-        def wait_all_futures(fs, timeout):
+        async def wait_all_futures(fs):
             fs[0].set_exception(MyError())
 
-        self.context.wait_all_futures.side_effect = wait_all_futures
+        self.context.wait_all_futures = AsyncMock(side_effect=wait_all_futures)
 
         with self.assertRaises(MyError):
-            f.result()
+            await f
 
-        self.context.wait_all_futures.assert_called_once_with([f], None)
+        self.context.wait_all_futures.assert_called_once_with([f])
         self.context.wait_all_futures.reset_mock()
         self.assertIsInstance(f.exception(), MyError)
         self.context.wait_all_futures.assert_not_called()

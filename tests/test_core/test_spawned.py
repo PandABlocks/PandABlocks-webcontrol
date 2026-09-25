@@ -109,3 +109,34 @@ class TestSpawnedCoroutines(unittest.TestCase):
             release.put("done")
         for s in spawned:
             assert s.get(10) == "done"
+
+
+class TestLoopGuards(unittest.TestCase):
+    """Blocking the event loop from the event loop hangs the application, so
+    the blocking entry points refuse to do it"""
+
+    def test_wait_from_the_loop_raises(self):
+        async def blocks_the_loop():
+            Spawned(lambda: 1, (), {}).wait()
+
+        with self.assertRaises(RuntimeError) as cm:
+            Spawned(blocks_the_loop, (), {}).get(10)
+        assert "would deadlock" in str(cm.exception)
+
+    def test_event_loop_run_from_the_loop_raises(self):
+        async def inner():
+            return 1
+
+        async def blocks_the_loop():
+            coro = inner()
+            try:
+                EventLoop.run(coro)
+            finally:
+                coro.close()
+
+        with self.assertRaises(RuntimeError) as cm:
+            Spawned(blocks_the_loop, (), {}).get(10)
+        assert "would deadlock" in str(cm.exception)
+
+    def test_still_works_off_the_loop(self):
+        assert Spawned(lambda: 7, (), {}).get(10) == 7

@@ -22,6 +22,15 @@ class Future:
         """Return True if the future finished executing."""
         return self._state == self.FINISHED
 
+    def __await__(self):
+        """Wait for the Future to finish and give up its result"""
+        return self._wait_for_result().__await__()
+
+    async def _wait_for_result(self):
+        if self._state == self.RUNNING:
+            await self._context.wait_all_futures([self])
+        return self.__get_result()
+
     def __get_result(self):
         if self._exception:
             raise self._exception
@@ -45,7 +54,10 @@ class Future:
                 raised.
         """
         if self._state == self.RUNNING:
-            self._context.wait_all_futures([self], timeout)
+            raise RuntimeError(
+                "Future is not finished, so it has no result yet. Await the "
+                "Future, or await context.wait_all_futures(), first"
+            )
         return self.__get_result()
 
     def exception(self, timeout=None):
@@ -65,7 +77,10 @@ class Future:
                 timeout.
         """
         if self._state == self.RUNNING:
-            self._context.wait_all_futures([self], timeout)
+            raise RuntimeError(
+                "Future is not finished, so it has no exception yet. Await "
+                "the Future, or await context.wait_all_futures(), first"
+            )
         return self._exception
 
     # The following methods should only be used by Task and in unit tests.

@@ -1,9 +1,11 @@
+import asyncio
 import os
 import shutil
 import tempfile
+import time
 import unittest
 
-from mock import MagicMock
+from mock import MagicMock, patch
 
 from malcolm.compat import OrderedDict
 from malcolm.core import (
@@ -286,3 +288,24 @@ class TestManagerController(unittest.TestCase):
         # block has changed, get a new view
         b = context.block_view("mainBlock")
         assert "childAttr" not in b
+
+    @on_loop
+    async def test_save_does_not_block_the_event_loop(self):
+        # Writing the design and flushing it can take a while on a PandA's
+        # flash. Everything shares one event loop, so it has to happen on a
+        # thread or the UI and the hardware polling stall with it
+        ticks = []
+
+        async def tick():
+            for _ in range(20):
+                await asyncio.sleep(0.01)
+                ticks.append(1)
+
+        ticking = asyncio.ensure_future(tick())
+        with patch(
+            "malcolm.modules.builtin.controllers.managercontroller.subprocess.call",
+            side_effect=lambda *a, **k: time.sleep(0.2),
+        ):
+            await self.c.save(designName="blocking")
+        assert ticks, "the loop made no progress while saving"
+        ticking.cancel()

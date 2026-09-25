@@ -64,6 +64,19 @@ class _ThreadPerTaskExecutor(concurrent.futures.Executor):
 _EXECUTOR = _ThreadPerTaskExecutor()
 
 
+async def run_blocking(func: Callable[..., Any], *args: Any, **kwargs: Any) -> Any:
+    """Await a blocking function on a worker thread
+
+    Everything runs on one event loop, so work that blocks it - file IO, a
+    subprocess - stalls the UI and the PandA polling along with itself. Hand
+    that kind of work to a thread and await the result.
+    """
+    loop = asyncio.get_running_loop()
+    return await loop.run_in_executor(
+        _EXECUTOR, functools.partial(func, *args, **kwargs)
+    )
+
+
 class EventLoop:
     """The single asyncio event loop that this process runs its callbacks on.
 
@@ -102,13 +115,34 @@ class EventLoop:
         cls.get().call_soon_threadsafe(func, *args)
 
     @classmethod
+    def is_current_thread(cls) -> bool:
+        """True if the caller is running on the event loop's thread"""
+        return threading.current_thread() is cls._thread
+
+    @classmethod
+    def check_not_on_loop(cls, what: str) -> None:
+        """Refuse to block the event loop from the event loop
+
+        Blocking the loop to wait for work that only the loop can do hangs the
+        whole application, and a hang is far harder to diagnose than an error.
+        """
+        if cls.is_current_thread():
+            raise RuntimeError(
+                f"{what} was called from the event loop, which would deadlock: "
+                "the loop would be waiting for work only it can do. Await the "
+                "coroutine instead."
+            )
+
+    @classmethod
     def run(cls, coro, timeout: float = None) -> Any:
         """Run a coroutine on the loop from another thread, returning its result
 
         For code that isn't on the loop and has a coroutine in hand, like the
         interactive console: run(block.save(designName="mine")).
         """
-        return asyncio.run_coroutine_threadsafe(coro, cls.get()).result(timeout)
+        loop = cls.get()
+        cls.check_not_on_loop("EventLoop.run()")
+        return asyncio.run_coroutine_threadsafe(coro, loop).result(timeout)
 
     @staticmethod
     def _run_forever(loop: asyncio.AbstractEventLoop) -> None:
@@ -186,7 +220,12 @@ class Spawned:
         self._kwargs = None
 
     def wait(self, timeout: float = None) -> None:
-        """Block until the function has finished, or timeout seconds pass"""
+        """Block until the function has finished, or timeout seconds pass
+
+        For callers that are not on the event loop. Coroutines must use
+        wait_async(), or they would block the loop they are running on.
+        """
+        EventLoop.check_not_on_loop("Spawned.wait()")
         try:
             # exception() returns the error rather than raising it: wait() only
             # reports that we finished, get() is what re-raises

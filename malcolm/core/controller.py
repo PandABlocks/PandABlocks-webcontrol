@@ -7,7 +7,7 @@ from malcolm.compat import OrderedDict
 
 from .alarm import Alarm
 from .camel import camel_to_title
-from .concurrency import Queue, Spawned, maybe_await
+from .concurrency import Spawned, maybe_await
 from .context import Context
 from .errors import FieldError, NotWriteableError, UnexpectedError
 from .hook import Hook, Hookable, start_hooks, wait_hooks
@@ -290,11 +290,13 @@ class Controller(Hookable):
     async def run_hooks(self, hooks: Iterable[Hook]) -> Dict[str, List[Info]]:
         return await self.wait_hooks(*self.start_hooks(hooks))
 
-    def start_hooks(self, hooks: Iterable[Hook]) -> Tuple[Queue, List[Hook]]:
+    def start_hooks(self, hooks: Iterable[Hook]) -> Tuple["asyncio.Queue", List[Hook]]:
         # Hooks might be a generator, so convert to a list
         hooks = list(hooks)
         if not hooks:
-            return Queue(), []
+            # An asyncio queue, to match what start_hooks makes and wait_hooks
+            # awaits, even though with no hooks nothing ever reads it
+            return asyncio.Queue(), []
         self.log.debug(f"{self.mri}: {hooks[0].name}: Starting hook")
         assert self.process, "No process for starting hooks"
         for hook in hooks:
@@ -306,7 +308,7 @@ class Controller(Hookable):
         return hook_queue, hook_spawned
 
     async def wait_hooks(
-        self, hook_queue: Queue, hook_spawned: List[Hook]
+        self, hook_queue: "asyncio.Queue", hook_spawned: List[Hook]
     ) -> Dict[str, List[Info]]:
         if hook_spawned:
             return_dict = await wait_hooks(
