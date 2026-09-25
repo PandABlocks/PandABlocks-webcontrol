@@ -108,6 +108,15 @@ class Notifier(Loggable):
         re-acquire it. Everything now runs on one event loop, so a block that
         awaits nothing cannot be interleaved with and needs no lock; the
         Controller's asyncio.Lock is what serialises whole requests.
+
+        That makes one rule for callers: **a changes_squashed block must not
+        span an await**. The Controller drops its lock around the call into a
+        Part (see Controller.lock_released), so a second request can run while
+        you are suspended. Both would then be squashing into this same counter
+        and change list: neither one's changes are published when its own
+        block exits, only when the last one out reaches zero. A client can see
+        the Return for a Put before the Update for the value it just set. Do
+        the awaiting either side of the block instead.
         """
         self._squashed_count += 1
 

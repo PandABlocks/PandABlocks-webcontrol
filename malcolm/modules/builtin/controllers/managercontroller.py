@@ -192,10 +192,14 @@ class ManagerController(StatefulController):
                 visibility_changed = True
             if visibility_changed:
                 self.update_modified()
-                await self.update_exportable()
-                # Part visibility changed, might have attributes or methods
-                # that we need to hide or show
-                await self.update_block_endpoints()
+        # Awaited outside changes_squashed, like the hooks above: holding a
+        # batch open across an await lets a second request in, because
+        # _handle_put releases the Controller lock around this call
+        if visibility_changed:
+            await self.update_exportable()
+            # Part visibility changed, might have attributes or methods
+            # that we need to hide or show
+            await self.update_block_endpoints()
 
     async def set_exports(self, value):
         # Validate
@@ -206,7 +210,8 @@ class ManagerController(StatefulController):
         with self.changes_squashed:
             self.exports.set_value(value)
             self.update_modified()
-            await self.update_block_endpoints()
+        # Awaited outside changes_squashed, see set_layout
+        await self.update_block_endpoints()
 
     def update_modified(
         self, part: Part = None, info: PartModifiedInfo = None
@@ -255,6 +260,7 @@ class ManagerController(StatefulController):
     async def update_exportable(
         self, part: Part = None, info: PartExportableInfo = None
     ) -> None:
+        changed_exports = None
         with self.changes_squashed:
             if part:
                 assert info, "No info to update part"
@@ -275,20 +281,27 @@ class ManagerController(StatefulController):
                 )
                 changed_exports = changed_names.intersection(self.exports.value.source)
                 self.exports.meta.elements["source"].set_choices(names)
-                # Update the block endpoints if anything currently exported is
-                # added or deleted
-                if changed_exports:
-                    await self.update_block_endpoints()
+        # Update the block endpoints if anything currently exported is added or
+        # deleted. Awaited outside changes_squashed, see set_layout
+        if changed_exports:
+            await self.update_block_endpoints()
 
     async def update_block_endpoints(self):
-        if self._current_part_fields:
-            for name, child, _, _ in self._current_part_fields:
-                self._block.remove_endpoint(name)
-                for state, state_writeable in self._children_writeable.items():
-                    state_writeable.pop(child, None)
-        self._current_part_fields = tuple(await self._get_current_part_fields())
-        for name, child, writeable_func, needs_context in self._current_part_fields:
-            self.add_block_field(name, child, writeable_func, needs_context)
+        # Work out the new fields first. This awaits, so it has to happen
+        # before the changes_squashed block below rather than inside it
+        part_fields = tuple(await self._get_current_part_fields())
+        # Squash our own changes, rather than relying on a caller to do it:
+        # this drops every endpoint before putting them back, and a subscriber
+        # that saw the gap would see the Block with no fields at all
+        with self.changes_squashed:
+            if self._current_part_fields:
+                for name, child, _, _ in self._current_part_fields:
+                    self._block.remove_endpoint(name)
+                    for state, state_writeable in self._children_writeable.items():
+                        state_writeable.pop(child, None)
+            self._current_part_fields = part_fields
+            for name, child, writeable_func, needs_context in self._current_part_fields:
+                self.add_block_field(name, child, writeable_func, needs_context)
 
     def add_part(self, part: Part) -> None:
         super().add_part(part)
@@ -585,4 +598,5 @@ class ManagerController(StatefulController):
             self.update_modified()
             self._set_layout_names(design)
             self.design.set_value(design)
-            await self.update_block_endpoints()
+        # Awaited outside changes_squashed, see set_layout
+        await self.update_block_endpoints()

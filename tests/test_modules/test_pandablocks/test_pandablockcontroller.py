@@ -289,11 +289,18 @@ class PandABoxBlockMakerTest(unittest.TestCase):
         ts = TimeStamp()
         await o.handle_changes({"FUNC": "!A&!B&!C&!D&!E"}, ts)
         self.client.get_field.assert_called_once_with("LUT3", "FUNC.RAW")
+        # Two deltas, not one: rendering a LUT icon asks the box for FUNC.RAW,
+        # and that await happens outside changes_squashed, so the field change
+        # is published as soon as it is made rather than being held back for
+        # the round trip. The icon follows in its own batch
         delta = await queue.get()
         assert delta.changes == [
             [["func", "value"], "!A&!B&!C&!D&!E"],
             [["func", "timeStamp"], ts],
+        ]
+        delta = await queue.get()
+        assert delta.changes == [
             [["icon", "value"], ANY],
             [["icon", "timeStamp"], ts],
         ]
-        assert '<path id="OR"' not in delta.changes[2][1]
+        assert '<path id="OR"' not in delta.changes[0][1]

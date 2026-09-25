@@ -102,8 +102,9 @@ class PandABlockController(builtin.controllers.BasicController):
             self._make_parts_for(field_name, field_data)
 
     async def handle_changes(self, changes: Dict[str, Any], ts: TimeStamp) -> None:
+        icon_needs_update = False
+        icon_field_values: Dict[str, Any] = {}
         with self.changes_squashed:
-            icon_needs_update = False
             if isinstance(changes, Dict):
                 for k, v in changes.items():
                     # Health changes are for us
@@ -134,14 +135,20 @@ class PandABlockController(builtin.controllers.BasicController):
                     else:
                         self._handle_mux_update(mux_meta, v)
             if icon_needs_update:
-                d = {}
                 for key in self.icon_part.update_fields:
                     if key in self.field_parts:
                         field_part = self.field_parts[key]
                         if field_part:
-                            d[key] = field_part.attr.value
-                icon = builtin.util.SVGIcon(self.icon_part.svg_text)
-                await self.icon_part.update_icon(icon, d)
+                            icon_field_values[key] = field_part.attr.value
+        # Rendering the icon can await - PandALutIconPart asks the box for
+        # FUNC.RAW - so it happens outside changes_squashed. Holding the batch
+        # open across a round trip to the PandA would let a concurrent Put to
+        # this Block fall into it, and defer both sets of changes until
+        # whichever of the two finished last
+        if icon_needs_update:
+            icon = builtin.util.SVGIcon(self.icon_part.svg_text)
+            await self.icon_part.update_icon(icon, icon_field_values)
+            with self.changes_squashed:
                 self.icon_part.attr.set_value(str(icon), ts=ts)
 
     def _handle_mux_update(self, mux_meta, v):

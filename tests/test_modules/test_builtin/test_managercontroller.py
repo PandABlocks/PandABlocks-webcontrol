@@ -13,6 +13,7 @@ from malcolm.core import (
     Part,
     PartRegistrar,
     Process,
+    Put,
     StringMeta,
     Widget,
     config_tag,
@@ -309,3 +310,80 @@ class TestManagerController(unittest.TestCase):
             await self.c.save(designName="blocking")
         assert ticks, "the loop made no progress while saving"
         ticking.cancel()
+
+
+def spy_on_awaits(controller):
+    """Record the Notifier's nesting depth each time the controller awaits
+
+    A changes_squashed block must not span an await: the Controller drops its
+    lock around the call into a Part, so a second request can run while we are
+    suspended, and then neither one's changes are published when its own block
+    exits. Every one of these should be reached with no batch open.
+    """
+    depths = []
+
+    def wrap(name):
+        original = getattr(controller, name)
+
+        async def wrapper(*args, **kwargs):
+            depths.append((name, controller._notifier._squashed_count))
+            return await original(*args, **kwargs)
+
+        setattr(controller, name, wrapper)
+
+    for name in ("update_block_endpoints", "update_exportable"):
+        wrap(name)
+    return depths
+
+
+class TestChangesSquashedNeverSpansAnAwait(unittest.TestCase):
+    # Reuse the fixture, but not the tests that go with it
+    setUp = TestManagerController.setUp
+    tearDown = TestManagerController.tearDown
+
+    @on_loop
+    async def test_when_called_directly(self):
+        depths = spy_on_awaits(self.c)
+
+        layout = self.c.layout.value
+        await self.c.set_layout(
+            LayoutTable(layout.name, layout.mri, layout.x, layout.y, [False])
+        )
+        await self.c.set_exports(ExportTable(["part2.attr"], ["myattr"]))
+        await self.c.update_exportable()
+        await self.c._mark_clean("")
+
+        # All four routes reached, and none of them with a batch open
+        assert [name for name, _ in depths] != []
+        assert depths == [(name, 0) for name, _ in depths], depths
+
+    @on_loop
+    async def test_under_two_concurrent_puts(self):
+        # This is the case that made it matter: _handle_put releases the
+        # Controller's lock around the call into the Part, so these two run
+        # interleaved on the one event loop
+        depths = spy_on_awaits(self.c)
+        layout = self.c.layout.value
+
+        requests = [
+            Put(
+                id=1,
+                path=["mainBlock", "layout"],
+                value=LayoutTable(layout.name, layout.mri, layout.x, layout.y, [False]),
+            ),
+            Put(
+                id=2,
+                path=["mainBlock", "exports"],
+                value=ExportTable(["part2.attr"], ["myattr"]),
+            ),
+        ]
+        responses: asyncio.Queue = asyncio.Queue()
+        spawned = []
+        for request in requests:
+            request.set_callback(responses.put_nowait)
+            spawned.append(self.c.handle_request(request))
+        for s in spawned:
+            await s.wait_async(10)
+
+        assert [name for name, _ in depths] != []
+        assert depths == [(name, 0) for name, _ in depths], depths
