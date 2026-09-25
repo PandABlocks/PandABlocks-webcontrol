@@ -19,7 +19,7 @@ from typing import (
 from malcolm.annotypes import Anno, WithCallTypes
 from malcolm.compat import OrderedDict
 
-from .concurrency import Queue, Spawned, maybe_await
+from .concurrency import Spawned, maybe_await
 from .errors import AbortedError
 from .info import Info
 from .loggable import Loggable
@@ -103,7 +103,7 @@ class Hook(Generic[T], WithCallTypes):
     def __init__(self, child: AHookable, **kwargs: Any) -> None:
         self.child = child
         self._kwargs = kwargs
-        self._queue: Union[Queue, None] = None
+        self._queue: Union[asyncio.Queue, None] = None
         self._spawn: Union[Callable[..., Spawned], None] = None
         self.spawned: Union[Spawned, None] = None
 

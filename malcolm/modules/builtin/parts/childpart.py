@@ -79,7 +79,8 @@ ss = StatefulStates
 
 class ChildPart(Part):
     #: A set containing all the Attribute names of our child Block that we will
-    #: put to, so shouldn't be saved. Set this in subclasses using `no_save`
+    #: put to, so shouldn't be saved. Override it in subclasses; the `no_save`
+    #: decorator that used to set it has gone
     no_save_attribute_names: Set[str] = set()
 
     def _unmanaged_attr(self, attr_name):
@@ -97,8 +98,9 @@ class ChildPart(Part):
             attribute_name = request.path[-2]
             if self._unmanaged_attr(attribute_name) and self.log:
                 self.log.warning(
-                    "Part %s tried to set '%s' that is not in self.no_save. "
-                    "This will stop the 'modified' attribute from working.",
+                    "Part %s tried to set '%s' that is not in "
+                    "self.no_save_attribute_names. This will stop the "
+                    "'modified' attribute from working.",
                     self,
                     attribute_name,
                 )

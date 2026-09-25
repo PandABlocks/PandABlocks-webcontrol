@@ -40,16 +40,18 @@ class Future:
     def result(self, timeout=None):
         """Return the result of the call that the future represents.
 
+        The Future has to have finished already: this never waits. Await the
+        Future, or await context.wait_all_futures(), to make it finish.
+
         Args:
-            timeout: The number of seconds to wait for the result if the future
-                isn't done. If None, then there is no limit on the wait time.
+            timeout: Ignored, and kept only so that existing callers still
+                work. Waiting here would block the one event loop.
 
         Returns:
             The result of the call that the future represents.
 
         Raises:
-            TimeoutError: If the future didn't finish executing before the given
-                timeout.
+            RuntimeError: If the future hasn't finished executing.
             Exception: If the call raised then that exception will be
                 raised.
         """
@@ -63,18 +65,19 @@ class Future:
     def exception(self, timeout=None):
         """Return the exception raised by the call that the future represents.
 
+        The Future has to have finished already: this never waits. Await the
+        Future, or await context.wait_all_futures(), to make it finish.
+
         Args:
-            timeout: The number of seconds to wait for the exception if the
-                future isn't done. If None, then there is no limit on the wait
-                time.
+            timeout: Ignored, and kept only so that existing callers still
+                work. Waiting here would block the one event loop.
 
         Returns:
             The exception raised by the call that the future represents or None
             if the call completed without raising.
 
         Raises:
-            TimeoutError: If the future didn't finish executing before the given
-                timeout.
+            RuntimeError: If the future hasn't finished executing.
         """
         if self._state == self.RUNNING:
             raise RuntimeError(
