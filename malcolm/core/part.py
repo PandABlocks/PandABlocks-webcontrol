@@ -108,14 +108,14 @@ class FieldRegistry:
         writeable_func: Optional["Callable"] = None,
         needs_context: bool = False,
     ) -> None:
-        assert CAMEL_RE.match(
-            name
-        ), f"Field {name!r} published by {owner} is not camelCase"
+        assert CAMEL_RE.match(name), (
+            f"Field {name!r} published by {owner} is not camelCase"
+        )
         for o, fields in self.fields.items():
             existing = [x for x in fields if x[0] == name]
-            assert (
-                not existing
-            ), f"Field {name!r} published by {owner} would overwrite one made by {o}"
+            assert not existing, (
+                f"Field {name!r} published by {owner} would overwrite one made by {o}"
+            )
         part_fields = self.fields.setdefault(owner, [])
         part_fields.append((name, model, cast(Callable, writeable_func), needs_context))
 

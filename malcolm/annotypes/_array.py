@@ -13,7 +13,8 @@ def array_type(cls):
     # type: (Type[Array[T]]) -> Type[T]
     type_args = getattr(cls, "__args__", ())
     assert type_args, "Expected Array[<typ>](...), got Array[%s](...)" % (
-        ", ".join(repr(x) for x in type_args))
+        ", ".join(repr(x) for x in type_args)
+    )
     return type_args[0]
 
 
@@ -42,9 +43,10 @@ class Array(Sequence[T], Generic[T]):
         self.typ = typ
         # TODO: add type checking for array.array
         if hasattr(seq, "dtype"):
-            assert self.typ == seq.dtype, \
-                "Expected numpy array with dtype %s, got %r with dtype %s" % (
-                    self.typ, seq, seq.dtype)
+            assert self.typ == seq.dtype, (
+                "Expected numpy array with dtype %s, got %r with dtype %s"
+                % (self.typ, seq, seq.dtype)
+            )
 
     @overload
     def __getitem__(self, idx):  # pragma: no cover
@@ -83,8 +85,10 @@ def to_array(typ, seq=None):
         # It's a numpy array or stdlib array
         return typ(seq, typ=expected)
     elif isinstance(seq, Array):
-        assert expected == seq.typ, \
-            "Expected Array[%s], got Array[%s]" % (expected, seq.typ)
+        assert expected == seq.typ, "Expected Array[%s], got Array[%s]" % (
+            expected,
+            seq.typ,
+        )
         return seq
     elif seq is None:
         return typ(typ=expected)

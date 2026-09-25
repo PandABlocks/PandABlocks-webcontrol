@@ -247,13 +247,17 @@ class PandABlocksManagerControllerTest(unittest.TestCase):
     async def test_change_pcap_bits(self):
         b = self.process.block_view("P")
         assert b.bits.value.capture == [False, False, False]
-        await b.bits.put_value(BitsTable(name=["TTLIN1.VAL"], value=[False], capture=[True]))
+        await b.bits.put_value(
+            BitsTable(name=["TTLIN1.VAL"], value=[False], capture=[True])
+        )
         assert b.bits.value.capture == [True, False, False]
         self.client.set_fields.assert_called_once_with({"PCAP.BITS0.CAPTURE": "Value"})
         self.client.set_fields.reset_mock()
         await self.o.handle_changes([("PCAP.BITS0.CAPTURE", "Value")])
         assert b.bits.value.capture == [True, True, True]
-        await b.bits.put_value(BitsTable(name=["TTLIN1.VAL"], value=[False], capture=[False]))
+        await b.bits.put_value(
+            BitsTable(name=["TTLIN1.VAL"], value=[False], capture=[False])
+        )
         assert b.bits.value.capture == [False, True, True]
         self.client.set_fields.assert_called_once_with({"PCAP.BITS0.CAPTURE": "No"})
         await self.o.handle_changes([("PCAP.BITS0.CAPTURE", "No")])

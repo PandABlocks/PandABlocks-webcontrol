@@ -55,7 +55,7 @@ class DisableHook(ControllerHook):
 with Anno("The PortInfos for all the parts"):
     APortMap = Union[Mapping[str, Array[PortInfo]]]
 with Anno(
-    "A possibly partial set of changes to the layout table that " "should be acted on"
+    "A possibly partial set of changes to the layout table that should be acted on"
 ):
     ALayoutTable = LayoutTable
 with Anno("The current layout information"):

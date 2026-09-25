@@ -126,18 +126,18 @@ class Hook(Generic[T], WithCallTypes):
     def __call__(self, func: Callable[..., T], args_gen: ArgsGen = None) -> None:
         """Spawn the function, passing kwargs specified by func.call_types or
         keys if given"""
-        assert (
-            not self.spawned
-        ), "Hook has already spawned a function, cannot run another"
+        assert not self.spawned, (
+            "Hook has already spawned a function, cannot run another"
+        )
         self.prepare()
         if args_gen is None:
             args_gen = make_args_gen(func)
         # TODO: should we check the return types here?
         supplied = list(self._kwargs)
         demanded = args_gen(supplied)
-        assert set(supplied).issuperset(
-            demanded
-        ), f"Hook demanded arguments {demanded}, but only supplied {supplied}"
+        assert set(supplied).issuperset(demanded), (
+            f"Hook demanded arguments {demanded}, but only supplied {supplied}"
+        )
         kwargs = {k: self._kwargs[k] for k in demanded}
         assert self._spawn, "No spawned function"
         self.spawned = self._spawn(self._run, func, kwargs)

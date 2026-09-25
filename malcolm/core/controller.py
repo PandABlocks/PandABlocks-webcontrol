@@ -63,9 +63,9 @@ class Controller(Hookable):
         self.add_initial_part_fields()
 
     def add_part(self, part: Part) -> None:
-        assert (
-            part.name not in self.parts
-        ), f"Part {part.name!r} already exists in Controller {self.mri!r}"
+        assert part.name not in self.parts, (
+            f"Part {part.name!r} already exists in Controller {self.mri!r}"
+        )
         part.setup(PartRegistrar(self.field_registry, self.info_registry, part))
         self.parts[part.name] = part
 
@@ -196,9 +196,9 @@ class Controller(Hookable):
         except KeyError:
             raise FieldError(f"Block '{self.mri}' has no Attribute '{attribute_name}'")
 
-        assert isinstance(
-            attribute, AttributeModel
-        ), f"Cannot Put to {attribute.path} which is a {type(attribute)}"
+        assert isinstance(attribute, AttributeModel), (
+            f"Cannot Put to {attribute.path} which is a {type(attribute)}"
+        )
         self.check_field_writeable(attribute)
 
         put_function = self.get_put_function(attribute_name)
@@ -253,9 +253,9 @@ class Controller(Hookable):
         except KeyError:
             raise FieldError(f"Block '{self.mri}' has no Method '{method_name}'")
 
-        assert isinstance(
-            method, MethodModel
-        ), f"Cannot Post to {method.path} which is a {type(method)}"
+        assert isinstance(method, MethodModel), (
+            f"Cannot Post to {method.path} which is a {type(method)}"
+        )
         self.check_field_writeable(method)
 
         post_function = self.get_post_function(method_name)

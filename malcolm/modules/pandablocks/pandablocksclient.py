@@ -172,9 +172,9 @@ class PandABlocksClient:
                     if line == ".":
                         await self._respond(self._completed_response_lines)
                     else:
-                        assert (
-                            line[0] == "!"
-                        ), f"Multiline response {repr(line)} doesn't start with !"
+                        assert line[0] == "!", (
+                            f"Multiline response {repr(line)} doesn't start with !"
+                        )
                         self._completed_response_lines.append(line[1:])
                 else:
                     await self._respond(line)

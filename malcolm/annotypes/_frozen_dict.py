@@ -5,6 +5,7 @@ def not_supported(self, *args, **kwargs):
 class FrozenOrderedDict(dict):
     """Absolutely minimal implementation of an OrderedDict, frozen at init to
     give better performance than the one in collections"""
+
     def __init__(self, seq=()):
         super(FrozenOrderedDict, self).__init__()
         keys = []

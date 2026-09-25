@@ -9,8 +9,9 @@ with Anno("An array of simple objects"):
 
 
 @add_call_types
-def composition_func(exposure: Exposure, prefix: Prefix = None
-                     ) -> Optional[SimpleArray]:
+def composition_func(
+    exposure: Exposure, prefix: Prefix = None
+) -> Optional[SimpleArray]:
     if prefix:
         ret = [Simple(exposure, prefix + suff) for suff in ["/one", "/two"]]
         return SimpleArray(ret)

@@ -224,9 +224,9 @@ class PandABussesPart(Part):
                 else:
                     parsed_value = value
                 if self.positions:
-                    update_column(column_changes, column, self.positions.value)[
-                        i
-                    ] = parsed_value
+                    update_column(column_changes, column, self.positions.value)[i] = (
+                        parsed_value
+                    )
             # Grab scale and offset
             assert self.positions, "No positions"
             table_value = self.positions.value

@@ -23,6 +23,4 @@ class PandALabelPart(builtin.parts.LabelPart):
 
     async def set_label(self, value, ts=None):
         super().set_label(value, ts)
-        await self.client.set_field(
-            "*METADATA", self.metadata_field, self.attr.value
-        )
+        await self.client.set_field("*METADATA", self.metadata_field, self.attr.value)

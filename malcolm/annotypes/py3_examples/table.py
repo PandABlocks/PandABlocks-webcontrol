@@ -4,8 +4,9 @@ from malcolm.annotypes import Anno, WithCallTypes, Array, add_call_types
 class Table(WithCallTypes):
     def validate(self):
         lengths = {a: len(getattr(self, a)) for a in self.call_types}
-        assert len(set(lengths.values())) == 1, \
+        assert len(set(lengths.values())) == 1, (
             "Column lengths %s don't match" % lengths
+        )
 
     def __getitem__(self, item):
         self.validate()

@@ -17,8 +17,7 @@ from malcolm.modules import pandablocks, web
 
 
 DEFAULT_TEMPLATE_DIR = web.parts.www_dir
-DEFAULT_TEMPLATE_DESIGNS_DIR = os.path.join(web.parts.www_dir,
-                                            "template_designs")
+DEFAULT_TEMPLATE_DESIGNS_DIR = os.path.join(web.parts.www_dir, "template_designs")
 
 
 def existing_dir(value):
@@ -31,44 +30,72 @@ def parse_args():
     # Parse arguments
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "--hostname", default="localhost",
-        help="Hostname of the PandA TCP server to connect to")
+        "--hostname",
+        default="localhost",
+        help="Hostname of the PandA TCP server to connect to",
+    )
     parser.add_argument(
-        "--port", default=8888, type=int,
-        help="Port of the PandA TCP server to connect to")
+        "--port",
+        default=8888,
+        type=int,
+        help="Port of the PandA TCP server to connect to",
+    )
     parser.add_argument(
-        "--wsport", default=8008, type=int,
-        help="Websocket port to run the webserver on")
+        "--wsport",
+        default=8008,
+        type=int,
+        help="Websocket port to run the webserver on",
+    )
     parser.add_argument(
-        "--configdir", default=None, type=existing_dir,
-        help="Config directory to save and load designs")
-    parser.add_argument(
-        "--templatedesigns", default=DEFAULT_TEMPLATE_DESIGNS_DIR,
+        "--configdir",
+        default=None,
         type=existing_dir,
-        help="Directory to get template designs for tutorials")
+        help="Config directory to save and load designs",
+    )
     parser.add_argument(
-        "--templatedir", default=DEFAULT_TEMPLATE_DIR, type=existing_dir,
-        help="Directory to get templated html files from")
+        "--templatedesigns",
+        default=DEFAULT_TEMPLATE_DESIGNS_DIR,
+        type=existing_dir,
+        help="Directory to get template designs for tutorials",
+    )
     parser.add_argument(
-        "--optionsdir", default=None, type=existing_dir,
+        "--templatedir",
+        default=DEFAULT_TEMPLATE_DIR,
+        type=existing_dir,
+        help="Directory to get templated html files from",
+    )
+    parser.add_argument(
+        "--optionsdir",
+        default=None,
+        type=existing_dir,
         help="Directory of options that can optionally be installed like"
-             "no-subnet-check")
+        "no-subnet-check",
+    )
     parser.add_argument(
-        "--admindir", default=None, type=existing_dir,
-        help="Directory to get web-admin templates like nav.template from")
+        "--admindir",
+        default=None,
+        type=existing_dir,
+        help="Directory to get web-admin templates like nav.template from",
+    )
     parser.add_argument(
-        "--etcdir", default=None, type=existing_dir,
-        help="Directory to get nav elements from")
+        "--etcdir",
+        default=None,
+        type=existing_dir,
+        help="Directory to get nav elements from",
+    )
     parser.add_argument(
-        "--mri", default="PANDA",
-        help="MRI of the base PandA Block that the webserver hosts")
+        "--mri",
+        default="PANDA",
+        help="MRI of the base PandA Block that the webserver hosts",
+    )
     parser.add_argument(
-        "--enable-nav", action="store_true",
-        help="Whether to show the bottom nav bar")
+        "--enable-nav", action="store_true", help="Whether to show the bottom nav bar"
+    )
     parser.add_argument(
         "--doc-url-base",
         default="https://pandablocks.github.io/PandABlocks-FPGA/main",
-        help="Documentation URL base to access each block help page")
+        help="Documentation URL base to access each block help page",
+    )
     args = parser.parse_args()
     for attr in ["configdir", "admindir", "etcdir", "optionsdir"]:
         if getattr(args, attr) is None:
@@ -87,10 +114,9 @@ def wait_for_port(hostname, port, timeout=None, poll_interval=1.0):
         except OSError:
             if timeout is not None and time.time() - start_time > timeout:
                 raise TimeoutError(
-                    "Timed out waiting for %s:%s to be ready" % (
-                        hostname, port))
-            log.info("Waiting for PandA TCP server at %s:%s...",
-                     hostname, port)
+                    "Timed out waiting for %s:%s to be ready" % (hostname, port)
+                )
+            log.info("Waiting for PandA TCP server at %s:%s...", hostname, port)
             time.sleep(poll_interval)
 
 
@@ -116,15 +142,16 @@ def main():
                 self.render("index.html")
             else:
                 # /gui/... should have index.html, templated with nav
-                self.render("index-nav.html", etc_loader=self.etc_loader,
-                            admin_loader=self.admin_loader)
-
+                self.render(
+                    "index-nav.html",
+                    etc_loader=self.etc_loader,
+                    admin_loader=self.admin_loader,
+                )
 
     class TemplatedGuiPart(web.parts.GuiServerPart):
         # Override the things that returns the GUI html to use
         # a templated version
         GuiHandler = TemplateHandler
-
 
     # Check the options
     if os.path.exists(args.optionsdir):
@@ -137,17 +164,24 @@ def main():
 
     # Add the websocket server
     controller = web.controllers.HTTPServerComms(port=args.wsport, mri="WS")
-    controller.add_part(web.parts.WebsocketServerPart(
-        subnet_validation="no-subnet-validation" not in options
-    ))
+    controller.add_part(
+        web.parts.WebsocketServerPart(
+            subnet_validation="no-subnet-validation" not in options
+        )
+    )
     controller.add_part(TemplatedGuiPart())
     process.add_controller(controller)
 
     # Add the PandABox
     controller = pandablocks.controllers.PandAManagerController(
-        config_dir=args.configdir, hostname=args.hostname,
-        template_designs=args.templatedesigns, port=args.port, mri=args.mri,
-        doc_url_base=args.doc_url_base, poll_period=0.1)
+        config_dir=args.configdir,
+        hostname=args.hostname,
+        template_designs=args.templatedesigns,
+        port=args.port,
+        mri=args.mri,
+        doc_url_base=args.doc_url_base,
+        poll_period=0.1,
+    )
     process.add_controller(controller)
 
     # Wait for the PandA TCP server to be ready before starting
@@ -157,8 +191,9 @@ def main():
     process.start()
 
     # Check if we are running under systemd and can't run interactively
-    if 'INVOCATION_ID' in os.environ:
+    if "INVOCATION_ID" in os.environ:
         import asyncio
+
         asyncio.run(asyncio.Event().wait())
     else:
         header = (
@@ -173,5 +208,5 @@ def main():
     process.stop(timeout=1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

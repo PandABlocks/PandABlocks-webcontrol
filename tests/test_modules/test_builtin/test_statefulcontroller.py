@@ -142,7 +142,9 @@ class TestStatefulController(unittest.TestCase):
     async def test_run_hook(self):
         await self.start_process()
         part_contexts = self.o.create_part_contexts()
-        result = await self.o.run_hooks(SaveHook(p, c) for p, c in part_contexts.items())
+        result = await self.o.run_hooks(
+            SaveHook(p, c) for p, c in part_contexts.items()
+        )
         assert set(result) == {"testpart", "testpart2"}
         assert result["testpart"] == dict(foo="bartestpart")
         assert result["testpart2"] == dict(foo="bartestpart2")

@@ -118,7 +118,9 @@ class Context:
             The value after the put completes
         """
         future = self.put_async(path, value)
-        await self.wait_all_futures(future, timeout=timeout, event_timeout=event_timeout)
+        await self.wait_all_futures(
+            future, timeout=timeout, event_timeout=event_timeout
+        )
         return future.result()
 
     def put_async(self, path, value):
@@ -151,7 +153,9 @@ class Context:
             the result from 'method'
         """
         future = self.post_async(path, params)
-        await self.wait_all_futures(future, timeout=timeout, event_timeout=event_timeout)
+        await self.wait_all_futures(
+            future, timeout=timeout, event_timeout=event_timeout
+        )
         return future.result()
 
     def post_async(self, path, params=None):
@@ -195,9 +199,9 @@ class Context:
         Args:
             future (Future): The future of the original subscription
         """
-        assert (
-            future not in self._pending_unsubscribes
-        ), f"{self._pending_unsubscribes[future]!r} has already been unsubscribed from"
+        assert future not in self._pending_unsubscribes, (
+            f"{self._pending_unsubscribes[future]!r} has already been unsubscribed from"
+        )
         subscribe = self._requests[future]
         self._pending_unsubscribes[future] = subscribe
         # Clear out the subscription
@@ -246,7 +250,9 @@ class Context:
                 event, wait forever if None
         """
         future = self.when_matches_async(path, good_value, bad_values)
-        await self.wait_all_futures(future, timeout=timeout, event_timeout=event_timeout)
+        await self.wait_all_futures(
+            future, timeout=timeout, event_timeout=event_timeout
+        )
 
     def when_matches_async(self, path, good_value, bad_values=None):
         """Wait for an attribute to become a given value

@@ -47,8 +47,7 @@ def serialize_object(o, dict_cls=FrozenOrderedDict):
     if isinstance(o, dict):
         # Need to recurse down in case we have a serializable object in the
         # dict or somewhere further down the tree
-        return dict_cls((k, serialize_object(v, dict_cls))
-                        for k, v in o.items())
+        return dict_cls((k, serialize_object(v, dict_cls)) for k, v in o.items())
 
     # Is it an Array, list or numpy array?
     if o.__class__ is Array:
@@ -62,9 +61,10 @@ def serialize_object(o, dict_cls=FrozenOrderedDict):
         list_cls = Serializable
     if isinstance(o, list):
         if inspect.isclass(list_cls) and (
-            hasattr(list_cls, "to_dict") or
-            isinstance(list_cls, Exception) or (
-                has_enum and isinstance(list_cls, Enum))):
+            hasattr(list_cls, "to_dict")
+            or isinstance(list_cls, Exception)
+            or (has_enum and isinstance(list_cls, Enum))
+        ):
             recurse = True
         else:
             recurse = False
@@ -95,8 +95,10 @@ def deserialize_object(ob, type_check=None):
         subclass = Serializable.lookup_subclass(ob)
         ob = subclass.from_dict(ob)
     if type_check is not None:
-        assert isinstance(ob, type_check), \
-            "Expected %s, got %r" % (type_check, type(ob))
+        assert isinstance(ob, type_check), "Expected %s, got %r" % (
+            type_check,
+            type(ob),
+        )
     return ob
 
 
@@ -138,8 +140,7 @@ class Serializable(WithCallTypes):
         else:
             keys = self.call_types
 
-        pairs = ((k, serialize_object(getattr(self, k), dict_cls))
-                 for k in keys)
+        pairs = ((k, serialize_object(getattr(self, k), dict_cls)) for k in keys)
         d = dict_cls(pairs)
         return d
 
@@ -157,9 +158,11 @@ class Serializable(WithCallTypes):
         filtered = {}
         for k, v in d.items():
             if k == "typeid":
-                assert v == cls.typeid, \
-                    "Dict has typeid %s but %s has typeid %s" % \
-                    (v, cls, cls.typeid)
+                assert v == cls.typeid, "Dict has typeid %s but %s has typeid %s" % (
+                    v,
+                    cls,
+                    cls.typeid,
+                )
             elif k not in ignore:
                 filtered[k] = v
         try:
@@ -175,10 +178,12 @@ class Serializable(WithCallTypes):
         Args:
             typeid (str): Type identifier for subclass
         """
+
         def decorator(subclass):
             cls._subcls_lookup[typeid] = subclass
             subclass.typeid = typeid
             return subclass
+
         return decorator
 
     @classmethod

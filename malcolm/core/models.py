@@ -58,9 +58,9 @@ class Model(Serializable):
         """
         # This function should either change from the DummyNotifier or to
         # the DummyNotifier, never between two valid notifiers
-        assert (
-            self.notifier is Model.notifier or notifier is Model.notifier
-        ), f"Already have a notifier {self.notifier} path {self.path}"
+        assert self.notifier is Model.notifier or notifier is Model.notifier, (
+            f"Already have a notifier {self.notifier} path {self.path}"
+        )
         self.notifier = notifier
         self.path = path
         # Tell all our children too
@@ -85,17 +85,17 @@ class Model(Serializable):
                 # Cast to right type, this will do some cheap validation
                 value = cast(Array, ct(value))
                 # Check we have the right type
-                assert not Model.matches_type(
-                    ct.typ
-                ), "Can't handle Array[Model] at the moment"
+                assert not Model.matches_type(ct.typ), (
+                    "Can't handle Array[Model] at the moment"
+                )
                 if isinstance(value.seq, (tuple, list)):
                     # Variable array, check types of each instance
                     # TODO: this might harm performance
                     typ = ct.typ
                     for x in value.seq:
-                        assert isinstance(
-                            x, typ
-                        ), f"Expected Array[{ct.typ!r}], got {value.seq!r}"
+                        assert isinstance(x, typ), (
+                            f"Expected Array[{ct.typ!r}], got {value.seq!r}"
+                        )
             elif ct.is_mapping:
                 # Check it is the right type
                 ktype, vtype = ct.typ
@@ -135,9 +135,9 @@ class Model(Serializable):
             self[path[0]].apply_change(path[1:], *args)
         else:
             # This is for us
-            assert (
-                len(path) == 1 and len(args) == 1
-            ), f"Cannot process change {[self.path + path] + list(args)}"
+            assert len(path) == 1 and len(args) == 1, (
+                f"Cannot process change {[self.path + path] + list(args)}"
+            )
             getattr(self, f"set_{path[0]}")(args[0])
 
 
@@ -489,9 +489,9 @@ class ChoiceMeta(VMeta):
         for i, choice in enumerate(choices):
             # If we already have an enum type it must match
             if enum_typ is not None:
-                assert isinstance(
-                    choice, enum_typ
-                ), f"Expected {enum_typ} choice, got {choice}"
+                assert isinstance(choice, enum_typ), (
+                    f"Expected {enum_typ} choice, got {choice}"
+                )
             elif not isinstance(choice, str):
                 enum_typ = type(choice)
             if isinstance(choice, Enum):
@@ -628,6 +628,7 @@ _dtype_strings = [
 _dtype_string_lookup = {getattr(np, dtype): dtype for dtype in _dtype_strings}
 _dtype_string_lookup.update({int: "int64", float: "float64"})
 
+
 def _wrap_to_dtype(value: int, np_type: type) -> int:
     """Reduce an out-of-range integer to the value its bits stand for
 
@@ -685,9 +686,9 @@ class NumberMeta(VMeta):
         return self.set_endpoint_data("display", display)
 
     def set_dtype(self, dtype: ADtype) -> ADtype:
-        assert (
-            dtype in _dtype_strings
-        ), f"Expected dtype to be in {self._dtypes}, got {dtype}"
+        assert dtype in _dtype_strings, (
+            f"Expected dtype to be in {self._dtypes}, got {dtype}"
+        )
         self._np_type = getattr(np, dtype)
         return self.set_endpoint_data("dtype", dtype)
 
@@ -915,9 +916,9 @@ class TableMeta(VMeta):
                 table_cls.call_types[k] = anno
         else:
             # User supplied, check it matches element names
-            assert Table.matches_type(
-                table_cls
-            ), f"Expecting table subclass, got {table_cls}"
+            assert Table.matches_type(table_cls), (
+                f"Expecting table subclass, got {table_cls}"
+            )
             missing = set(self.elements) - set(table_cls.call_types)
             assert not missing, f"Supplied Table missing fields {missing}"
             extra = set(table_cls.call_types) - set(self.elements)
@@ -946,9 +947,9 @@ class TableMeta(VMeta):
         value.validate_column_lengths()
         # Check the table class give Array elements
         for k in args:
-            assert (
-                value[k].__class__ is Array
-            ), f"Table Class {self.table_cls} doesn't wrap attr '{k}' with an Array"
+            assert value[k].__class__ is Array, (
+                f"Table Class {self.table_cls} doesn't wrap attr '{k}' with an Array"
+            )
         return value
 
     def doc_type_string(self) -> str:
@@ -1035,9 +1036,9 @@ class MapMeta(Model):
 
     def set_required(self, required: URequired) -> ARequired:
         for r in required:
-            assert (
-                r in self.elements
-            ), f"Expected one of {list(self.elements)!r}, got {r!r}"
+            assert r in self.elements, (
+                f"Expected one of {list(self.elements)!r}, got {r!r}"
+            )
         return self.set_endpoint_data("required", ARequired(required))
 
     def validate(
@@ -1059,9 +1060,9 @@ class MapMeta(Model):
             elif add_missing:
                 args[k] = m.validate(None)
         missing: Set = set(self.required) - set(args)
-        assert (
-            not missing
-        ), f"Requires keys {list(self.required)} but only given {list(args)}"
+        assert not missing, (
+            f"Requires keys {list(self.required)} but only given {list(args)}"
+        )
         return args
 
 

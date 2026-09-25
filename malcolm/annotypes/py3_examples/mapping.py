@@ -12,4 +12,3 @@ class LayoutManager(WithCallTypes):
     def __init__(self, part_layout: PartLayout, value: Value):
         self.part_layout = part_layout
         self.value = value
-

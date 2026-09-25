@@ -432,9 +432,9 @@ class ChildPart(Part):
         source_port_lookup: Dict = {}
         port_infos: List
         port_info: PortInfo
-        filtered_source_parts: Dict[
-            str, List[SourcePortInfo]
-        ] = SourcePortInfo.filter_parts(ports)
+        filtered_source_parts: Dict[str, List[SourcePortInfo]] = (
+            SourcePortInfo.filter_parts(ports)
+        )
         for part_name, port_infos in filtered_source_parts.items():
             for port_info in port_infos:
                 source_port_lookup[port_info.connected_value] = (

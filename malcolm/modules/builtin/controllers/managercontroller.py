@@ -204,18 +204,16 @@ class ManagerController(StatefulController):
     async def set_exports(self, value):
         # Validate
         for export_name in value.export:
-            assert CAMEL_RE.match(
-                export_name
-            ), f"Field {export_name!r} is not camelCase"
+            assert CAMEL_RE.match(export_name), (
+                f"Field {export_name!r} is not camelCase"
+            )
         with self.changes_squashed:
             self.exports.set_value(value)
             self.update_modified()
         # Awaited outside changes_squashed, see set_layout
         await self.update_block_endpoints()
 
-    def update_modified(
-        self, part: Part = None, info: PartModifiedInfo = None
-    ) -> None:
+    def update_modified(self, part: Part = None, info: PartModifiedInfo = None) -> None:
         with self.changes_squashed:
             if part:
                 assert info, "No info to update part"
@@ -437,9 +435,7 @@ class ManagerController(StatefulController):
     @add_call_types
     async def save(self, designName: ASaveDesign = "") -> None:
         """Save the current design to file"""
-        await self.try_stateful_function(
-            ss.SAVING, ss.READY, self.do_save, designName
-        )
+        await self.try_stateful_function(ss.SAVING, ss.READY, self.do_save, designName)
 
     async def do_save(self, design=""):
         if not design:

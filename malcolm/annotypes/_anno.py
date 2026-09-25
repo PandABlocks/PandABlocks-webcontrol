@@ -22,15 +22,17 @@ def anno_with_default(src, default=RETURN_DEFAULT):
         optional = type(None) in src.__args__
         # the anno is actually the first parameter to Optional or Union
         anno = src.__args__[0]  # type: Anno
-        assert isinstance(anno, Anno), \
+        assert isinstance(anno, Anno), (
             "Expected Optional[Anno], Union[Anno,...] or Anno, got %r" % (anno,)
+        )
         # if this is a return type and optional, default should be None
         if optional:
             if default is RETURN_DEFAULT:
                 default = None
-            assert default is None, \
-                "Expected Optional[Anno] with default=None, got %r with " \
+            assert default is None, (
+                "Expected Optional[Anno] with default=None, got %r with "
                 "default=%r" % (anno, default)
+            )
     else:
         anno = src
     # Make a copy of the anno with the new default if needed
@@ -61,7 +63,8 @@ def make_repr(inst, attrs):
         attrs: The attributes that should appear in the repr
     """
     arg_str = ", ".join(
-        "%s=%r" % (a, getattr(inst, a)) for a in attrs if hasattr(inst, a))
+        "%s=%r" % (a, getattr(inst, a)) for a in attrs if hasattr(inst, a)
+    )
     repr_str = "%s(%s)" % (inst.__class__.__name__, arg_str)
     return repr_str
 
@@ -115,14 +118,16 @@ class Anno(object):
 
     def _get_defined_name(self, locals_d):
         defined = set(locals_d) - self._names_on_enter
-        assert len(defined) == 1, \
-            "Expected a single type to be defined, got %s" % list(defined)
+        assert len(defined) == 1, "Expected a single type to be defined, got %s" % list(
+            defined
+        )
         self.name = defined.pop()
 
     def set_typ(self, typ, is_array=False, is_mapping=False):
         self.typ = typ
-        assert is_array is False or is_mapping is False, \
+        assert is_array is False or is_mapping is False, (
             "Can't have both and array and mapping"
+        )
         self.is_array = is_array
         if is_array:
             self._array_cls = Array[typ]
@@ -136,8 +141,7 @@ class Anno(object):
             self.set_typ(typ.__args__[0], is_array=True)
         elif origin == MappingOrigin:
             # This is a dict
-            assert len(typ.__args__) == 2, \
-                "Expected Mapping[ktyp, vtyp], got %r" % typ
+            assert len(typ.__args__) == 2, "Expected Mapping[ktyp, vtyp], got %r" % typ
             self.set_typ(typ.__args__, is_mapping=True)
         elif origin is None:
             # This is a bare type
@@ -152,4 +156,3 @@ class Anno(object):
         self._get_defined_name(locals_d)
         self._get_type(locals_d[self.name])
         locals_d[self.name] = self
-

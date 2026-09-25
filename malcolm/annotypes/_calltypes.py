@@ -10,12 +10,12 @@ from ._typing import TYPE_CHECKING, GenericMeta, Any
 if TYPE_CHECKING:  # pragma: no cover
     from typing import Dict, Callable, Tuple, List
 
-type_re = re.compile('^# type: ([^-]*)( -> (.*))?$')
+type_re = re.compile("^# type: ([^-]*)( -> (.*))?$")
 
 
 class CallTypesMeta(GenericMeta):
     def __init__(cls, name, bases, dct, **kwargs):
-        f = dct.get('__init__', None)
+        f = dct.get("__init__", None)
         if f:
             cls.call_types, _ = make_call_types(f, func_globals(f))
         elif getattr(cls, "call_types", None) is not None:
@@ -60,7 +60,7 @@ def make_call_types(f, globals_d):
 
     defaults = {}  # type: Dict[str, Any]
     if arg_spec.defaults:
-        default_args = args[-len(arg_spec.defaults):]
+        default_args = args[-len(arg_spec.defaults) :]
         for a, default in zip(default_args, arg_spec.defaults):
             defaults[a] = default
 
@@ -73,15 +73,17 @@ def make_call_types(f, globals_d):
     call_types = OrderedDict()  # type: Dict[str, Anno]
     for a in args:
         anno = anno_with_default(annotations[a], defaults.get(a, NO_DEFAULT))
-        assert isinstance(anno, Anno), \
+        assert isinstance(anno, Anno), (
             "Argument %r has type %r which is not an Anno" % (a, anno)
+        )
         call_types[a] = anno
 
     return_type = anno_with_default(annotations.get("return", None))
     if return_type is Any:
         return_type = Anno("Any return value", name="return").set_typ(Any)
-    assert return_type is None or isinstance(return_type, Anno), \
+    assert return_type is None or isinstance(return_type, Anno), (
         "Return has type %r which is not an Anno" % (return_type,)
+    )
 
     return call_types, return_type
 
@@ -154,8 +156,7 @@ def make_annotations(f, globals_d=None):
                     try:
                         ob = eval(expr, globals_d, locals_d)
                     except Exception as e:
-                        raise ValueError(
-                            "Error evaluating %r: %s" % (expr, e))
+                        raise ValueError("Error evaluating %r: %s" % (expr, e))
                     if isinstance(ob, tuple):
                         # We got more than one argument
                         types += list(ob)
@@ -167,14 +168,14 @@ def make_annotations(f, globals_d=None):
                     try:
                         ob = eval(parts[2], globals_d, locals_d)
                     except Exception as e:
-                        raise ValueError(
-                            "Error evaluating %r: %s" % (parts[2], e))
+                        raise ValueError("Error evaluating %r: %s" % (parts[2], e))
                     if args and args[0] in ["self", "cls"]:
                         # Allow the first argument to be inferred
                         if len(args) == len(types) + 1:
                             args = args[1:]
-                    assert len(args) == len(types), \
+                    assert len(args) == len(types), (
                         "Args %r Types %r length mismatch" % (args, types)
+                    )
                     ret = dict(zip(args, types))
                     ret["return"] = ob
                     return ret

@@ -17,20 +17,22 @@ def_units = Units("mm")
 
 
 class ManyArgs(WithCallTypes):
-    def __init__(self,
-                 axes: Union[Axes, Sequence[str], str],
-                 start: Union[Start, Sequence[float], float],
-                 stop: Union[Stop, Sequence[float], float],
-                 size: Size,
-                 units: Union[Units, Sequence[str], str] = def_units,
-                 alternate: Alternate = False):
+    def __init__(
+        self,
+        axes: Union[Axes, Sequence[str], str],
+        start: Union[Start, Sequence[float], float],
+        stop: Union[Stop, Sequence[float], float],
+        size: Size,
+        units: Union[Units, Sequence[str], str] = def_units,
+        alternate: Alternate = False,
+    ):
         self.axes = Axes(axes)
         self.start = Start(start)
         self.stop = Stop(stop)
         self.size = size
         self.units = Units(units)
         self.alternate = alternate
-        assert len(self.axes) == len(self.units) == \
-            len(self.start) == len(self.stop), \
-            "axes %s, units %s, start %s, stop %s are not the same length" % (
-                self.axes, self.units, self.start, self.stop)
+        assert len(self.axes) == len(self.units) == len(self.start) == len(self.stop), (
+            "axes %s, units %s, start %s, stop %s are not the same length"
+            % (self.axes, self.units, self.start, self.stop)
+        )

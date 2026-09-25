@@ -17,6 +17,3 @@ class ReuseCls(WithCallTypes):
     @add_call_types
     def configure(self, params: ASimple):
         time.sleep(params.exposure)
-
-
-

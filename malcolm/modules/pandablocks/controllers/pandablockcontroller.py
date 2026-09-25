@@ -189,9 +189,7 @@ class PandABlockController(builtin.controllers.BasicController):
         self.add_part(label_part)
         self.field_parts["LABEL"] = label_part
         self.add_part(
-            builtin.parts.HelpPart(
-                f"{self.doc_url_base}/{block_type.lower()}-doc/"
-            )
+            builtin.parts.HelpPart(f"{self.doc_url_base}/{block_type.lower()}-doc/")
         )
         return icon_part
 
@@ -242,7 +240,7 @@ class PandABlockController(builtin.controllers.BasicController):
             self._make_mux(field_name, field_data, Port.INT32)
         elif typ == "table":
             self._make_table(field_name, field_data)
-            for suffix in ("QUEUED_LINES","MODE"):
+            for suffix in ("QUEUED_LINES", "MODE"):
                 self.field_parts[f"{field_name}.{suffix}"] = None
         else:
             raise ValueError(f"Unknown type {typ!r} subtype {subtyp!r}")

@@ -43,7 +43,7 @@ class StatefulController(BasicController):
         self.state = ChoiceMeta(
             "StateMachine State of Block",
             self.state_set.possible_states,
-            tags=[Widget.MULTILINETEXTUPDATE.tag()]
+            tags=[Widget.MULTILINETEXTUPDATE.tag()],
             # Start DISABLING so we can immediately go to DISABLED
         ).create_attribute_model(ss.DISABLING)
         self.field_registry.add_attribute_model("state", self.state)
@@ -59,11 +59,12 @@ class StatefulController(BasicController):
         # Field has defined when it should be writeable, just check that
         # this is valid for this state_set
         for state in states:
-            assert (
-                state in self.state_set.possible_states
-            ), "State %s is not one of the valid states %s" % (
-                state,
-                self.state_set.possible_states,
+            assert state in self.state_set.possible_states, (
+                "State %s is not one of the valid states %s"
+                % (
+                    state,
+                    self.state_set.possible_states,
+                )
             )
         for state in self.state_set.possible_states:
             state_writeable = self._children_writeable.setdefault(state, {})
