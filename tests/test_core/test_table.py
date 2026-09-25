@@ -3,8 +3,7 @@ from collections import OrderedDict
 from typing import Union
 
 import numpy
-from annotypes import Anno, Array
-
+from malcolm.annotypes import Anno, Array
 from malcolm.core import Table
 
 with Anno("Row A"):

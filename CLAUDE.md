@@ -326,13 +326,10 @@ Python tests are not run in CI**, so run them locally.
   for the package itself. The tests need only `pytest` on top of those: they
   use `unittest.mock` from the standard library, so there is no `mock`
   dependency to install.
-- Six test modules (`test_controller`, `test_models`, `test_notifier`,
-  `test_table`, `test_views`, `test_statefulcontroller`) do
-  `from annotypes import …` — the *top-level* package, not the vendored
-  `malcolm.annotypes`. `annotypes` is not a declared dependency, so unless a
-  real one is installed those six fail at collection, which aborts the whole
-  run. A shim module doing `sys.modules[__name__] = malcolm.annotypes` is enough
-  to get the suite going.
+- Import the vendored copy as `malcolm.annotypes`, never as a top-level
+  `annotypes`. The latter is a different, undeclared package; where it was used
+  (six test modules and the `py3_examples`) those files failed at *collection*,
+  which aborts the whole pytest run rather than failing one test.
 - 2 tests fail out of the box, both for pre-existing reasons:
   `test_models.py::test_unsigned_validates` expects numpy 1 wrap-around where
   numpy 2 raises `OverflowError` (so it is 1 failure on numpy 1.x, where that

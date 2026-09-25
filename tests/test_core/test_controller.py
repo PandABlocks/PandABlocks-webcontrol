@@ -1,7 +1,7 @@
 import unittest
 
-from annotypes import Anno, add_call_types
 from malcolm import __version__
+from malcolm.annotypes import Anno, add_call_types
 from malcolm.core import (
     Controller,
     Error,

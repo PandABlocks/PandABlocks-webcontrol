@@ -1,6 +1,6 @@
 import time
 
-from annotypes import WithCallTypes, add_call_types, Anno
+from malcolm.annotypes import WithCallTypes, add_call_types, Anno
 from .simple import Simple
 
 with Anno("Parameters to take"):

@@ -1,4 +1,4 @@
-from annotypes import Anno, WithCallTypes, Array, add_call_types
+from malcolm.annotypes import Anno, WithCallTypes, Array, add_call_types
 
 
 class Table(WithCallTypes):

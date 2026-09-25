@@ -1,4 +1,4 @@
-from annotypes import add_call_types, WithCallTypes, Anno, Array, Optional
+from malcolm.annotypes import add_call_types, WithCallTypes, Anno, Array, Optional
 from .simple import Simple, Exposure, Path
 
 

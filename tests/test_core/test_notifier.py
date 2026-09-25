@@ -1,7 +1,7 @@
 import unittest
 from unittest.mock import Mock
 
-from annotypes import serialize_object
+from malcolm.annotypes import serialize_object
 
 # module imports
 from malcolm.compat import OrderedDict

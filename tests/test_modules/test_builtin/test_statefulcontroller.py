@@ -1,8 +1,7 @@
 import gc
 import unittest
 
-from annotypes import add_call_types
-
+from malcolm.annotypes import add_call_types
 from malcolm.compat import OrderedDict
 from malcolm.core import NotWriteableError, Part, Process
 from malcolm.modules.builtin.controllers import StatefulController

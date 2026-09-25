@@ -3,7 +3,7 @@ from collections import OrderedDict
 from unittest.mock import Mock
 
 import numpy as np
-from annotypes import Serializable
+from malcolm.annotypes import Serializable
 from malcolm.core import (
     Alarm,
     AlarmSeverity,

@@ -1,6 +1,6 @@
 from enum import Enum
 
-from annotypes import Anno, WithCallTypes
+from malcolm.annotypes import Anno, WithCallTypes
 
 
 class Status(Enum):

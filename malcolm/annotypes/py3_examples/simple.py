@@ -1,6 +1,6 @@
 import time
 
-from annotypes import Anno, WithCallTypes
+from malcolm.annotypes import Anno, WithCallTypes
 
 with Anno("The exposure to be active for"):
     Exposure = float

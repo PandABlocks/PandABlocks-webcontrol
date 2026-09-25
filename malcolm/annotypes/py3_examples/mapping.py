@@ -1,4 +1,4 @@
-from annotypes import Anno, WithCallTypes, Mapping, Any
+from malcolm.annotypes import Anno, WithCallTypes, Mapping, Any
 
 from .table import LayoutTable
 
