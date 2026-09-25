@@ -345,12 +345,6 @@ Python tests are not run in CI**, so run them locally.
   until the docs restructure deleted it; they are now inlined, copied from the
   same examples in pymalcolm upstream. Keep them inline — there is no fixture
   directory to go back to.
-- **`.gitignore` line 20 is `parts/`**, a buildout-era pattern that matches
-  `malcolm/modules/{builtin,pandablocks,web}/parts/`. The files already in there
-  are tracked, so nothing is actually excluded today — but a **new** file in a
-  `parts/` directory is invisible to `git status` and silently skipped by
-  `git add .`. Adding it by name at least errors (`git add -f` to override).
-  Remember this when adding a Part.
 - The checked-in formatting predates current ruff: `ruff format --check` wants
   to rewrite files nobody has touched, and `ruff check` reports hundreds of
   `UP`/`B` findings against the project's own rule selection. Don't reformat the
