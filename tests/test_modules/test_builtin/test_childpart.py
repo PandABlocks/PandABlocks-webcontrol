@@ -23,7 +23,7 @@ sm = ManagerController.state_set
 
 class PortsPart(Part):
     def setup(self, registrar: PartRegistrar) -> None:
-        super(PortsPart, self).setup(registrar)
+        super().setup(registrar)
         attr = StringMeta(
             tags=[Port.INT32.sink_port_tag(""), config_tag(1)]
         ).create_attribute_model()
@@ -141,7 +141,13 @@ class TestChildPart(unittest.TestCase):
     async def test_sever_all_sink_ports(self):
         b = self.p.block_view("mainBlock")
         b1, b2, b3 = (self.c1.block_view(), self.c2.block_view(), self.c3.block_view())
-        new_layout = dict(name=["partchild1"], mri=[""], x=[0], y=[0], visible=[False])
+        new_layout = {
+            "name": ["partchild1"],
+            "mri": [""],
+            "x": [0],
+            "y": [0],
+            "visible": [False],
+        }
         await b.layout.put_value(new_layout)
         assert b1.sinkportConnector.value == ""
         assert b2.sinkportConnector.value == ""
@@ -152,11 +158,11 @@ class TestChildPart(unittest.TestCase):
         b1 = self.c1.block_view()
         context = Context(self.p)
         structure1 = await self.p1.on_save(context)
-        expected = dict(sinkportConnector="Connector3")
+        expected = {"sinkportConnector": "Connector3"}
         assert structure1 == expected
         await b1.sinkportConnector.put_value("blah")
         structure2 = await self.p1.on_save(context)
-        expected = dict(sinkportConnector="blah")
+        expected = {"sinkportConnector": "blah"}
         assert structure2 == expected
-        await self.p1.on_load(context, dict(sinkportConnector="blah_again"))
+        await self.p1.on_load(context, {"sinkportConnector": "blah_again"})
         assert b1.sinkportConnector.value == "blah_again"

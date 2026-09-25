@@ -1,6 +1,7 @@
 import re
+from collections.abc import Sequence
 from enum import Enum
-from typing import List, Sequence, Tuple, Union
+from typing import Union
 
 from .. import __version__
 
@@ -74,7 +75,7 @@ class Port(Enum):
     @classmethod
     def port_tag_details(
         cls, tags: Sequence[str]
-    ) -> Union[Tuple[bool, "Port", str], None]:
+    ) -> Union[tuple[bool, "Port", str], None]:
         """Search tags for port info, returning it
 
         Args:
@@ -99,7 +100,7 @@ def group_tag(group_name: str) -> str:
     return tag
 
 
-def without_group_tags(tags: Sequence[str]) -> List[str]:
+def without_group_tags(tags: Sequence[str]) -> list[str]:
     """Return a new list of tags without any group tags"""
     new_tags = [x for x in tags if not x.startswith("group:")]
     return new_tags
@@ -112,7 +113,7 @@ def linked_value_tag(mri: str, attribute_name: str) -> str:
     return tag
 
 
-def without_linked_value_tags(tags: Sequence[str]) -> List[str]:
+def without_linked_value_tags(tags: Sequence[str]) -> list[str]:
     """Return a new list of tags without any group tags"""
     new_tags = [x for x in tags if not x.startswith("linkedvalue:")]
     return new_tags

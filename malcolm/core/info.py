@@ -1,5 +1,6 @@
 import inspect
-from typing import Dict, List, Mapping, Optional, Sequence, Type, TypeVar
+from collections.abc import Mapping, Sequence
+from typing import Optional, TypeVar
 
 from malcolm.compat import OrderedDict
 
@@ -20,7 +21,7 @@ class Info:
         return f"{self.__class__.__name__}({args})"
 
     @classmethod
-    def filter_parts(cls: Type[T], part_info: PartInfo) -> Dict[str, List[T]]:
+    def filter_parts(cls: type[T], part_info: PartInfo) -> dict[str, list[T]]:
         """Filter the part_info dict looking for instances of our class
 
         Args:
@@ -40,7 +41,7 @@ class Info:
         return filtered
 
     @classmethod
-    def filter_values(cls: Type[T], part_info: PartInfo) -> List[T]:
+    def filter_values(cls: type[T], part_info: PartInfo) -> list[T]:
         """Filter the part_info dict list looking for instances of our class
 
         Args:
@@ -50,7 +51,7 @@ class Info:
         Returns:
             list: [info] where info is a subclass of cls
         """
-        filtered: List[T] = []
+        filtered: list[T] = []
         info_list: Sequence
         assert hasattr(cls, "filter_parts"), "Class has no filter parts method"
         for info_list in cls.filter_parts(part_info).values():
@@ -59,7 +60,7 @@ class Info:
 
     @classmethod
     def filter_single_value(
-        cls: Type[T], part_info: PartInfo, error_msg: str = None
+        cls: type[T], part_info: PartInfo, error_msg: str = None
     ) -> T:
         """Filter the part_info dict list looking for a single instance of our
         class
@@ -74,7 +75,7 @@ class Info:
             info subclass of cls
         """
         assert hasattr(cls, "filter_values"), "Class has no filter values method"
-        filtered: List[T] = cls.filter_values(part_info)
+        filtered: list[T] = cls.filter_values(part_info)
         if len(filtered) != 1:
             if error_msg is None:
                 error_msg = (

@@ -76,7 +76,7 @@ class TestBlock(unittest.TestCase):
 
     @on_loop
     async def test_put_attribute_values(self):
-        await self.o.put_attribute_values(dict(attr=43))
+        await self.o.put_attribute_values({"attr": 43})
         self.context.put_async.assert_called_once_with(["block", "attr", "value"], 43)
         self.context.wait_all_futures.assert_called_once_with(
             [self.context.put_async.return_value], timeout=None, event_timeout=None

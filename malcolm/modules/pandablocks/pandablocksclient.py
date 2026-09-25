@@ -105,8 +105,8 @@ class PandABlocksClient:
     async def recv(self, response_queue, timeout=10.0):
         try:
             response = await asyncio.wait_for(response_queue.get(), timeout)
-        except (asyncio.TimeoutError, TimeoutError):
-            raise TimeoutError(f"Timeout waiting {timeout}s for a response")
+        except (asyncio.TimeoutError, TimeoutError) as e:
+            raise TimeoutError(f"Timeout waiting {timeout}s for a response") from e
         if isinstance(response, Exception):
             raise response
         else:
@@ -238,14 +238,16 @@ class PandABlocksClient:
                 unsorted_fields[field_name] = (int(index), field_type, field_subtype)
 
             # Sort the field list
-            def get_field_index(field_name):
-                return unsorted_fields[field_name][0]
+            def get_field_index(field_name, fields=unsorted_fields):
+                # fields is bound here rather than closed over: this is defined
+                # inside the loop over blocks
+                return fields[field_name][0]
 
             field_names = sorted(unsorted_fields, key=get_field_index)
 
             # Request description for each field
             field_desc_queues = self.parameterized_send(
-                "*DESC.%s.%%s?\n" % block_name, field_names
+                f"*DESC.{block_name}.%s?\n", field_names
             )
 
             # Request enum labels for fields that are enums
@@ -257,7 +259,7 @@ class PandABlocksClient:
                 elif field_type == "ext_out":
                     enum_fields.append(field_name + ".CAPTURE")
             enum_queues = self.parameterized_send(
-                "*ENUMS.%s.%%s?\n" % block_name, enum_fields
+                f"*ENUMS.{block_name}.%s?\n", enum_fields
             )
 
             # Get desc and enum data for each field
@@ -339,7 +341,7 @@ class PandABlocksClient:
 
         # Request description for each field
         desc_queues = self.parameterized_send(
-            "*DESC.%s.%s[].%%s?\n" % (block, field), list(fields)
+            f"*DESC.{block}.{field}[].%s?\n", list(fields)
         )
         for name, (bits_str, signed) in fields.items():
             bits_hi, bits_lo = [int(x) for x in bits_str.split(":")]
@@ -355,7 +357,7 @@ class PandABlocksClient:
         try:
             resp = await self.send_recv(f"{block}.{field}?\n")
         except ValueError as e:
-            raise ValueError(f"Error getting {block}.{field}: {e}")
+            raise ValueError(f"Error getting {block}.{field}: {e}") from e
         else:
             return strip_ok(resp)
 
@@ -371,7 +373,7 @@ class PandABlocksClient:
             try:
                 resp = await self.recv(queue)
             except ValueError as e:
-                raise ValueError(f"Error setting {field} to {value!r}: {e}")
+                raise ValueError(f"Error setting {field} to {value!r}: {e}") from e
             else:
                 assert resp == "OK", f"Expected OK, got {resp!r}"
 

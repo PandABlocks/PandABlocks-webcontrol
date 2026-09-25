@@ -6,9 +6,7 @@ name: Test
 # No Python version is pinned: uv picks one satisfying pyproject's
 # requires-python. The suite passes on 3.10 through 3.13.
 #
-# Tests only. `ruff check` and `ruff format --check` are not gated here yet:
-# the checked-in formatting predates the current ruff, so both fail on files
-# nobody has touched. Add them once that has been dealt with in one pass.
+# Lint and formatting are gated; mypy is not, it still has a backlog.
 on:
   workflow_call:
 
@@ -29,5 +27,12 @@ jobs:
         # quietly re-resolving, so a dependency change has to be locked to land
         run: uv sync --extra dev --locked
 
+      - name: Lint
+        run: uv run --extra dev ruff check .
+
+      - name: Check formatting
+        run: uv run --extra dev ruff format --check .
+
       - name: Run the tests
+        # Last, so a lint failure does not hide a real one
         run: uv run --extra dev pytest tests

@@ -218,16 +218,16 @@ class PandABoxControlTest(unittest.TestCase):
     async def test_get_pcap_bits_fields(self):
         messages = (
             ["!BITS1 1 ext_out bits\n!BITS0 0 ext_out bits\n.\n"]
-            + ["!B%d\n" % i for i in range(32)]
+            + [f"!B{i}\n" for i in range(32)]
             + [".\n"]
-            + ["!B%d\n" % i for i in range(32, 52)]
+            + [f"!B{i}\n" for i in range(32, 52)]
             + ["!\n" * 12]
             + [".\n"]
         )
         await self.start(messages)
         expected = {
-            "PCAP.BITS0.CAPTURE": ["B%d" % i for i in range(32)],
-            "PCAP.BITS1.CAPTURE": ["B%d" % i for i in range(32, 52)] + [""] * 12,
+            "PCAP.BITS0.CAPTURE": [f"B{i}" for i in range(32)],
+            "PCAP.BITS1.CAPTURE": [f"B{i}" for i in range(32, 52)] + [""] * 12,
         }
         assert await self.c.get_pcap_bits_fields() == expected
         await self.c.stop()

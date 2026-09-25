@@ -24,7 +24,7 @@ class Table(Serializable):
     def from_rows(cls, rows):
         attrs = {k: [] for k in cls.call_types}
         for row in rows:
-            for key, data in zip(cls.call_types, row):
+            for key, data in zip(cls.call_types, row, strict=True):
                 attrs[key].append(data)
         attrs = {k: cls.call_types[k](v) for k, v in attrs.items()}
         return cls(**attrs)
@@ -32,7 +32,7 @@ class Table(Serializable):
     def rows(self):
         self.validate_column_lengths()
         data = [getattr(self, a) for a in self.call_types]
-        for row in zip(*data):
+        for row in zip(*data, strict=True):
             yield list(row)
 
     def __eq__(self, other: object) -> bool:

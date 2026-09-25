@@ -16,4 +16,4 @@ class Simple(WithCallTypes):
     def write_data(self, data: str):
         with open(self.path, "w") as f:
             time.sleep(self.exposure)
-            f.write("Data: %s\n" % data)
+            f.write(f"Data: {data}\n")

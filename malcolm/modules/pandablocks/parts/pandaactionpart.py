@@ -1,4 +1,5 @@
-from typing import Optional, Sequence, Union
+from collections.abc import Sequence
+from typing import Optional, Union
 
 from malcolm.annotypes import Anno, Array
 from malcolm.core import MethodModel, Part, PartRegistrar, snake_to_camel

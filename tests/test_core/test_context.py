@@ -67,16 +67,16 @@ class TestContext(unittest.TestCase):
 
     @on_loop
     async def test_post(self):
-        self.o._q.put_nowait(Return(1, dict(a=2)))
-        result = await self.o.post(["block", "method"], dict(b=32))
-        self.assert_handle_request_called_with(Post(1, ["block", "method"], dict(b=32)))
-        assert result == dict(a=2)
+        self.o._q.put_nowait(Return(1, {"a": 2}))
+        result = await self.o.post(["block", "method"], {"b": 32})
+        self.assert_handle_request_called_with(Post(1, ["block", "method"], {"b": 32}))
+        assert result == {"a": 2}
 
     @on_loop
     async def test_post_failure(self):
         self.o._q.put_nowait(Error(1, ValueError("Test Exception")))
         with self.assertRaises(ValueError) as cm:
-            await self.o.post(["block", "method"], dict(b=32))
+            await self.o.post(["block", "method"], {"b": 32})
         assert str(cm.exception) == "Test Exception"
 
     @on_loop

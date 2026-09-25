@@ -138,25 +138,24 @@ class TestManagerController(unittest.TestCase):
         expected = [
             x.strip()
             for x in (
-                """{
-          "attributes": {
-             "layout": {
-               "part2": {
-                 "x": %s,
-                 "y": %s,
-                 "visible": %s
-               }
-             },
-             "exports": {},
+                f"""{{
+          "attributes": {{
+             "layout": {{
+               "part2": {{
+                 "x": {x},
+                 "y": {y},
+                 "visible": {visible}
+               }}
+             }},
+             "exports": {{}},
              "attr": "defaultv"
-          },
-          "children": {
-             "part2": {
-               "attr": "%s"
-             }
-          }
-        }"""
-                % (x, y, visible, attr)
+          }},
+          "children": {{
+             "part2": {{
+               "attr": "{attr}"
+             }}
+          }}
+        }}"""
             ).splitlines()
         ]
         with open(self._get_design_filename(self.main_block_name, design_name)) as f:
@@ -197,9 +196,13 @@ class TestManagerController(unittest.TestCase):
         assert self.c.design.value == "testSaveLayout"
 
     async def move_child_block(self):
-        new_layout = dict(
-            name=["part2"], mri=["anything"], x=[10], y=[20], visible=[True]
-        )
+        new_layout = {
+            "name": ["part2"],
+            "mri": ["anything"],
+            "x": [10],
+            "y": [20],
+            "visible": [True],
+        }
         await self.b.layout.put_value(new_layout)
 
     @on_loop

@@ -2,7 +2,8 @@ import asyncio
 import logging
 import time
 import weakref
-from typing import TYPE_CHECKING, Any, Callable, Dict, List, Tuple, Union
+from collections.abc import Callable
+from typing import TYPE_CHECKING, Any, Union
 
 from .concurrency import maybe_await
 from .errors import AbortedError, BadValueError, TimeoutError
@@ -33,15 +34,15 @@ class Context:
         self._notify_args = ()
         self._process = process
         self._next_id = 1
-        self._futures: Dict[int, Future] = {}
-        self._subscriptions: Dict[int, Tuple[Callable, Any]] = {}
-        self._requests: Dict[Future, Request] = {}
-        self._pending_unsubscribes: Dict[Future, Subscribe] = {}
+        self._futures: dict[int, Future] = {}
+        self._subscriptions: dict[int, tuple[Callable, Any]] = {}
+        self._requests: dict[Future, Request] = {}
+        self._pending_unsubscribes: dict[Future, Subscribe] = {}
         # If not None, wait for this before listening to STOPs
         self._sentinel_stop = None
 
     @property
-    def mri_list(self) -> List[str]:
+    def mri_list(self) -> list[str]:
         return self._process.mri_list
 
     def get_controller(self, mri):
@@ -276,7 +277,7 @@ class Context:
 
     async def wait_all_futures(
         self,
-        futures: Union[List[Future], Future, None],
+        futures: Union[list[Future], Future, None],
         timeout: float = None,
         event_timeout: float = None,
     ) -> None:
@@ -389,17 +390,17 @@ class Context:
             # service whatever is waiting and then time out
             try:
                 response = self._q.get_nowait()
-            except asyncio.QueueEmpty:
+            except asyncio.QueueEmpty as e:
                 raise TimeoutError(
                     f"Timeout waiting for {self._describe_futures(futures)}"
-                )
+                ) from e
         else:
             try:
                 response = await asyncio.wait_for(self._q.get(), timeout)
-            except (asyncio.TimeoutError, TimeoutError):
+            except (asyncio.TimeoutError, TimeoutError) as e:
                 raise TimeoutError(
                     f"Timeout waiting for {self._describe_futures(futures)}"
-                )
+                ) from e
         if response is self._sentinel_stop:
             self._sentinel_stop = None
         elif response is self.STOP:

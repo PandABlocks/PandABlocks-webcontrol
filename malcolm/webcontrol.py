@@ -1,20 +1,19 @@
 #!/usr/bin/env python
+import argparse
 import code
 import logging
-import argparse
 import os
 import socket
 import tempfile
 import time
-
 from pathlib import Path
-from tornado.web import RequestHandler
+
 from tornado.template import Loader
+from tornado.web import RequestHandler
 
 # Import the right things
 from malcolm.core import EventLoop, Process
 from malcolm.modules import pandablocks, web
-
 
 DEFAULT_TEMPLATE_DIR = web.parts.www_dir
 DEFAULT_TEMPLATE_DESIGNS_DIR = os.path.join(web.parts.www_dir, "template_designs")
@@ -111,11 +110,11 @@ def wait_for_port(hostname, port, timeout=None, poll_interval=1.0):
         try:
             with socket.create_connection((hostname, port), timeout=poll_interval):
                 return
-        except OSError:
+        except OSError as e:
             if timeout is not None and time.time() - start_time > timeout:
                 raise TimeoutError(
-                    "Timed out waiting for %s:%s to be ready" % (hostname, port)
-                )
+                    f"Timed out waiting for {hostname}:{port} to be ready"
+                ) from e
             log.info("Waiting for PandA TCP server at %s:%s...", hostname, port)
             time.sleep(poll_interval)
 

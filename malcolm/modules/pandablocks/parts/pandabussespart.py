@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Optional, Type, Union
+from typing import Any, Optional, Union
 
 from malcolm.core import (
     Alarm,
@@ -15,8 +15,8 @@ from ..util import AClient, BitsTable, PositionCapture, PositionsTable
 
 
 def update_column(
-    column_changes: Dict[str, List[Any]], column: str, table_value: Table
-) -> List[Any]:
+    column_changes: dict[str, list[Any]], column: str, table_value: Table
+) -> list[Any]:
     try:
         column_value = column_changes[column]
     except KeyError:
@@ -31,7 +31,7 @@ def update_column(
     return column_value
 
 
-def make_updated_table(old_value: Table, column_changes: Dict[str, List[Any]]) -> Table:
+def make_updated_table(old_value: Table, column_changes: dict[str, list[Any]]) -> Table:
     # Create new table from the old and changes
     d = {k: column_changes.get(k, getattr(old_value, k)) for k in old_value}
     new_value = old_value.__class__(**d)
@@ -40,8 +40,8 @@ def make_updated_table(old_value: Table, column_changes: Dict[str, List[Any]]) -
 
 class PandABussesPart(Part):
     # Tables to make metas from
-    bits_table_cls: Type[BitsTable] = BitsTable
-    positions_table_cls: Type[PositionsTable] = PositionsTable
+    bits_table_cls: type[BitsTable] = BitsTable
+    positions_table_cls: type[PositionsTable] = PositionsTable
 
     # Attributes
     bits = None
@@ -52,16 +52,16 @@ class PandABussesPart(Part):
         self._client = client
         # Row index lookups
         # {bit_name: index}
-        self._bit_indexes: Dict[str, int] = {}
+        self._bit_indexes: dict[str, int] = {}
         # {pos_name: index}
-        self._pos_indexes: Dict[str, int] = {}
+        self._pos_indexes: dict[str, int] = {}
         # {pos_index: value}
-        self._pos_values: Dict[int, int] = {}
+        self._pos_values: dict[int, int] = {}
         # Forward and reverse bit lookups
         # {pcap_capture_field: [bit_index]}
-        self._pcap_bit_indexes: Dict[str, List[int]] = {}
+        self._pcap_bit_indexes: dict[str, list[int]] = {}
         # {bit_name: pcap_capture_field}
-        self._bit_pcap_fields: Dict[str, str] = {}
+        self._bit_pcap_fields: dict[str, str] = {}
 
     def setup(self, registrar: PartRegistrar) -> None:
         self.bits = TableMeta.from_table(
@@ -85,8 +85,8 @@ class PandABussesPart(Part):
         registrar.add_attribute_model("bits", self.bits, self.set_bits)
         registrar.add_attribute_model("positions", self.positions, self.set_positions)
 
-    def get_column_changes(self, old: Table, new: Table) -> Dict[str, List[Any]]:
-        column_changes: Dict[str, List[Any]] = {}
+    def get_column_changes(self, old: Table, new: Table) -> dict[str, list[Any]]:
+        column_changes: dict[str, list[Any]] = {}
         lookup = {k: i for i, k in enumerate(old.name)}
         for i, name in enumerate(new.name):
             for k in old:
@@ -142,7 +142,7 @@ class PandABussesPart(Part):
         self.positions.set_value(new_value)
 
     @staticmethod
-    def _make_initial_bits_table(bit_names: List[str]) -> BitsTable:
+    def _make_initial_bits_table(bit_names: list[str]) -> BitsTable:
         bits_table = BitsTable(
             name=bit_names,
             value=[False] * len(bit_names),
@@ -151,7 +151,7 @@ class PandABussesPart(Part):
         return bits_table
 
     @staticmethod
-    def _make_initial_pos_table(pos_names: List[str]) -> PositionsTable:
+    def _make_initial_pos_table(pos_names: list[str]) -> PositionsTable:
         pos_table = PositionsTable(
             name=pos_names,
             value=[0.0] * len(pos_names),
@@ -163,10 +163,10 @@ class PandABussesPart(Part):
         return pos_table
 
     def create_busses(
-        self, pcap_bits_fields: Dict[str, List[str]], pos_names: List[str]
+        self, pcap_bits_fields: dict[str, list[str]], pos_names: list[str]
     ) -> None:
         # Bits
-        bit_names: List[str] = []
+        bit_names: list[str] = []
         self._bit_indexes = {}
         self._pcap_bit_indexes = {}
         self._bit_pcap_fields = {}
@@ -193,7 +193,7 @@ class PandABussesPart(Part):
             self._pos_values[i] = 0
 
     def _handle_bit(
-        self, field_name: str, value: bool, column_changes: Dict[str, List[Any]]
+        self, field_name: str, value: bool, column_changes: dict[str, list[Any]]
     ) -> Optional[bool]:
         i = self._bit_indexes.get(field_name, None)
         assert self.bits, "No bits"
@@ -204,7 +204,7 @@ class PandABussesPart(Part):
         return None
 
     def _handle_pos(
-        self, field_name: str, value: str, column_changes: Dict[str, List[Any]]
+        self, field_name: str, value: str, column_changes: dict[str, list[Any]]
     ) -> Optional[bool]:
         i = self._pos_indexes.get(field_name, None)
         if i is not None:
@@ -241,7 +241,7 @@ class PandABussesPart(Part):
         return None
 
     def _handle_pcap(
-        self, field_name: str, value: str, column_changes: Dict[str, List[Any]]
+        self, field_name: str, value: str, column_changes: dict[str, list[Any]]
     ) -> Optional[bool]:
         # This should be a pcap bits field...
         indexes = self._pcap_bit_indexes.get(field_name, None)
@@ -253,9 +253,9 @@ class PandABussesPart(Part):
             return True
         return None
 
-    def handle_changes(self, changes: Dict[str, Any], ts: TimeStamp) -> None:
-        bit_column_changes: Dict[str, Any] = {}
-        pos_column_changes: Dict[str, Any] = {}
+    def handle_changes(self, changes: dict[str, Any], ts: TimeStamp) -> None:
+        bit_column_changes: dict[str, Any] = {}
+        pos_column_changes: dict[str, Any] = {}
         for k, v in changes.items():
             assert (
                 self._handle_bit(k, v, bit_column_changes)

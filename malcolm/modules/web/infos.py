@@ -1,4 +1,4 @@
-from typing import Any, Type
+from typing import Any
 
 from tornado.web import RequestHandler
 
@@ -15,7 +15,7 @@ class HandlerInfo(Info):
     """
 
     def __init__(
-        self, regexp: str, request_class: Type[RequestHandler], **kwargs: Any
+        self, regexp: str, request_class: type[RequestHandler], **kwargs: Any
     ) -> None:
         self.regexp = regexp
         self.request_class = request_class

@@ -1,23 +1,15 @@
 import sys
-
+from abc import ABCMeta as GenericMeta
+from collections.abc import Mapping, Sequence
+from collections.abc import Mapping as MappingOrigin
 from typing import (
     TYPE_CHECKING,
-    TypeVar,
-    Sequence,
-    Union,
-    Optional,
-    Generic,
-    overload,
-    Mapping,
     Any,
+    Generic,
+    Optional,
+    TypeVar,
+    Union,
+    overload,
 )
 
-if sys.version_info >= (3, 7):
-    from abc import ABCMeta as GenericMeta
-    from collections.abc import Mapping as MappingOrigin
-
-    NEW_TYPING = True
-else:
-    from typing import GenericMeta, Mapping as MappingOrigin
-
-    NEW_TYPING = False
+NEW_TYPING = True

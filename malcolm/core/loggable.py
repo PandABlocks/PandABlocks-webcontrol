@@ -14,7 +14,7 @@ class Loggable:
                 ".".join([<module_name>, <cls_name>] + fields_sorted_on_key)
         """
         names = [self.__module__, self.__class__.__name__]
-        for field, value in sorted(fields.items()):
+        for _field, value in sorted(fields.items()):
             names.append(value)
         # names should be something like this for one field:
         #   ["malcolm.modules.scanning.controllers.runnablecontroller",

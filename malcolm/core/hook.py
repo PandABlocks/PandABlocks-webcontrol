@@ -2,16 +2,11 @@ import asyncio
 import inspect
 import logging
 import time
+from collections.abc import Callable, Sequence
 from typing import (
     Any,
-    Callable,
-    Dict,
     Generic,
-    List,
     Optional,
-    Sequence,
-    Tuple,
-    Type,
     TypeVar,
     Union,
 )
@@ -31,7 +26,7 @@ log = logging.getLogger(__name__)
 T = TypeVar("T")
 
 Hooked = Callable[..., T]
-ArgsGen = Callable[[List[str]], List[str]]
+ArgsGen = Callable[[list[str]], list[str]]
 
 
 def make_args_gen(func: Callable) -> ArgsGen:
@@ -45,7 +40,7 @@ def make_args_gen(func: Callable) -> ArgsGen:
             "forget to decorate with @add_call_types?"
         )
 
-    def args_gen(keys: List[str]) -> List[str]:
+    def args_gen(keys: list[str]) -> list[str]:
         return call_types.keys()
 
     return args_gen
@@ -55,11 +50,11 @@ class Hookable(Loggable, WithCallTypes):
     """Baseclass of something that can be attached to a hook"""
 
     name: Union[str, None] = None
-    hooked: Union[Dict[Type["Hook"], Tuple[Hooked, ArgsGen]], None] = None
+    hooked: Union[dict[type["Hook"], tuple[Hooked, ArgsGen]], None] = None
 
     def register_hooked(
         self,
-        hooks: Union[Type["Hook"], Sequence[Type["Hook"]]],
+        hooks: Union[type["Hook"], Sequence[type["Hook"]]],
         func: Hooked,
         args_gen: Optional[ArgsGen] = None,
     ) -> None:
@@ -142,7 +137,7 @@ class Hook(Generic[T], WithCallTypes):
         assert self._spawn, "No spawned function"
         self.spawned = self._spawn(self._run, func, kwargs)
 
-    async def _run(self, func: Callable[..., T], kwargs: Dict[str, Any]) -> None:
+    async def _run(self, func: Callable[..., T], kwargs: dict[str, Any]) -> None:
         result: Union[T, Exception]
         try:
             # A hooked function may be a coroutine or a plain function
@@ -170,7 +165,7 @@ class Hook(Generic[T], WithCallTypes):
         return None
 
 
-def start_hooks(hooks: List[Hook]) -> Tuple["asyncio.Queue", List[Hook]]:
+def start_hooks(hooks: list[Hook]) -> tuple["asyncio.Queue", list[Hook]]:
     # This queue will hold (part, result) tuples. Hook._run puts to it from the
     # event loop, and wait_hooks awaits it there too
     hook_queue: asyncio.Queue = asyncio.Queue()
@@ -187,10 +182,10 @@ def start_hooks(hooks: List[Hook]) -> Tuple["asyncio.Queue", List[Hook]]:
 async def wait_hooks(
     logger: Optional[logging.Logger],
     hook_queue: "asyncio.Queue",
-    hook_spawned: List[Hook],
+    hook_spawned: list[Hook],
     timeout: float = None,
     exception_check: bool = True,
-) -> Dict[str, List[Info]]:
+) -> dict[str, list[Info]]:
     # timeout is time to wait for spawned processes to complete on abort,
     # not time for them to run for
     # Wait for them all to finish

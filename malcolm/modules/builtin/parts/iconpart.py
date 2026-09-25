@@ -17,7 +17,7 @@ class IconPart(Part):
         try:
             with open(svg) as f:
                 self.svg_text = f.read()
-        except IOError:
+        except OSError:
             self.svg_text = "<svg/>"
         self.attr = meta.create_attribute_model(self.svg_text)
 

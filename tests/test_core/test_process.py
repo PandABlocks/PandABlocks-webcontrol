@@ -1,5 +1,4 @@
 import unittest
-from typing import List
 from unittest.mock import MagicMock
 
 from malcolm.annotypes import add_call_types
@@ -16,7 +15,7 @@ from ..loop import on_loop
 
 
 class PublishController(Controller):
-    published: List[APublished] = []
+    published: list[APublished] = []
 
     def on_hook(self, hook):
         if isinstance(hook, ProcessPublishHook):

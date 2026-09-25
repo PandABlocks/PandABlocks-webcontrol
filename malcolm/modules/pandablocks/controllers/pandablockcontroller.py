@@ -1,5 +1,5 @@
 import os
-from typing import Any, Dict, Optional, Union, cast
+from typing import Any, Optional, Union, cast
 
 from malcolm.annotypes import Anno
 from malcolm.core import (
@@ -92,20 +92,20 @@ class PandABlockController(builtin.controllers.BasicController):
         # fetching it is IO and we can't await in __init__
         self.table_fields = table_fields or {}
         # {field_name: part}
-        self.field_parts: Dict[str, Optional[ChangeHandler]] = {}
+        self.field_parts: dict[str, Optional[ChangeHandler]] = {}
         # {field_name: attr.meta}
-        self.mux_metas: Dict[str, VMeta] = {}
+        self.mux_metas: dict[str, VMeta] = {}
         # Make an icon, label and help for the Block
         self.icon_part: PandAIconPart = self._make_common_parts()
         # Create parts for each field
         for field_name, field_data in block_data.fields.items():
             self._make_parts_for(field_name, field_data)
 
-    async def handle_changes(self, changes: Dict[str, Any], ts: TimeStamp) -> None:
+    async def handle_changes(self, changes: dict[str, Any], ts: TimeStamp) -> None:
         icon_needs_update = False
-        icon_field_values: Dict[str, Any] = {}
+        icon_field_values: dict[str, Any] = {}
         with self.changes_squashed:
-            if isinstance(changes, Dict):
+            if isinstance(changes, dict):
                 for k, v in changes.items():
                     # Health changes are for us
                     if k.upper() == "HEALTH":

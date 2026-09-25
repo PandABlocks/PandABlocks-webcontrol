@@ -11,6 +11,11 @@ with Anno("Error message exception"):
 with Anno("List of [[path], value] pairs for changed values"):
     AChanges = Any
 
+# Error's default message. A module-level singleton rather than an
+# Exception("") built in the signature, which is a call in a default argument;
+# it is the same shared, never-mutated object either way
+_NO_MESSAGE = Exception("")
+
 
 class Response(Serializable):
     """Represents a response to a Request"""
@@ -38,7 +43,7 @@ class Error(Response):
 
     __slots__ = ["message"]
 
-    def __init__(self, id: AId = 0, message: AMessage = Exception("")) -> None:
+    def __init__(self, id: AId = 0, message: AMessage = _NO_MESSAGE) -> None:
         super().__init__(id)
         self.message = message
 

@@ -1,5 +1,6 @@
 import weakref
-from typing import Any, Mapping, Sequence, TypeVar, Union
+from collections.abc import Mapping, Sequence
+from typing import Any, TypeVar, Union
 
 from malcolm.annotypes import Anno, Array
 from malcolm.core import Context, Hook, Part

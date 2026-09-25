@@ -1,6 +1,6 @@
-from malcolm.annotypes import add_call_types, WithCallTypes, Anno, Array, Optional
-from .simple import Simple, Exposure, Path
+from malcolm.annotypes import Anno, Array, Optional, WithCallTypes, add_call_types
 
+from .simple import Exposure, Path, Simple
 
 with Anno("The path prefix for the list of writers"):
     Prefix = str

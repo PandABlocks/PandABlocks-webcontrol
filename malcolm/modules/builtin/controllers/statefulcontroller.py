@@ -1,4 +1,4 @@
-from typing import Dict, Union
+from typing import Union
 
 from malcolm.compat import OrderedDict
 from malcolm.core import (
@@ -21,7 +21,7 @@ from ..util import StatefulStates
 from .basiccontroller import ADescription, AMri, BasicController
 
 Field = Union[AttributeModel, MethodModel]
-ChildrenWriteable = Dict[str, Dict[Field, bool]]
+ChildrenWriteable = dict[str, dict[Field, bool]]
 
 
 ss = StatefulStates
@@ -60,17 +60,14 @@ class StatefulController(BasicController):
         # this is valid for this state_set
         for state in states:
             assert state in self.state_set.possible_states, (
-                "State %s is not one of the valid states %s"
-                % (
-                    state,
-                    self.state_set.possible_states,
-                )
+                f"State {state} is not one of the valid states "
+                f"{self.state_set.possible_states}"
             )
         for state in self.state_set.possible_states:
             state_writeable = self._children_writeable.setdefault(state, {})
             state_writeable[field] = state in states
 
-    def create_part_contexts(self) -> Dict[Part, Context]:
+    def create_part_contexts(self) -> dict[Part, Context]:
         part_contexts = OrderedDict()
         assert self.process, "No attached process"
         for part in self.parts.values():
@@ -120,7 +117,7 @@ class StatefulController(BasicController):
             super().check_field_writeable(field)
         except NotWriteableError as e:
             msg = f"{e}, maybe because Block state = {self.state.value}"
-            raise NotWriteableError(msg)
+            raise NotWriteableError(msg) from e
 
     def transition(self, state, message=""):
         """Change to a new state if the transition is allowed

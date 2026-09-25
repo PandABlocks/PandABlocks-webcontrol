@@ -1,6 +1,6 @@
 import os
 import subprocess
-from typing import Dict, List, Sequence, Set
+from collections.abc import Sequence
 
 from malcolm.annotypes import (
     Anno,
@@ -87,14 +87,14 @@ class ManagerController(StatefulController):
         self.saved_exports = None
         # ((name, AttributeModel/MethodModel, setter, needs_context))
         self._current_part_fields = ()
-        self._subscriptions: List[Subscribe] = []
-        self.port_info: Dict[APartName, List[PortInfo]] = {}
-        self.part_exportable: Dict[Part, Sequence[AAttributeName]] = {}
+        self._subscriptions: list[Subscribe] = []
+        self.port_info: dict[APartName, list[PortInfo]] = {}
+        self.part_exportable: dict[Part, Sequence[AAttributeName]] = {}
         # TODO: turn this into "exported attribute modified"
-        self.context_modified: Dict[Part, Set[str]] = {}
-        self.part_modified: Dict[Part, PartModifiedInfo] = {}
+        self.context_modified: dict[Part, set[str]] = {}
+        self.part_modified: dict[Part, PartModifiedInfo] = {}
         # The attributes our part has published
-        self.our_config_attributes: Dict[str, AttributeModel] = {}
+        self.our_config_attributes: dict[str, AttributeModel] = {}
         # The reportable infos we are listening for
         self.info_registry.add_reportable(PartModifiedInfo, self.update_modified)
         # Update queue of exportable fields
@@ -223,7 +223,7 @@ class ManagerController(StatefulController):
             message_list = []
             only_modified_by_us = True
             for part_name, visible in zip(
-                self.layout.value.name, self.layout.value.visible
+                self.layout.value.name, self.layout.value.visible, strict=True
             ):
                 part = self.parts[part_name]
                 info = self.part_modified.get(part, None)
@@ -295,7 +295,7 @@ class ManagerController(StatefulController):
             if self._current_part_fields:
                 for name, child, _, _ in self._current_part_fields:
                     self._block.remove_endpoint(name)
-                    for state, state_writeable in self._children_writeable.items():
+                    for _state, state_writeable in self._children_writeable.items():
                         state_writeable.pop(child, None)
             self._current_part_fields = part_fields
             for name, child, writeable_func, needs_context in self._current_part_fields:
@@ -334,7 +334,10 @@ class ManagerController(StatefulController):
         mris = {}
         invisible = set()
         for part_name, mri, visible in zip(
-            self.layout.value.name, self.layout.value.mri, self.layout.value.visible
+            self.layout.value.name,
+            self.layout.value.mri,
+            self.layout.value.visible,
+            strict=True,
         ):
             if visible:
                 mris[part_name] = mri
@@ -418,7 +421,7 @@ class ManagerController(StatefulController):
         part_contexts = super().create_part_contexts()
         if only_visible:
             for part_name, visible in zip(
-                self.layout.value.name, self.layout.value.visible
+                self.layout.value.name, self.layout.value.visible, strict=True
             ):
                 part = self.parts[part_name]
                 if not visible:
@@ -446,7 +449,7 @@ class ManagerController(StatefulController):
         attributes = structure.setdefault("attributes", OrderedDict())
         # Add the layout table
         layout = attributes.setdefault("layout", OrderedDict())
-        for name, mri, x, y, visible in self.layout.value.rows():
+        for name, _mri, x, y, visible in self.layout.value.rows():
             layout_structure = OrderedDict()
             layout_structure["x"] = x
             layout_structure["y"] = y
@@ -497,8 +500,9 @@ class ManagerController(StatefulController):
         if os.path.isdir(self.template_designs):
             for f in sorted(os.listdir(self.template_designs)):
                 assert f.startswith("template_") and f.endswith(".json"), (
-                    "Template design %s/%s should start with 'template_' "
-                    "and end with .json" % (self.template_designs, f)
+                    f"Template design {self.template_designs}/{f} should "
+                    "start with 'template_' "
+                    "and end with .json"
                 )
                 t_name = f.split(".json")[0]
                 if t_name not in names:

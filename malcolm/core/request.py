@@ -1,5 +1,6 @@
 import logging
-from typing import Any, Callable, List, Mapping, Sequence, Tuple, Union
+from collections.abc import Callable, Mapping, Sequence
+from typing import Any, Union
 
 from malcolm.annotypes import Anno, Array, Serializable
 
@@ -45,18 +46,18 @@ class Request(Serializable):
         """Set the callback to be called on response"""
         self.callback = callback
 
-    def return_response(self, value: Any = None) -> Tuple[Callback, Return]:
+    def return_response(self, value: Any = None) -> tuple[Callback, Return]:
         """Create a Return Response object to signal a return value"""
         response = Return(id=self.id, value=value)
         return self.callback, response
 
-    def error_response(self, exception: Exception) -> Tuple[Callback, Error]:
+    def error_response(self, exception: Exception) -> tuple[Callback, Error]:
         """Create an Error Response object to signal an error"""
         response = Error(id=self.id, message=exception)
         log.exception("Exception raised for request %s", self)
         return self.callback, response
 
-    def generate_key(self) -> Tuple[Callback, int]:
+    def generate_key(self) -> tuple[Callback, int]:
         """A key that will uniquely identify this request, for matching
         Subscribes up to Unsubscribes"""
         key = (self.callback, self.id)
@@ -81,7 +82,7 @@ class PathRequest(Request):
 class Get(PathRequest):
     """Create a Get Request object"""
 
-    __slots__: List[str] = []
+    __slots__: list[str] = []
 
 
 @Serializable.register_subclass("malcolm:core/Put:1.0")
@@ -129,14 +130,14 @@ class Subscribe(PathRequest):
         super().__init__(id, path)
         self.delta = delta
 
-    def update_response(self, value: Any) -> Tuple[Callback, Update]:
+    def update_response(self, value: Any) -> tuple[Callback, Update]:
         """Create an Update Response object to handle the request"""
         response = Update(id=self.id, value=value)
         return self.callback, response
 
     def delta_response(
-        self, changes: List[List[Union[List[str], Any]]]
-    ) -> Tuple[Callback, Delta]:
+        self, changes: list[list[Union[list[str], Any]]]
+    ) -> tuple[Callback, Delta]:
         """Create a Delta Response object to handle the request"""
         response = Delta(id=self.id, changes=changes)
         return self.callback, response
@@ -146,4 +147,4 @@ class Subscribe(PathRequest):
 class Unsubscribe(Request):
     """Create an Unsubscribe Request object"""
 
-    __slots__: List[str] = []
+    __slots__: list[str] = []

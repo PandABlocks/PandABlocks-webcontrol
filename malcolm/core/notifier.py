@@ -1,7 +1,8 @@
 import asyncio
 import inspect
+from collections.abc import Callable
 from contextlib import contextmanager
-from typing import TYPE_CHECKING, Any, Callable, Dict, List, Tuple
+from typing import TYPE_CHECKING, Any
 
 from malcolm.annotypes import Array, FrozenOrderedDict
 
@@ -13,8 +14,8 @@ if TYPE_CHECKING:
     from .models import BlockModel
 
     Callback = Callable[[Response], None]
-    CallbackResponses = List[Tuple[Callback, Response]]
-    SubscriptionKeys = Dict[Tuple[Callback, int], Subscribe]
+    CallbackResponses = list[tuple[Callback, Response]]
+    SubscriptionKeys = dict[tuple[Callback, int], Subscribe]
 
 
 class DummyNotifier:
@@ -23,10 +24,10 @@ class DummyNotifier:
     def changes_squashed(self):
         yield
 
-    def add_squashed_change(self, path: List[str], data: Any) -> None:
+    def add_squashed_change(self, path: list[str], data: Any) -> None:
         pass
 
-    def add_squashed_delete(self, path: List[str]) -> None:
+    def add_squashed_delete(self, path: list[str]) -> None:
         pass
 
 
@@ -55,7 +56,7 @@ class Notifier(Loggable):
         self._tree = NotifierNode(block)
         # Incremented every time we do with changes_squashed
         self._squashed_count = 0
-        self._squashed_changes: List[List] = []
+        self._squashed_changes: list[list] = []
         self._subscription_keys: SubscriptionKeys = {}
 
     def handle_subscribe(self, request: Subscribe) -> "CallbackResponses":
@@ -81,7 +82,7 @@ class Notifier(Loggable):
         """
         return self
 
-    def add_squashed_change(self, path: List[str], data: Any) -> None:
+    def add_squashed_change(self, path: list[str], data: Any) -> None:
         """Register a squashed change to a particular path
 
         Args:
@@ -91,7 +92,7 @@ class Notifier(Loggable):
         assert self._squashed_count, "Called while not squashing changes"
         self._squashed_changes.append([path[1:], data])
 
-    def add_squashed_delete(self, path: List[str]) -> None:
+    def add_squashed_delete(self, path: list[str]) -> None:
         """Register a squashed deletion of a particular path
 
         Args:
@@ -160,13 +161,13 @@ class NotifierNode:
     __slots__ = ["delta_requests", "update_requests", "children", "parent", "data"]
 
     def __init__(self, data: Any, parent: "NotifierNode" = None) -> None:
-        self.delta_requests: List[Subscribe] = []
-        self.update_requests: List[Subscribe] = []
-        self.children: Dict[str, NotifierNode] = {}
+        self.delta_requests: list[Subscribe] = []
+        self.update_requests: list[Subscribe] = []
+        self.children: dict[str, NotifierNode] = {}
         self.parent = parent
         self.data = data
 
-    def notify_changes(self, changes: List[List]) -> "CallbackResponses":
+    def notify_changes(self, changes: list[list]) -> "CallbackResponses":
         """Set our data and notify anyone listening
 
         Args:
@@ -178,7 +179,7 @@ class NotifierNode:
             list: [(callback, Response)] that need to be called
         """
         ret = []
-        child_changes: Dict[str, List] = {}
+        child_changes: dict[str, list] = {}
         for change in changes:
             # Add any changes that our children need to know about
             self._add_child_change(change, child_changes)
@@ -201,7 +202,7 @@ class NotifierNode:
             ret += self.children[name].notify_changes(changes)
         return ret
 
-    def _add_child_change(self, change: List, child_changes: Dict[str, List]) -> None:
+    def _add_child_change(self, change: list, child_changes: dict[str, list]) -> None:
         path = change[0]
         if path:
             # This is for one of our children
@@ -221,7 +222,7 @@ class NotifierNode:
             for name, child_change in child_change_dict.items():
                 child_changes.setdefault(name, []).append(child_change)
 
-    def _update_data(self, data: Any) -> Dict[str, List]:
+    def _update_data(self, data: Any) -> dict[str, list]:
         """Set our data and notify any subscribers of children what has changed
 
         Args:
@@ -232,7 +233,7 @@ class NotifierNode:
                 that needs to be passed to a child as a result of this
         """
         self.data = data
-        child_change_dict: Dict[str, List] = {}
+        child_change_dict: dict[str, list] = {}
         # Reflect change of data to children
         for name in self.children:
             child_data = getattr(data, name, None)
@@ -245,7 +246,7 @@ class NotifierNode:
         return child_change_dict
 
     def handle_subscribe(
-        self, request: Subscribe, path: List[str]
+        self, request: Subscribe, path: list[str]
     ) -> "CallbackResponses":
         """Add to the list of request to notify, and notify the initial value of
         the data held
@@ -276,7 +277,7 @@ class NotifierNode:
         return ret
 
     def handle_unsubscribe(
-        self, request: Subscribe, path: List[str]
+        self, request: Subscribe, path: list[str]
     ) -> "CallbackResponses":
         """Remove from the notifier list and send a return
 

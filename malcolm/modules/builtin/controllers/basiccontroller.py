@@ -1,4 +1,4 @@
-from typing import Dict, Optional
+from typing import Optional
 
 from malcolm.core import ADescription, Alarm, AMri, Controller, StringMeta, Widget
 
@@ -14,7 +14,7 @@ class BasicController(Controller):
 
     def __init__(self, mri: AMri, description: ADescription = "") -> None:
         super().__init__(mri, description)
-        self._faults: Dict[object, Alarm] = {}
+        self._faults: dict[object, Alarm] = {}
         self.info_registry.add_reportable(LabelInfo, self.update_label)
         self.info_registry.add_reportable(HealthInfo, self.update_health)
         self.health = StringMeta(

@@ -1,5 +1,3 @@
-from typing import List
-
 from malcolm.compat import OrderedDict
 
 
@@ -7,7 +5,7 @@ class StateSet:
     def __init__(self) -> None:
         self._allowed = OrderedDict()
         # These are all the states we can possibly be in
-        self.possible_states: List[str] = []
+        self.possible_states: list[str] = []
 
     def transition_allowed(self, initial_state: str, target_state: str) -> bool:
         """Check if a transition between two states is allowed"""

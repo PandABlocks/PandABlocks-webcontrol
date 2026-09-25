@@ -122,7 +122,7 @@ class TestBlockModel(unittest.TestCase):
         assert list(self.o) == ["meta", "method"]
         assert self.o.meta.fields == ["method"]
         with self.assertRaises(AttributeError):
-            self.o.attr
+            self.o.attr  # noqa: B018 - the attribute read is what should raise
         self.o.set_endpoint_data("attr", self.attr)
         assert list(self.o) == ["meta", "method", "attr"]
         assert self.o.meta.fields == ["method", "attr"]
@@ -264,7 +264,7 @@ class TestChoiceMeta(unittest.TestCase):
 
     def test_from_dict(self):
         bm = ChoiceMeta.from_dict(self.serialized)
-        assert type(bm) == ChoiceMeta
+        assert type(bm) is ChoiceMeta
         assert bm.description == "desc"
         assert bm.choices == ["a", "b"]
         assert bm.tags == []
@@ -317,18 +317,18 @@ class TestMethodLog(unittest.TestCase):
     def setUp(self):
         self.serialized = OrderedDict()
         self.serialized["typeid"] = "malcolm:core/MethodLog:1.0"
-        self.serialized["value"] = dict(a=1)
+        self.serialized["value"] = {"a": 1}
         self.serialized["present"] = ["a"]
         self.serialized["alarm"] = Alarm.ok.to_dict()
         self.serialized["timeStamp"] = TimeStamp.zero.to_dict()
 
     def test_to_dict(self):
-        m = MethodLog(value=dict(a=1), present=["a"], timeStamp=TimeStamp.zero)
+        m = MethodLog(value={"a": 1}, present=["a"], timeStamp=TimeStamp.zero)
         assert m.to_dict() == self.serialized
 
     def test_from_dict(self):
         m = MethodLog.from_dict(self.serialized)
-        assert m.value == dict(a=1)
+        assert m.value == {"a": 1}
         assert m.present == ["a"]
         assert m.alarm.to_dict() == Alarm.ok.to_dict()
         assert m.timeStamp.to_dict() == TimeStamp.zero.to_dict()
@@ -341,7 +341,7 @@ class TestMapMeta(unittest.TestCase):
         assert self.mm.typeid == "malcolm:core/MapMeta:1.0"
 
     def test_set_elements(self):
-        els = dict(sam=StringArrayMeta())
+        els = {"sam": StringArrayMeta()}
         self.mm.set_elements(els)
         assert self.mm.elements == els
 
@@ -357,12 +357,12 @@ class TestMapMeta(unittest.TestCase):
         self.sam.label = "C1"
         self.serialized = OrderedDict()
         self.serialized["typeid"] = "malcolm:core/MapMeta:1.0"
-        self.serialized["elements"] = dict(c1=self.sam.to_dict())
+        self.serialized["elements"] = {"c1": self.sam.to_dict()}
         self.serialized["required"] = ["c1"]
 
     def test_to_dict(self):
         tm = MapMeta()
-        tm.set_elements(dict(c1=self.sam))
+        tm.set_elements({"c1": self.sam})
         tm.set_required(["c1"])
         assert tm.to_dict() == self.serialized
 
@@ -460,7 +460,7 @@ class TestNumberArrayMeta(unittest.TestCase):
         values = [1.2, 3.4, 5.6]
         response = nm.validate(values)
 
-        for i, value in enumerate(response):
+        for i, _value in enumerate(response):
             self.assertAlmostEqual(values[i], response[i], places=5)
 
     def test_int_against_float(self):
@@ -582,7 +582,7 @@ class TestNumberMeta(unittest.TestCase):
 
     def test_from_dict(self):
         nm = NumberMeta.from_dict(self.serialized)
-        assert type(nm) == NumberMeta
+        assert type(nm) is NumberMeta
         assert nm.description == "desc"
         assert nm.dtype == "float64"
         assert nm.tags == []
@@ -655,7 +655,7 @@ class TestTableMeta(unittest.TestCase):
     def setUp(self):
         tm = TableMeta("desc")
         self.tm = tm
-        self.tm.set_elements(dict(c1=StringArrayMeta()))
+        self.tm.set_elements({"c1": StringArrayMeta()})
         self.sam = StringArrayMeta()
         self.serialized = OrderedDict()
         self.serialized["typeid"] = "malcolm:core/TableMeta:1.0"
@@ -663,7 +663,7 @@ class TestTableMeta(unittest.TestCase):
         self.serialized["tags"] = []
         self.serialized["writeable"] = True
         self.serialized["label"] = "Name"
-        self.serialized["elements"] = dict(c1=self.sam.to_dict())
+        self.serialized["elements"] = {"c1": self.sam.to_dict()}
 
     def test_set_elements(self):
         tm = self.tm
@@ -686,7 +686,7 @@ class TestTableMeta(unittest.TestCase):
         tm = TableMeta("desc")
         tm.set_label("Name")
         tm.set_writeable(True)
-        tm.set_elements(dict(c1=self.sam))
+        tm.set_elements({"c1": self.sam})
         assert tm.to_dict() == self.serialized
 
     def test_from_dict(self):
@@ -707,7 +707,7 @@ class TestTableMeta(unittest.TestCase):
 
     def test_validate_from_serialized(self):
         tm = self.tm
-        serialized = dict(typeid="anything", c1=("me", "me3"))
+        serialized = {"typeid": "anything", "c1": ("me", "me3")}
         t = tm.validate(serialized)
         assert list(t) == ["c1"]
         assert t.c1 == serialized["c1"]

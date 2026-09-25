@@ -340,8 +340,19 @@ and runs pytest — `--locked` is what makes an unlocked dependency change fail
 rather than be quietly re-resolved. No Python version is pinned; uv picks one
 matching `requires-python`, and the suite passes on 3.10 through 3.13. The
 docs half uses the shared `DiamondLightSource/myst-version-switcher-plugin`
-reusable workflows. Lint and type checking are deliberately not gated yet, see
-Rough edges.
+reusable workflows.
+
+`ruff check .` and `ruff format --check .` are clean and CI gates both, so keep
+them that way. Two rules are switched off in `[tool.ruff]` and the reasons
+matter: **UP007 and UP045**, the PEP 604 `X | Y` and `X | None` rewrites, break
+this codebase outright — annotations here are often `Anno` *instances* from the
+`with Anno("..."): AFoo = str` idiom, and an `Anno` has no `__or__`, so the
+rewrite raises `TypeError` while the class body executes. There are also
+per-file ignores for the `__init__.py` re-exports, which `submodule_all` builds
+at runtime where ruff cannot see them, and for the vendored annotypes, whose
+"unused" typing imports feed its `# type:` comments.
+
+Mypy is *not* gated: it still reports a backlog of pre-existing errors.
 
 ## Rough edges (verified, as of this writing)
 
@@ -362,11 +373,6 @@ Rough edges.
   until the docs restructure deleted it; they are now inlined, copied from the
   same examples in pymalcolm upstream. Keep them inline — there is no fixture
   directory to go back to.
-- The checked-in formatting predates current ruff: `ruff format --check` wants
-  to rewrite files nobody has touched, and `ruff check` reports hundreds of
-  `UP`/`B` findings against the project's own rule selection. Don't reformat the
-  world — compare a changed file against its `HEAD` version and only care about
-  findings your edit introduced.
 - `malcolm/modules/web/www/` is a vendored malcolmjs build. Do not hand-edit it;
   `update_malcolmjs.sh` re-downloads a release tarball and regenerates
   `index-nav.html` (the nav-bar variant rendered by the Tornado template handler

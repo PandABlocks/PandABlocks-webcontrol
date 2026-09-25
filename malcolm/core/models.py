@@ -1,16 +1,9 @@
 import inspect
+from collections.abc import Callable, Mapping, Sequence
 from enum import Enum
 from typing import (
     Any,
-    Callable,
-    Dict,
-    List,
-    Mapping,
     Optional,
-    Sequence,
-    Set,
-    Tuple,
-    Type,
     Union,
     cast,
 )
@@ -44,11 +37,11 @@ def check_type(value, typ):
 
 class Model(Serializable):
     notifier: Union[Notifier, DummyNotifier] = DummyNotifier()
-    path: List[str] = []
-    __slots__: List[str] = []
+    path: list[str] = []
+    __slots__: list[str] = []
 
     def set_notifier_path(
-        self, notifier: Union[Notifier, DummyNotifier], path: List[str]
+        self, notifier: Union[Notifier, DummyNotifier], path: list[str]
     ) -> None:
         """Sets the notifier, and the path from the path from block root
 
@@ -78,8 +71,10 @@ class Model(Serializable):
     def set_endpoint_data(self, name: str, value: Any) -> Any:
         try:
             ct = self.call_types[name]
-        except KeyError:
-            raise ValueError(f"{name!r} not in {self!r}.call_types {self.call_types!r}")
+        except KeyError as e:
+            raise ValueError(
+                f"{name!r} not in {self!r}.call_types {self.call_types!r}"
+            ) from e
         else:
             if ct.is_array:
                 # Cast to right type, this will do some cheap validation
@@ -107,7 +102,7 @@ class Model(Serializable):
                     # If we have old Models then stop them notifying
                     child = getattr(self, name, {})
                     if child:
-                        for k, v in child.items():
+                        for v in child.values():
                             v.set_notifier_path(Model.notifier, [])
                     for k, v in value.items():
                         v.set_notifier_path(self.notifier, self.path + [name, k])
@@ -128,7 +123,7 @@ class Model(Serializable):
                 self.notifier.add_squashed_change(self.path + [name], value)
             return value
 
-    def apply_change(self, path: List[str], *args: Any) -> None:
+    def apply_change(self, path: list[str], *args: Any) -> None:
         """Take a single change from a Delta and apply it to this model"""
         if len(path) > 1:
             # This is for a child
@@ -188,9 +183,9 @@ class Meta(Model):
 class VMeta(Meta):
     """Abstract base class for validating the values of Attributes"""
 
-    attribute_class: Union[Type["AttributeModel"], None] = None
-    _annotype_lookup: Mapping[Tuple[type, bool, bool], Type["VMeta"]] = {}
-    __slots__: List[str] = []
+    attribute_class: Union[type["AttributeModel"], None] = None
+    _annotype_lookup: Mapping[tuple[type, bool, bool], type["VMeta"]] = {}
+    __slots__: list[str] = []
 
     def validate(self, value: Any) -> Any:
         """Abstract function to validate a given value
@@ -255,9 +250,9 @@ class VMeta(Meta):
         return decorator
 
     @classmethod
-    def lookup_annotype_converter(cls, anno: Anno) -> Type["VMeta"]:
+    def lookup_annotype_converter(cls, anno: Anno) -> type["VMeta"]:
         """Look up a vmeta based on an Anno"""
-        bases: Union[List[Any], Tuple]
+        bases: Union[list[Any], tuple]
         if hasattr(anno.typ, "__bases__"):
             # This is a proper type
             bases = inspect.getmro(anno.typ)
@@ -383,7 +378,7 @@ class AttributeModel(Model):
 class NTTable(AttributeModel):
     """AttributeModel containing a `TableMeta`"""
 
-    __slots__: List[str] = []
+    __slots__: list[str] = []
 
     def set_value_alarm_ts(self, value: AValue, alarm: Alarm, ts: TimeStamp) -> None:
         with self.notifier.changes_squashed:
@@ -411,7 +406,7 @@ class NTTable(AttributeModel):
 class NTScalarArray(AttributeModel):
     """AttributeModel containing a `VArrayMeta`"""
 
-    __slots__: List[str] = []
+    __slots__: list[str] = []
 
 
 @Serializable.register_subclass("epics:nt/NTScalar:1.0")
@@ -420,7 +415,7 @@ class NTScalar(AttributeModel):
     or `ChoiceMeta`
     """
 
-    __slots__: List[str] = []
+    __slots__: list[str] = []
 
 
 FALSE_STRINGS = {"0", "False", "false", "FALSE", "No", "no", "NO"}
@@ -432,7 +427,7 @@ class BooleanMeta(VMeta):
     """Meta object containing information for a boolean"""
 
     attribute_class = NTScalar
-    __slots__: List[str] = []
+    __slots__: list[str] = []
 
     def validate(self, value: Any) -> bool:
         """Cast value to boolean and return it"""
@@ -474,17 +469,17 @@ class ChoiceMeta(VMeta):
         label: ALabel = "",
     ) -> None:
         super().__init__(description, tags, writeable, label)
-        self.choices_lookup: Dict[Any, Union[str, Enum]] = {}
+        self.choices_lookup: dict[Any, Union[str, Enum]] = {}
         # Used for ChoiceMetaArray subclass only for producing Arrays
-        self.enum_cls: Union[Type, None] = None
+        self.enum_cls: Union[type, None] = None
         self.choices = self.set_choices(choices)
 
     def set_choices(self, choices: UChoices) -> AChoices:
         # Calculate a lookup from all possible entries to the choice value
-        choices_lookup: Dict[Any, Union[str, Enum]] = {}
-        new_choices: List[Union[str, Enum]]
+        choices_lookup: dict[Any, Union[str, Enum]] = {}
+        new_choices: list[Union[str, Enum]]
         new_choices = []  # type: ignore
-        enum_typ: Union[Type, None] = None
+        enum_typ: Union[type, None] = None
         choice: Union[object, None]
         for i, choice in enumerate(choices):
             # If we already have an enum type it must match
@@ -534,8 +529,10 @@ class ChoiceMeta(VMeta):
         # Our lookup table contains all the possible values
         try:
             return self.choices_lookup[value]
-        except KeyError:
-            raise ValueError(f"{value!r} is not a valid value in {list(self.choices)}")
+        except KeyError as e:
+            raise ValueError(
+                f"{value!r} is not a valid value in {list(self.choices)}"
+            ) from e
 
     def doc_type_string(self) -> str:
         return " | ".join([repr(x) for x in self.choices])
@@ -728,7 +725,7 @@ class StringMeta(VMeta):
     """Meta object containing information for a string"""
 
     attribute_class = NTScalar
-    __slots__: List[str] = []
+    __slots__: list[str] = []
 
     def validate(self, value: Any) -> str:
         """Check if the value is valid returns it"""
@@ -753,7 +750,7 @@ class VArrayMeta(VMeta):
     """Intermediate abstract class so `TableMeta` can say "only arrays" """
 
     attribute_class = NTScalarArray
-    __slots__: List[str] = []
+    __slots__: list[str] = []
 
 
 def to_np_array(dtype, value: Any) -> Any:
@@ -811,11 +808,11 @@ class ChoiceArrayMeta(ChoiceMeta, VArrayMeta):
                 # Our lookup table contains all the possible values
                 try:
                     new_choice = self.choices_lookup[choice]
-                except KeyError:
+                except KeyError as e:
                     raise ValueError(
                         f"{value} is not a valid value in {self.choices} "
                         f"for element {i}"
-                    )
+                    ) from e
                 else:
                     is_same &= choice == new_choice
                     ret.append(new_choice)
@@ -881,8 +878,8 @@ class TableMeta(VMeta):
         label: ALabel = "",
         elements: ATableElements = None,
     ) -> None:
-        self.table_cls: Union[Type[Table], None] = None
-        self.elements: Dict[str, Meta] = {}
+        self.table_cls: Union[type[Table], None] = None
+        self.elements: dict[str, Meta] = {}
         super().__init__(description, tags, writeable, label)
         # Do this after so writeable is honoured
         self.set_elements(elements if elements else {})
@@ -897,7 +894,7 @@ class TableMeta(VMeta):
         self.set_table_cls(self.table_cls)
         return ret
 
-    def set_table_cls(self, table_cls: Type[Table] = None) -> None:
+    def set_table_cls(self, table_cls: type[Table] = None) -> None:
         if table_cls is None or table_cls.__name__ == "TableSubclass":
             # Either autogenerated by this function or not set, so make one
 
@@ -928,14 +925,14 @@ class TableMeta(VMeta):
     def validate(self, value: Any) -> Any:
         if value is None:
             # Create an empty table
-            value = {k: None for k in self.elements}
+            value = dict.fromkeys(self.elements)
         elif isinstance(value, Table):
             # Serialize a single level so we can type check it
             value = {k: value[k] for k in value.call_types}
         elif not isinstance(value, dict):
             raise ValueError(f"Expected Table instance or serialized, got {value}")
         # We need to make a table instance ourselves
-        keys = set(x for x in value if x != "typeid")
+        keys = {x for x in value if x != "typeid"}
         missing = set(self.elements) - keys
         assert not missing, f"Supplied table missing fields {missing}"
         extra = keys - set(self.elements)
@@ -961,11 +958,11 @@ class TableMeta(VMeta):
     @classmethod
     def from_table(
         cls,
-        table_cls: Type[Table],
+        table_cls: type[Table],
         description: str,
         widget: Widget = None,
-        writeable: List[str] = [],
-        extra_tags: List[str] = [],
+        writeable: list[str] = None,
+        extra_tags: list[str] = None,
     ) -> "TableMeta":
         """Create a TableMeta object, using a Table subclass as the spec
 
@@ -977,6 +974,10 @@ class TableMeta(VMeta):
                 writeable fields then the whole Meta is writeable
             extra_tags: A list of tags to be added to the table meta
         """
+        if extra_tags is None:
+            extra_tags = []
+        if writeable is None:
+            writeable = []
         elements = OrderedDict()
         for k, ct in table_cls.call_types.items():
             subclass = cls.lookup_annotype_converter(ct)
@@ -1043,14 +1044,14 @@ class MapMeta(Model):
 
     def validate(
         self, param_dict: Optional[Mapping[str, Any]] = None, add_missing: bool = False
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Return a param dict in the right order, with the correct keys and
         values of the correct type with no extras or missing"""
         if param_dict is None:
             param_dict = {}
         extra = set(param_dict) - set(self.elements)
         assert not extra, (
-            f"Given keys {list(sorted(param_dict))}, some of which aren't "
+            f"Given keys {sorted(param_dict)}, some of which aren't "
             f"in allowed keys {list(self.elements)}"
         )
         args = OrderedDict()
@@ -1059,7 +1060,7 @@ class MapMeta(Model):
                 args[k] = m.validate(param_dict[k])
             elif add_missing:
                 args[k] = m.validate(None)
-        missing: Set = set(self.required) - set(args)
+        missing: set = set(self.required) - set(args)
         assert not missing, (
             f"Requires keys {list(self.required)} but only given {list(args)}"
         )
@@ -1205,7 +1206,7 @@ class MethodLog(Serializable):
         alarm: AAlarm = None,
         timeStamp: ATimeStamp = None,
     ) -> None:
-        self.value: Union[Dict, AMVValue]
+        self.value: Union[dict, AMVValue]
         if value is None:
             self.value = {}
         else:

@@ -1,5 +1,3 @@
-from typing import Set
-
 from malcolm.modules import builtin
 
 from ..util import ABlockName, AClient
@@ -8,7 +6,7 @@ ASvg = builtin.parts.ASvg
 
 
 class PandAIconPart(builtin.parts.IconPart):
-    update_fields: Set = set()
+    update_fields: set = set()
 
     def __init__(self, client: AClient, block_name: ABlockName, svg: ASvg) -> None:
         super().__init__(svg)

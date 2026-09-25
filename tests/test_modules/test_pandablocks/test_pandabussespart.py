@@ -14,11 +14,11 @@ class PandABussesPartTest(unittest.TestCase):
         self.o = PandABussesPart("busses", MagicMock(set_fields=AsyncMock()))
         self.o.setup(MagicMock())
         pcap_bits_fields = OrderedDict()
-        pcap_bits_fields["PCAP.BITS0.CAPTURE"] = ["B1.B%d" % i for i in range(6)]
-        pcap_bits_fields["PCAP.BITS1.CAPTURE"] = [
-            "B2.B%d" % i for i in range(12, 15)
-        ] + [""] * 12
-        pos_names = ["B1.P%d" % i for i in range(3)] + ["B2.P33"]
+        pcap_bits_fields["PCAP.BITS0.CAPTURE"] = [f"B1.B{i}" for i in range(6)]
+        pcap_bits_fields["PCAP.BITS1.CAPTURE"] = [f"B2.B{i}" for i in range(12, 15)] + [
+            ""
+        ] * 12
+        pos_names = [f"B1.P{i}" for i in range(3)] + ["B2.P33"]
         self.o.create_busses(pcap_bits_fields, pos_names)
         self.expected_bit_names = [
             "B1.B0",

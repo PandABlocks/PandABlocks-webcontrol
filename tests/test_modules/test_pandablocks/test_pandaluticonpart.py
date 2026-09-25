@@ -1,7 +1,7 @@
 import os
 import unittest
 from unittest.mock import AsyncMock, MagicMock
-from xml.etree import cElementTree as ET
+from xml.etree import ElementTree as ET
 
 from malcolm.modules.builtin.util import SVGIcon
 from malcolm.modules.pandablocks.parts.pandaluticonpart import (
@@ -115,14 +115,14 @@ class PandABLutIconTest(unittest.TestCase):
         icon = SVGIcon(self.o.svg_text)
         await self.o.update_icon(
             icon,
-            dict(
-                FUNC="~A&~B&~C&~D",
-                TYPEA="level",
-                TYPEB="rising",
-                TYPEC="falling",
-                TYPED="either",
-                TYPEE="rising",
-            ),
+            {
+                "FUNC": "~A&~B&~C&~D",
+                "TYPEA": "level",
+                "TYPEB": "rising",
+                "TYPEC": "falling",
+                "TYPED": "either",
+                "TYPEE": "rising",
+            },
         )
         self.o.client.get_field.assert_called_once_with("LUT1", "FUNC.RAW")
         svg_text = str(icon)

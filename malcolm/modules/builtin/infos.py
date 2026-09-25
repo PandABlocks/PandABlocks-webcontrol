@@ -1,4 +1,5 @@
-from typing import Any, Dict, List, Sequence
+from collections.abc import Sequence
+from typing import Any
 
 from malcolm.core import Alarm, Info, Port, Request, TimeStamp
 
@@ -98,7 +99,7 @@ class PartExportableInfo(Info):
         port_infos: The list of PortInfo objects that the Part exposes
     """
 
-    def __init__(self, names: Sequence[str], port_infos: List[PortInfo]) -> None:
+    def __init__(self, names: Sequence[str], port_infos: list[PortInfo]) -> None:
         self.names = names
         self.port_infos = port_infos
 
@@ -111,7 +112,7 @@ class PartModifiedInfo(Info):
             modified from the saved value
     """
 
-    def __init__(self, modified: Dict[str, str]) -> None:
+    def __init__(self, modified: dict[str, str]) -> None:
         self.modified = modified
 
 

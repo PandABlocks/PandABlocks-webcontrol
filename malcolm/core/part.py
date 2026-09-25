@@ -1,13 +1,8 @@
 import re
+from collections.abc import Callable, Sequence
 from typing import (
     Any,
-    Callable,
-    Dict,
-    List,
     Optional,
-    Sequence,
-    Tuple,
-    Type,
     TypeVar,
     Union,
     cast,
@@ -27,12 +22,12 @@ T = TypeVar("T")
 
 
 Field = Union[AttributeModel, MethodModel]
-FieldDict = Dict[object, List[Tuple[str, Field, Callable, bool]]]
+FieldDict = dict[object, list[tuple[str, Field, Callable, bool]]]
 Info_co = TypeVar("Info_co", covariant=True, bound=Info)
 object_co = TypeVar("object_co", covariant=True)
 Callback = Callable[[object_co, Info_co], None]
 Hooked = Callable[..., T]
-ArgsGen = Callable[[List[str]], List[str]]
+ArgsGen = Callable[[list[str]], list[str]]
 
 with Anno("The name of the Part within the Controller"):
     APartName = str
@@ -64,7 +59,7 @@ class FieldRegistry:
         """Register a function to be added to the block"""
         if name is None:
             name = func.__name__
-        without: Union[Tuple[str], Tuple[()]]
+        without: Union[tuple[str], tuple[()]]
         if needs_context:
             call_types = getattr(func, "call_types", {})
             context_anno: Anno = call_types.get("context", None)
@@ -122,9 +117,9 @@ class FieldRegistry:
 
 class InfoRegistry:
     def __init__(self):
-        self._reportable_infos: Dict[Type[Info], Callback] = {}
+        self._reportable_infos: dict[type[Info], Callback] = {}
 
-    def add_reportable(self, info: Type[Info], callback: Callback) -> None:
+    def add_reportable(self, info: type[Info], callback: Callback) -> None:
         self._reportable_infos[info] = callback
 
     def report(self, reporter: object, info: Info) -> Any:
@@ -136,12 +131,12 @@ class InfoRegistry:
         typ = type(info)
         try:
             callback = self._reportable_infos[typ]
-        except KeyError:
+        except KeyError as e:
             raise ValueError(
                 f"Don't know how to report a {typ.__name__}, only "
                 f"{[x.__name__ for x in self._reportable_infos]}\n"
                 "Did you use the wrong type of Controller?"
-            )
+            ) from e
         return callback(reporter, info)
 
 
@@ -182,7 +177,7 @@ class PartRegistrar:
 
     def hook(
         self,
-        hooks: Union[Type[Hook], Sequence[Type[Hook]]],
+        hooks: Union[type[Hook], Sequence[type[Hook]]],
         func: Hooked,
         args_gen: Optional[ArgsGen] = None,
     ):

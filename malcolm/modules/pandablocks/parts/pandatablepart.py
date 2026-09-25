@@ -1,5 +1,6 @@
 import numpy as np
 
+from malcolm.annotypes import Anno
 from malcolm.compat import OrderedDict
 from malcolm.core import (
     Alarm,
@@ -11,8 +12,6 @@ from malcolm.core import (
     camel_to_title,
     snake_to_camel,
 )
-
-from malcolm.annotypes import Anno
 
 from ..pandablocksclient import TableFieldData
 from .pandafieldpart import ABlockName, AClient, AFieldName, AMeta, PandAFieldPart

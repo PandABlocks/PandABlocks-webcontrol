@@ -10,15 +10,15 @@ from malcolm.core.request import Return, Subscribe, Unsubscribe
 from malcolm.core.response import Delta, Update
 
 
-class Dummy(object):
+class Dummy:
     def __init__(self):
         self.data = OrderedDict()
 
     def __getattr__(self, item):
         try:
             return self.data[item]
-        except KeyError:
-            raise AttributeError(item)
+        except KeyError as e:
+            raise AttributeError(item) from e
 
     def __setitem__(self, item, value):
         self.data[item] = value
@@ -92,7 +92,7 @@ class TestNotifier(unittest.TestCase):
         r2.set_callback(Mock())
         self.handle_subscribe(r2)
         self.assert_called_with(
-            r2.callback, Delta(changes=[[[], dict(attr=dict(value=32))]])
+            r2.callback, Delta(changes=[[[], {"attr": {"value": 32}}]])
         )
         r2.callback.reset_mock()
         # set some data and check only second got called
@@ -102,7 +102,7 @@ class TestNotifier(unittest.TestCase):
             self.o.add_squashed_change(["b", "attr2"], self.block.attr2)
         r1.callback.assert_not_called()
         self.assert_called_with(
-            r2.callback, Delta(changes=[[["attr2"], dict(value="st")]])
+            r2.callback, Delta(changes=[[["attr2"], {"value": "st"}]])
         )
         r2.callback.reset_mock()
         # delete the first and check calls
@@ -119,9 +119,7 @@ class TestNotifier(unittest.TestCase):
             self.block.attr["value"] = 22
             self.o.add_squashed_change(["b", "attr"], self.block.attr)
         self.assert_called_with(r1.callback, Update(value=22))
-        self.assert_called_with(
-            r2.callback, Delta(changes=[[["attr"], dict(value=22)]])
-        )
+        self.assert_called_with(r2.callback, Delta(changes=[[["attr"], {"value": 22}]]))
 
     def test_update_squashing(self):
         # set some data
@@ -137,8 +135,8 @@ class TestNotifier(unittest.TestCase):
         self.handle_subscribe(r1)
         self.handle_subscribe(r2)
         expected = OrderedDict()
-        expected["attr"] = dict(value=32)
-        expected["attr2"] = dict(value="st")
+        expected["attr"] = {"value": 32}
+        expected["attr2"] = {"value": "st"}
         self.assert_called_with(r1.callback, Delta(changes=[[[], expected]]))
         self.assert_called_with(r2.callback, Update(value=expected))
         r1.callback.reset_mock()

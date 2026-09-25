@@ -1,18 +1,22 @@
 import operator
-from typing import Callable, Dict, Set, Tuple
+from collections.abc import Callable
 
 from malcolm.modules import builtin
 
 from .pandaiconpart import PandAIconPart
 
-LUT_CONSTANTS = dict(
-    A=0xFFFF0000, B=0xFF00FF00, C=0xF0F0F0F0, D=0xCCCCCCCC, E=0xAAAAAAAA
-)
+LUT_CONSTANTS = {
+    "A": 0xFFFF0000,
+    "B": 0xFF00FF00,
+    "C": 0xF0F0F0F0,
+    "D": 0xCCCCCCCC,
+    "E": 0xAAAAAAAA,
+}
 
 
 def _calc_visibility(
     func: str, op: Callable, nargs: int, permutation: int
-) -> Tuple[int, Set[str]]:
+) -> tuple[int, set[str]]:
     # Visibility dictionary defaults
     invis = {"AND", "OR", "LUT", "NOT"}
     invis.remove(func)
@@ -41,7 +45,7 @@ def _calc_visibility(
     return fnum, invis
 
 
-def _generate_lut_elements() -> Dict[int, Set[str]]:
+def _generate_lut_elements() -> dict[int, set[str]]:
     # {fnum: invis}
     lut_elements = {}
     # Generate the lut element table
@@ -75,7 +79,7 @@ LUT_ELEMENTS = _generate_lut_elements()
 LUT_INVIS = LUT_ELEMENTS[0]
 
 
-def get_lut_icon_elements(fnum: int) -> Set[str]:
+def get_lut_icon_elements(fnum: int) -> set[str]:
     return LUT_ELEMENTS.get(fnum, LUT_INVIS)
 
 

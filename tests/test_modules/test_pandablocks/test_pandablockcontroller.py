@@ -175,13 +175,13 @@ class PandABoxBlockMakerTest(unittest.TestCase):
         self.client.set_field.reset_mock()
 
         # check updated with nothing
-        await o.handle_changes(dict(LABEL=""), ts=TimeStamp())
+        await o.handle_changes({"LABEL": ""}, ts=TimeStamp())
         assert b.meta.label == "Pulse description 2"
         assert b.label.value == "Pulse description 2"
         self.client.set_field.assert_not_called()
 
         # check updated with something from the server
-        await o.handle_changes(dict(LABEL="A server label"), ts=TimeStamp())
+        await o.handle_changes({"LABEL": "A server label"}, ts=TimeStamp())
         assert b.meta.label == "A server label"
         assert b.label.value == "A server label"
         self.client.set_field.assert_not_called()

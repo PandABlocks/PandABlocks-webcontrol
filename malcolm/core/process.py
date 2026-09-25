@@ -1,4 +1,5 @@
-from typing import Any, Callable, List, Sequence, Set, TypeVar, Union
+from collections.abc import Callable, Sequence
+from typing import Any, TypeVar, Union
 
 from malcolm.annotypes import Anno, Array
 from malcolm.compat import OrderedDict
@@ -66,9 +67,9 @@ class Process(Loggable):
         self.set_logger(process_name=name)
         self.name = name
         self._controllers = OrderedDict()  # mri -> Controller
-        self._unpublished: Set[str] = set()  # [mri] for unpublishable controllers
+        self._unpublished: set[str] = set()  # [mri] for unpublishable controllers
         self.state = STOPPED
-        self._spawned: List[Spawned] = []
+        self._spawned: list[Spawned] = []
         self._spawn_count = 0
 
     def start(self, timeout=DEFAULT_TIMEOUT):
@@ -96,7 +97,7 @@ class Process(Loggable):
         self.state = STARTED
 
     async def _start_controllers(
-        self, controller_list: List[Controller], timeout: float = None
+        self, controller_list: list[Controller], timeout: float = None
     ) -> bool:
         # Start just the given controller_list
         infos = await self._run_hook(ProcessStartHook, controller_list, timeout=timeout)
@@ -229,7 +230,7 @@ class Process(Loggable):
         self._spawn_count = 0
         self._spawned = [s for s in self._spawned if not s.ready()]
 
-    def _register_controllers(self, controllers: List[Controller]) -> None:
+    def _register_controllers(self, controllers: list[Controller]) -> None:
         for controller in controllers:
             assert controller.mri not in self._controllers, (
                 f"Controller already exists for {controller.mri}"
@@ -238,7 +239,7 @@ class Process(Loggable):
             controller.setup(self)
 
     async def add_controllers_async(
-        self, controllers: List[Controller], timeout: float = None
+        self, controllers: list[Controller], timeout: float = None
     ) -> None:
         """Add many controllers to be hosted by this process, starting them if
         we are already running
@@ -255,7 +256,7 @@ class Process(Loggable):
                 await self._publish_controllers(timeout)
 
     def add_controllers(
-        self, controllers: List[Controller], timeout: float = None
+        self, controllers: list[Controller], timeout: float = None
     ) -> None:
         """Register many controllers before the process starts
 
@@ -276,15 +277,15 @@ class Process(Loggable):
         self.add_controllers([controller], timeout=timeout)
 
     @property
-    def mri_list(self) -> List[str]:
+    def mri_list(self) -> list[str]:
         return list(self._controllers)
 
     def get_controller(self, mri: str) -> Controller:
         """Get controller which can make Block views for this mri"""
         try:
             return self._controllers[mri]
-        except KeyError:
-            raise ValueError(f"No controller registered for mri '{mri}'")
+        except KeyError as e:
+            raise ValueError(f"No controller registered for mri '{mri}'") from e
 
     def block_view(self, mri: str) -> Any:
         """Get a Block view from a Controller with given mri"""

@@ -1,11 +1,12 @@
 import copy
 import sys
 
-from ._typing import TYPE_CHECKING, Union, MappingOrigin
 from ._array import Array, to_array
+from ._typing import TYPE_CHECKING, MappingOrigin, Union
 
 if TYPE_CHECKING:  # pragma: no cover
-    from typing import Dict, Set, Optional, Any, Sequence, Union, Type
+    from collections.abc import Sequence
+    from typing import Any, Dict, Optional, Set, Type, Union
 
 # Signifies that this is a return value and the default value should be inferred
 RETURN_DEFAULT = object()
@@ -23,15 +24,15 @@ def anno_with_default(src, default=RETURN_DEFAULT):
         # the anno is actually the first parameter to Optional or Union
         anno = src.__args__[0]  # type: Anno
         assert isinstance(anno, Anno), (
-            "Expected Optional[Anno], Union[Anno,...] or Anno, got %r" % (anno,)
+            f"Expected Optional[Anno], Union[Anno,...] or Anno, got {anno!r}"
         )
         # if this is a return type and optional, default should be None
         if optional:
             if default is RETURN_DEFAULT:
                 default = None
             assert default is None, (
-                "Expected Optional[Anno] with default=None, got %r with "
-                "default=%r" % (anno, default)
+                f"Expected Optional[Anno] with default=None, got {anno!r} with "
+                f"default={default!r}"
             )
     else:
         anno = src
@@ -62,14 +63,12 @@ def make_repr(inst, attrs):
         inst: The class instance we are generating a repr of
         attrs: The attributes that should appear in the repr
     """
-    arg_str = ", ".join(
-        "%s=%r" % (a, getattr(inst, a)) for a in attrs if hasattr(inst, a)
-    )
-    repr_str = "%s(%s)" % (inst.__class__.__name__, arg_str)
+    arg_str = ", ".join(f"{a}={getattr(inst, a)!r}" for a in attrs if hasattr(inst, a))
+    repr_str = f"{inst.__class__.__name__}({arg_str})"
     return repr_str
 
 
-class Anno(object):
+class Anno:
     def __init__(self, description, name=None, default=NO_DEFAULT):
         # type: (str, str, Any) -> None
         """Annotate a type with run-time accessible metadata
@@ -118,8 +117,8 @@ class Anno(object):
 
     def _get_defined_name(self, locals_d):
         defined = set(locals_d) - self._names_on_enter
-        assert len(defined) == 1, "Expected a single type to be defined, got %s" % list(
-            defined
+        assert len(defined) == 1, (
+            f"Expected a single type to be defined, got {list(defined)}"
         )
         self.name = defined.pop()
 
@@ -141,13 +140,13 @@ class Anno(object):
             self.set_typ(typ.__args__[0], is_array=True)
         elif origin == MappingOrigin:
             # This is a dict
-            assert len(typ.__args__) == 2, "Expected Mapping[ktyp, vtyp], got %r" % typ
+            assert len(typ.__args__) == 2, f"Expected Mapping[ktyp, vtyp], got {typ!r}"
             self.set_typ(typ.__args__, is_mapping=True)
         elif origin is None:
             # This is a bare type
             self.set_typ(typ)
         else:
-            raise ValueError("Cannot annotate a type with origin %r" % origin)
+            raise ValueError(f"Cannot annotate a type with origin {origin!r}")
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         if exc_type is not None:

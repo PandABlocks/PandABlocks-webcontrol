@@ -83,3 +83,27 @@ lint.select = [
     "I",  # isort - https://docs.astral.sh/ruff/rules/#isort-i
     "UP", # pyupgrade - https://docs.astral.sh/ruff/rules/#pyupgrade-up
 ]
+lint.ignore = [
+    # PEP 604 unions, `X | None` and `X | Y`. Annotations here are frequently
+    # Anno *instances* rather than types - the `with Anno("..."): AFoo = str`
+    # idiom - and an Anno has no __or__, so the rewrite raises TypeError while
+    # the class body is being executed. UP045 applied to models.py is enough
+    # to stop malcolm.core importing at all
+    "UP007",
+    "UP045",
+]
+
+[tool.ruff.lint.per-file-ignores]
+# An __init__.py here exists to re-export, and submodule_all() builds __all__
+# from the module namespace at import time. Ruff sees only unused imports
+# F811: the same annotype is re-exported from several submodules
+"**/__init__.py" = ["F401", "F811"]
+# The vendored annotypes re-exports typing names for its callers to import
+# from (see _typing.py, and the Mapping/Any/Union that modules take from
+# malcolm.annotypes), and resolves string annotations against module globals
+# at runtime. Its "unused" typing imports are load-bearing
+# F811: @overload stubs, which ruff misses because overload comes from the
+# package's own _typing shim rather than from typing directly
+# UP035: its annotations are py2-style `# type:` comments, which name
+# typing.Dict and friends; swapping the imports for builtins breaks them
+"malcolm/annotypes/*.py" = ["F401", "F811", "UP035"]

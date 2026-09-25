@@ -1,6 +1,7 @@
 import asyncio
+from collections.abc import Callable, Iterable
 from contextlib import asynccontextmanager
-from typing import TYPE_CHECKING, Any, Callable, Dict, Iterable, List, Tuple, Union
+from typing import TYPE_CHECKING, Any, Union
 
 from malcolm.annotypes import Anno, stringify_error
 from malcolm.compat import OrderedDict
@@ -22,7 +23,7 @@ from .timestamp import TimeStamp
 from .views import Block, make_view
 
 Field = Union[AttributeModel, MethodModel]
-CallbackResponses = List[Tuple[Callable[[Response], None], Response]]
+CallbackResponses = list[tuple[Callable[[Response], None], Response]]
 if TYPE_CHECKING:
     from .process import Process
 
@@ -44,7 +45,7 @@ class Controller(Hookable):
         self.set_logger(mri=mri)
         self.name = mri
         self.mri = mri
-        self.parts: Dict[str, Part] = OrderedDict()
+        self.parts: dict[str, Part] = OrderedDict()
         # Serialises whole requests against each other, so that two clients
         # putting to the same Attribute can't interleave
         self._lock = asyncio.Lock()
@@ -54,7 +55,7 @@ class Controller(Hookable):
         self._block.meta.set_tags([version_tag()])
         self._notifier = Notifier(mri, self._block)
         self._block.set_notifier_path(self._notifier, [mri])
-        self._write_functions: Dict[str, Callable[..., Any]] = {}
+        self._write_functions: dict[str, Callable[..., Any]] = {}
         self.field_registry = FieldRegistry()
         self.info_registry = InfoRegistry()
 
@@ -166,7 +167,7 @@ class Controller(Hookable):
         for i, endpoint in enumerate(request.path[1:]):
             try:
                 data = data[endpoint]
-            except KeyError:
+            except KeyError as e:
                 if hasattr(data, "typeid"):
                     typ = data.typeid
                 else:
@@ -174,7 +175,7 @@ class Controller(Hookable):
                 path = ".".join(request.path[: i + 1])
                 raise UnexpectedError(
                     f"Object '{path}' of type {typ!r} has no attribute '{endpoint}'"
-                )
+                ) from e
         # Important to freeze now with the lock so we get a consistent set
         serialized = freeze(data)
         ret = [request.return_response(serialized)]
@@ -193,8 +194,10 @@ class Controller(Hookable):
 
         try:
             attribute = self._block[attribute_name]
-        except KeyError:
-            raise FieldError(f"Block '{self.mri}' has no Attribute '{attribute_name}'")
+        except KeyError as e:
+            raise FieldError(
+                f"Block '{self.mri}' has no Attribute '{attribute_name}'"
+            ) from e
 
         assert isinstance(attribute, AttributeModel), (
             f"Cannot Put to {attribute.path} which is a {type(attribute)}"
@@ -250,8 +253,8 @@ class Controller(Hookable):
 
         try:
             method = self._block[method_name]
-        except KeyError:
-            raise FieldError(f"Block '{self.mri}' has no Method '{method_name}'")
+        except KeyError as e:
+            raise FieldError(f"Block '{self.mri}' has no Method '{method_name}'") from e
 
         assert isinstance(method, MethodModel), (
             f"Cannot Post to {method.path} which is a {type(method)}"
@@ -287,10 +290,10 @@ class Controller(Hookable):
         ret = [request.return_response(result)]
         return ret
 
-    async def run_hooks(self, hooks: Iterable[Hook]) -> Dict[str, List[Info]]:
+    async def run_hooks(self, hooks: Iterable[Hook]) -> dict[str, list[Info]]:
         return await self.wait_hooks(*self.start_hooks(hooks))
 
-    def start_hooks(self, hooks: Iterable[Hook]) -> Tuple["asyncio.Queue", List[Hook]]:
+    def start_hooks(self, hooks: Iterable[Hook]) -> tuple["asyncio.Queue", list[Hook]]:
         # Hooks might be a generator, so convert to a list
         hooks = list(hooks)
         if not hooks:
@@ -308,8 +311,8 @@ class Controller(Hookable):
         return hook_queue, hook_spawned
 
     async def wait_hooks(
-        self, hook_queue: "asyncio.Queue", hook_spawned: List[Hook]
-    ) -> Dict[str, List[Info]]:
+        self, hook_queue: "asyncio.Queue", hook_spawned: list[Hook]
+    ) -> dict[str, list[Info]]:
         if hook_spawned:
             return_dict = await wait_hooks(
                 self.log, hook_queue, hook_spawned, DEFAULT_TIMEOUT

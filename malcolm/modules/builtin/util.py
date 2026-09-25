@@ -1,5 +1,6 @@
-from typing import Iterable, Sequence, Union
-from xml.etree import cElementTree as ET
+from collections.abc import Iterable, Sequence
+from typing import Union
+from xml.etree import ElementTree as ET
 
 from malcolm.annotypes import Anno, Array
 from malcolm.compat import et_to_string

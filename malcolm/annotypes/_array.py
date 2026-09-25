@@ -1,10 +1,10 @@
 import array
 
 from ._compat import str_
-from ._typing import TYPE_CHECKING, overload, Sequence, TypeVar, Generic
+from ._typing import TYPE_CHECKING, Generic, Sequence, TypeVar, overload
 
 if TYPE_CHECKING:  # pragma: no cover
-    from typing import Union, Type
+    from typing import Type, Union
 
 T = TypeVar("T")
 
@@ -12,7 +12,7 @@ T = TypeVar("T")
 def array_type(cls):
     # type: (Type[Array[T]]) -> Type[T]
     type_args = getattr(cls, "__args__", ())
-    assert type_args, "Expected Array[<typ>](...), got Array[%s](...)" % (
+    assert type_args, "Expected Array[<typ>](...), got Array[{}](...)".format(
         ", ".join(repr(x) for x in type_args)
     )
     return type_args[0]
@@ -44,8 +44,8 @@ class Array(Sequence[T], Generic[T]):
         # TODO: add type checking for array.array
         if hasattr(seq, "dtype"):
             assert self.typ == seq.dtype, (
-                "Expected numpy array with dtype %s, got %r with dtype %s"
-                % (self.typ, seq, seq.dtype)
+                f"Expected numpy array with dtype {self.typ}, "
+                f"got {seq!r} with dtype {seq.dtype}"
             )
 
     @overload
@@ -75,7 +75,7 @@ class Array(Sequence[T], Generic[T]):
         return not_equal
 
     def __repr__(self):
-        return "Array(%r)" % (self.seq,)
+        return f"Array({self.seq!r})"
 
 
 def to_array(typ, seq=None):
@@ -85,10 +85,7 @@ def to_array(typ, seq=None):
         # It's a numpy array or stdlib array
         return typ(seq, typ=expected)
     elif isinstance(seq, Array):
-        assert expected == seq.typ, "Expected Array[%s], got Array[%s]" % (
-            expected,
-            seq.typ,
-        )
+        assert expected == seq.typ, f"Expected Array[{expected}], got Array[{seq.typ}]"
         return seq
     elif seq is None:
         return typ(typ=expected)

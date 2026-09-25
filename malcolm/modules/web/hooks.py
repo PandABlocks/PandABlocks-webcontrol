@@ -1,4 +1,5 @@
-from typing import Sequence, Union
+from collections.abc import Sequence
+from typing import Union
 
 from malcolm.annotypes import Anno, Array
 from malcolm.core import Hook

@@ -11,7 +11,7 @@ class MyInfo(Info):
 
 class TestInit(unittest.TestCase):
     def setUp(self):
-        self.d1 = dict(parta=[], partb=None)
+        self.d1 = {"parta": [], "partb": None}
         self.d2 = OrderedDict()
         self.d2["parta"] = []
         self.d2["partb"] = [MyInfo("v1")]

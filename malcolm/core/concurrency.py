@@ -6,7 +6,8 @@ import inspect
 import logging
 import queue as queue_module
 import threading
-from typing import Any, Callable, Dict, Optional, Tuple, TypeVar, Union
+from collections.abc import Callable
+from typing import Any, Optional, TypeVar, Union
 
 from .errors import TimeoutError
 
@@ -193,7 +194,7 @@ class Spawned:
     # concurrent Future when it was handed over from another thread
     _future: Union["asyncio.Future", concurrent.futures.Future]
 
-    def __init__(self, func: Callable[..., Any], args: Tuple, kwargs: Dict) -> None:
+    def __init__(self, func: Callable[..., Any], args: tuple, kwargs: dict) -> None:
         self._result: Union[Any, Exception] = self.NO_RESULT
         self._function = func
         self._args = args
@@ -216,7 +217,7 @@ class Spawned:
         # A View's method is a plain object with an async __call__, which
         # iscoroutinefunction doesn't see on its own
         return inspect.iscoroutinefunction(func) or inspect.iscoroutinefunction(
-            getattr(func, "__call__", None)
+            getattr(func, "__call__", None)  # noqa: B004 - we want __call__ itself
         )
 
     async def catching_function(self) -> None:
@@ -268,8 +269,10 @@ class Spawned:
             waitable = asyncio.shield(asyncio.wrap_future(self._future))
         try:
             await asyncio.wait_for(waitable, timeout)
-        except (asyncio.TimeoutError, TimeoutError):
-            raise TimeoutError(f"Spawned function didn't finish within {timeout}s")
+        except (asyncio.TimeoutError, TimeoutError) as e:
+            raise TimeoutError(
+                f"Spawned function didn't finish within {timeout}s"
+            ) from e
         except asyncio.CancelledError:
             pass
 
@@ -294,13 +297,13 @@ class Queue:
     """Threadsafe queue with gets in calling thread"""
 
     def __init__(self):
-        self._event_queue: "queue_module.Queue" = queue_module.Queue()
+        self._event_queue: queue_module.Queue = queue_module.Queue()
 
     def get(self, timeout=None):
         try:
             return self._event_queue.get(timeout=timeout)
-        except queue_module.Empty:
-            raise TimeoutError("Queue().get() timed out")
+        except queue_module.Empty as e:
+            raise TimeoutError("Queue().get() timed out") from e
 
     def put(self, value):
         self._event_queue.put(value)

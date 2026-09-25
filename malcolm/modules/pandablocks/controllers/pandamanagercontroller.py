@@ -2,7 +2,8 @@ import asyncio
 import json
 import re
 import time
-from typing import Any, Dict, Sequence, Set, Tuple
+from collections.abc import Sequence
+from typing import Any
 
 from malcolm.annotypes import Anno
 from malcolm.core import Display, NumberMeta, TimeStamp, Widget
@@ -58,21 +59,21 @@ class PandAManagerController(builtin.controllers.ManagerController):
         self._doc_url_base = doc_url_base
         # All the bit_out fields and their values
         # {block_name.field_name: value}
-        self._bit_outs: Dict[str, bool] = {}
+        self._bit_outs: dict[str, bool] = {}
         # The bit_out field values that need toggling since the last handle
         # {block_name.field_name: value}
-        self._bit_out_changes: Dict[str, bool] = {}
+        self._bit_out_changes: dict[str, bool] = {}
         # The fields that busses needs to know about
         # {block_name.field_name[.subfield_name]}
-        self._bus_fields: Set[str] = set()
+        self._bus_fields: set[str] = set()
         # The child controllers we have created
-        self._child_controllers: Dict[str, PandABlockController] = {}
+        self._child_controllers: dict[str, PandABlockController] = {}
         # The PandABlock client that does the comms
         self._client = PandABlocksClient(hostname, port)
         # Set when the PandA hands us a layout that we need to apply
         self._layout_needs_set = False
         # The json layout stored in PandA
-        self._json_layout: Dict[str, Dict[str, float]] = {}
+        self._json_layout: dict[str, dict[str, float]] = {}
         # Filled in on reset
         self._stopping = None
         self._poll_spawned = None
@@ -168,7 +169,7 @@ class PandAManagerController(builtin.controllers.ManagerController):
                 block_names.append(block_rootname)
             else:
                 for i in range(block_data.number):
-                    block_names.append("%s%d" % (block_rootname, i + 1))
+                    block_names.append(f"{block_rootname}{i + 1}")
             for block_name in block_names:
                 # Look through the BlockData for things we are interested in
                 for field_name, field_data in block_data.fields.items():
@@ -209,7 +210,7 @@ class PandAManagerController(builtin.controllers.ManagerController):
                 self._bus_fields.add(f"{pos_name}.{suffix}")
         # Handle the bit_outs, keeping a list for toggling and adding them
         # to the set of things that the busses need
-        self._bit_outs = {k: 0 for k in self.busses.bits.value.name}
+        self._bit_outs = dict.fromkeys(self.busses.bits.value.name, 0)
         self._bit_out_changes = {}
         self._bus_fields |= set(self._bit_outs)
         for capture_field in pcap_bit_fields:
@@ -302,10 +303,10 @@ class PandAManagerController(builtin.controllers.ManagerController):
                 return
         block_changes.setdefault(block_name, {})[field_name] = v
 
-    async def handle_changes(self, changes: Sequence[Tuple[str, str]]) -> None:
+    async def handle_changes(self, changes: Sequence[tuple[str, str]]) -> None:
         ts = TimeStamp()
         # {block_name: {field_name: field_value}}
-        block_changes: Dict[str, Any] = {}
+        block_changes: dict[str, Any] = {}
         # {full_field: field_value}
         bus_changes = {}
 
@@ -350,7 +351,7 @@ class PandAManagerController(builtin.controllers.ManagerController):
         old_json_layout = self._json_layout.copy()
         for name, _, x, y, visible in self.layout.value.rows():
             if visible:
-                self._json_layout[name] = dict(x=x, y=y)
+                self._json_layout[name] = {"x": x, "y": y}
             else:
                 self._json_layout.pop(name, "")
         if self._json_layout != old_json_layout:

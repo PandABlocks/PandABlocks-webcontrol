@@ -106,7 +106,8 @@ class Method(View):
 
     def _add_positional_args(self, args, kwargs):
         # add any positional args into our kwargs dict
-        for name, v in zip(self._data.meta.takes.elements, args):
+        # Fewer args than elements is the normal case, so not strict
+        for name, v in zip(self._data.meta.takes.elements, args, strict=False):
             assert name not in kwargs, (
                 f"{name} specified as positional and keyword args"
             )

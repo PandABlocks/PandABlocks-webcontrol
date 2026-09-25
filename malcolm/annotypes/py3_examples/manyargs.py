@@ -1,4 +1,4 @@
-from malcolm.annotypes import Anno, WithCallTypes, Array, to_array, Union, Sequence
+from malcolm.annotypes import Anno, Array, Sequence, Union, WithCallTypes, to_array
 
 with Anno("The scannable axes, e.g. ['x', 'y'] or 'x'"):
     Axes = Array[str]
@@ -33,6 +33,6 @@ class ManyArgs(WithCallTypes):
         self.units = Units(units)
         self.alternate = alternate
         assert len(self.axes) == len(self.units) == len(self.start) == len(self.stop), (
-            "axes %s, units %s, start %s, stop %s are not the same length"
-            % (self.axes, self.units, self.start, self.stop)
+            f"axes {self.axes}, units {self.units}, start {self.start}, "
+            f"stop {self.stop} are not the same length"
         )

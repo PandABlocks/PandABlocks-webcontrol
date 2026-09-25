@@ -1,13 +1,7 @@
+from collections.abc import Mapping, Sequence
 from typing import (
     Any,
-    Dict,
-    List,
-    Mapping,
     Optional,
-    Sequence,
-    Set,
-    Tuple,
-    Type,
     TypeVar,
     Union,
 )
@@ -81,7 +75,7 @@ class ChildPart(Part):
     #: A set containing all the Attribute names of our child Block that we will
     #: put to, so shouldn't be saved. Override it in subclasses; the `no_save`
     #: decorator that used to set it has gone
-    no_save_attribute_names: Set[str] = set()
+    no_save_attribute_names: set[str] = set()
 
     def _unmanaged_attr(self, attr_name):
         return not self.no_save_attribute_names or (
@@ -121,17 +115,17 @@ class ChildPart(Part):
         self.y: float = 0.0
         self.visible: Optional[bool] = initial_visibility
         # {part_name: visible} saying whether part_name is visible
-        self.part_visibility: Dict[str, bool] = {}
+        self.part_visibility: dict[str, bool] = {}
         # {attr_name: attr_value} of last saved/loaded structure
         self.saved_structure: Mapping[str, Any] = {}
         # {attr_name: modified_message} of current values
-        self.modified_messages: Dict[str, str] = {}
+        self.modified_messages: dict[str, str] = {}
         # The controller hosting our child
         self.child_controller: Optional[Controller] = None
         # {id: Subscribe} for subscriptions to config tagged fields
-        self.config_subscriptions: Dict[int, Subscribe] = {}
+        self.config_subscriptions: dict[int, Subscribe] = {}
         # {attr_name: PortInfo}
-        self.port_infos: Dict[str, PortInfo] = {}
+        self.port_infos: dict[str, PortInfo] = {}
 
     def setup(self, registrar: PartRegistrar) -> None:
         super().setup(registrar)
@@ -213,7 +207,7 @@ class ChildPart(Part):
         self, context: AContext, structure: AStructure, init: AInit = False
     ) -> None:
         child = context.block_view(self.mri)
-        iterations: Dict[int, Dict[str, Tuple[Attribute, Any]]] = {}
+        iterations: dict[int, dict[str, tuple[Attribute, Any]]] = {}
         for k, v in structure.items():
             if init and k == "design":
                 # At init pop out the design so it doesn't get restored here
@@ -234,7 +228,7 @@ class ChildPart(Part):
         # Do this first so that any callbacks that happen in the put know
         # not to notify controller
         self.saved_structure = structure
-        for name, params in sorted(iterations.items()):
+        for _name, params in sorted(iterations.items()):
             # Call each iteration as a separate operation, only putting the
             # ones that need to change
             to_set = {}
@@ -293,7 +287,7 @@ class ChildPart(Part):
                 self.port_infos.pop(attr_name, None)
 
         # Add a subscription to any new field
-        existing_fields = set(s.path[-2] for s in self.config_subscriptions.values())
+        existing_fields = {s.path[-2] for s in self.config_subscriptions.values()}
         for field in set(new_fields) - existing_fields:
             attr = getattr(child, field)
             if isinstance(attr, Attribute):
@@ -353,11 +347,9 @@ class ChildPart(Part):
         if original_value == new_value:
             message = None
         else:
-            message = "%s.%s.value = %s not %s" % (
-                self.name,
-                name,
-                repr(new_value),
-                repr(original_value),
+            message = (
+                f"{self.name}.{name}.value = "
+                f"{repr(new_value)} not {repr(original_value)}"
             )
         last_message = self.modified_messages.get(name, None)
         if message != last_message:
@@ -369,14 +361,14 @@ class ChildPart(Part):
             info = PartModifiedInfo(self.modified_messages.copy())
             self.registrar.report(info)
 
-    def _get_flowgraph_ports(self, ports: APortMap, typ: Type[TP]) -> Dict[str, TP]:
+    def _get_flowgraph_ports(self, ports: APortMap, typ: type[TP]) -> dict[str, TP]:
         ret = {}
         for port_info in ports.get(self.name, []):
             if isinstance(port_info, typ):
                 ret[port_info.name] = port_info
         return ret
 
-    def _source_port_lookup(self, info_list: List[PortInfo]) -> Dict[str, Port]:
+    def _source_port_lookup(self, info_list: list[PortInfo]) -> dict[str, Port]:
         source_port_lookup = {}
         for info in info_list:
             if isinstance(info, SourcePortInfo):
@@ -396,7 +388,7 @@ class ChildPart(Part):
             connected_to (str): Restrict severing to this part
         """
         # Find the Source Ports to connect to
-        source_port_lookup: Union[Dict[str, Port], bool]
+        source_port_lookup: Union[dict[str, Port], bool]
         if connected_to:
             # Calculate a lookup of the Source Port "name" to type
             source_port_lookup = self._source_port_lookup(ports.get(connected_to, []))
@@ -429,10 +421,10 @@ class ChildPart(Part):
             ports: {part_name: [PortInfo]} from other ports
         """
         # Calculate a lookup of Source Port connected_value to part_name
-        source_port_lookup: Dict = {}
-        port_infos: List
+        source_port_lookup: dict = {}
+        port_infos: list
         port_info: PortInfo
-        filtered_source_parts: Dict[str, List[SourcePortInfo]] = (
+        filtered_source_parts: dict[str, list[SourcePortInfo]] = (
             SourcePortInfo.filter_parts(ports)
         )
         for part_name, port_infos in filtered_source_parts.items():
@@ -444,7 +436,7 @@ class ChildPart(Part):
 
         # Look through all the Sink Ports, and set both ends of the
         # connection to visible if they aren't specified
-        filtered_sink_parts: Dict[str, List[SinkPortInfo]] = SinkPortInfo.filter_parts(
+        filtered_sink_parts: dict[str, list[SinkPortInfo]] = SinkPortInfo.filter_parts(
             ports
         )
         for part_name, port_infos in filtered_sink_parts.items():

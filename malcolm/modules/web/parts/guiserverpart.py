@@ -19,7 +19,7 @@ with Anno("Path to www directory to get files from"):
 class IndexHandler(StaticFileHandler):
     @classmethod
     def get_absolute_path(cls, root, path):
-        return super(IndexHandler, cls).get_absolute_path(root, "index.html")
+        return super().get_absolute_path(root, "index.html")
 
 
 class GuiServerPart(Part):

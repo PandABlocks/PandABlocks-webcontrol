@@ -67,7 +67,7 @@ class MyPart(Part):
         if self.exception:
             raise self.exception
         self.context = context
-        return dict(foo="bar" + self.name)
+        return {"foo": "bar" + self.name}
 
 
 class TestStatefulController(unittest.TestCase):
@@ -146,8 +146,8 @@ class TestStatefulController(unittest.TestCase):
             SaveHook(p, c) for p, c in part_contexts.items()
         )
         assert set(result) == {"testpart", "testpart2"}
-        assert result["testpart"] == dict(foo="bartestpart")
-        assert result["testpart2"] == dict(foo="bartestpart2")
+        assert result["testpart"] == {"foo": "bartestpart"}
+        assert result["testpart2"] == {"foo": "bartestpart2"}
         # The part.context is a weakref, so compare on one of its strong
         # methods instead
         assert self.part.context.sleep == part_contexts[self.part].sleep

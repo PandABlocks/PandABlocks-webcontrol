@@ -4,7 +4,7 @@ import logging
 import os
 import socket
 import struct
-from typing import Dict, Optional
+from typing import Optional
 
 from tornado.websocket import WebSocketError, WebSocketHandler
 
@@ -71,7 +71,7 @@ class MalcWebSocketHandler(WebSocketHandler):
     MAX_QUEUED_RESPONSES = 1000
 
     _registrar: PartRegistrar
-    _id_to_mri: Dict[int, str]
+    _id_to_mri: dict[int, str]
     _responses: "asyncio.Queue"
     _writer: Optional["asyncio.Future"] = None
     _validators = None
@@ -113,8 +113,8 @@ class MalcWebSocketHandler(WebSocketHandler):
             d = json_decode(message)
             try:
                 msg_id = d["id"]
-            except KeyError:
-                raise FieldError("id field not present in JSON message")
+            except KeyError as e:
+                raise FieldError("id field not present in JSON message") from e
             request = deserialize_object(d, Request)
             request.set_callback(self.on_response)
             if isinstance(request, Subscribe):

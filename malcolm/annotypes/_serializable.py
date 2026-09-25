@@ -3,8 +3,8 @@ import json
 
 from ._array import Array
 from ._calltypes import WithCallTypes
-from ._typing import TypeVar, TYPE_CHECKING
 from ._frozen_dict import FrozenOrderedDict
+from ._typing import TYPE_CHECKING, TypeVar
 
 try:
     from enum import Enum
@@ -14,12 +14,12 @@ else:
     has_enum = True
 
 if TYPE_CHECKING:
-    from typing import Type, Dict, Any, Union, List, Tuple
+    from typing import Any, Dict, List, Tuple, Type, Union
 
 
 def stringify_error(e):
     # type: (Exception) -> str
-    return "%s: %s" % (type(e).__name__, str(e))
+    return f"{type(e).__name__}: {str(e)}"
 
 
 def json_encode(o, indent=None):
@@ -30,10 +30,10 @@ def json_encode(o, indent=None):
 def json_decode(s, dict_cls=FrozenOrderedDict):
     try:
         o = json.loads(s, object_pairs_hook=dict_cls)
-        assert isinstance(o, dict_cls), "didn't return %s" % dict_cls.__name__
+        assert isinstance(o, dict_cls), f"didn't return {dict_cls.__name__}"
         return o
     except Exception as e:
-        raise ValueError("Error decoding JSON object (%s)" % str(e))
+        raise ValueError(f"Error decoding JSON object ({str(e)})") from e
 
 
 def serialize_object(o, dict_cls=FrozenOrderedDict):
@@ -95,10 +95,7 @@ def deserialize_object(ob, type_check=None):
         subclass = Serializable.lookup_subclass(ob)
         ob = subclass.from_dict(ob)
     if type_check is not None:
-        assert isinstance(ob, type_check), "Expected %s, got %r" % (
-            type_check,
-            type(ob),
-        )
+        assert isinstance(ob, type_check), f"Expected {type_check}, got {type(ob)!r}"
     return ob
 
 
@@ -118,9 +115,9 @@ class Serializable(WithCallTypes):
         if item in self.call_types:
             try:
                 return getattr(self, item)
-            except (AttributeError, TypeError):
-                raise KeyError(item)
-        elif item is "typeid" and self.typeid is not None:
+            except (AttributeError, TypeError) as e:
+                raise KeyError(item) from e
+        elif item == "typeid" and self.typeid is not None:
             return self.typeid
         else:
             raise KeyError(item)
@@ -158,17 +155,15 @@ class Serializable(WithCallTypes):
         filtered = {}
         for k, v in d.items():
             if k == "typeid":
-                assert v == cls.typeid, "Dict has typeid %s but %s has typeid %s" % (
-                    v,
-                    cls,
-                    cls.typeid,
+                assert v == cls.typeid, (
+                    f"Dict has typeid {v} but {cls} has typeid {cls.typeid}"
                 )
             elif k not in ignore:
                 filtered[k] = v
         try:
             inst = cls(**filtered)
         except TypeError as e:
-            raise TypeError("%s raised error: %s" % (cls.typeid, str(e)))
+            raise TypeError(f"{cls.typeid} raised error: {str(e)}") from e
         return inst
 
     @classmethod
@@ -201,11 +196,11 @@ class Serializable(WithCallTypes):
         """
         try:
             typeid = d["typeid"]
-        except KeyError:
-            raise TypeError("typeid not present in keys %s" % list(d))
+        except KeyError as e:
+            raise TypeError(f"typeid not present in keys {list(d)}") from e
 
         subclass = cls._subcls_lookup.get(typeid, None)
         if not subclass:
-            raise TypeError("'%s' not a valid typeid" % typeid)
+            raise TypeError(f"'{typeid}' not a valid typeid")
         else:
             return subclass

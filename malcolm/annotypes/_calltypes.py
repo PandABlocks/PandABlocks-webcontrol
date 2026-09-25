@@ -3,12 +3,13 @@ import re
 import tokenize
 from collections import OrderedDict
 
-from ._anno import Anno, NO_DEFAULT, make_repr, anno_with_default
-from ._compat import add_metaclass, getargspec, func_globals
-from ._typing import TYPE_CHECKING, GenericMeta, Any
+from ._anno import NO_DEFAULT, Anno, anno_with_default, make_repr
+from ._compat import add_metaclass, func_globals, getargspec
+from ._typing import TYPE_CHECKING, Any, GenericMeta
 
 if TYPE_CHECKING:  # pragma: no cover
-    from typing import Dict, Callable, Tuple, List
+    from collections.abc import Callable
+    from typing import Dict, List, Tuple
 
 type_re = re.compile("^# type: ([^-]*)( -> (.*))?$")
 
@@ -23,7 +24,7 @@ class CallTypesMeta(GenericMeta):
         else:
             cls.call_types = OrderedDict()
         cls.return_type = Anno("Class instance", name="Instance").set_typ(cls)
-        super(CallTypesMeta, cls).__init__(name, bases, dct, **kwargs)
+        super().__init__(name, bases, dct, **kwargs)
 
     def matches_type(self, cls):
         if not inspect.isclass(cls):
@@ -33,7 +34,7 @@ class CallTypesMeta(GenericMeta):
 
 
 @add_metaclass(CallTypesMeta)
-class WithCallTypes(object):
+class WithCallTypes:
     call_types = None  # type: Dict[str, Anno]
     return_type = None  # type: Anno
 
@@ -61,7 +62,7 @@ def make_call_types(f, globals_d):
     defaults = {}  # type: Dict[str, Any]
     if arg_spec.defaults:
         default_args = args[-len(arg_spec.defaults) :]
-        for a, default in zip(default_args, arg_spec.defaults):
+        for a, default in zip(default_args, arg_spec.defaults, strict=True):
             defaults[a] = default
 
     if not getattr(f, "__annotations__", None):
@@ -74,7 +75,7 @@ def make_call_types(f, globals_d):
     for a in args:
         anno = anno_with_default(annotations[a], defaults.get(a, NO_DEFAULT))
         assert isinstance(anno, Anno), (
-            "Argument %r has type %r which is not an Anno" % (a, anno)
+            f"Argument {a!r} has type {anno!r} which is not an Anno"
         )
         call_types[a] = anno
 
@@ -82,7 +83,7 @@ def make_call_types(f, globals_d):
     if return_type is Any:
         return_type = Anno("Any return value", name="return").set_typ(Any)
     assert return_type is None or isinstance(return_type, Anno), (
-        "Return has type %r which is not an Anno" % (return_type,)
+        f"Return has type {return_type!r} which is not an Anno"
     )
 
     return call_types, return_type
@@ -99,10 +100,10 @@ class EchoStr(str):
                 else:
                     str_items.append(str(x))
             item = ", ".join(str_items)
-        return "%s[%s]" % (self, item)
+        return f"{self}[{item}]"
 
     def __getattr__(self, item):
-        return "%s.%s" % (self, item)
+        return f"{self}.{item}"
 
 
 class EchoDict(dict):
@@ -156,7 +157,7 @@ def make_annotations(f, globals_d=None):
                     try:
                         ob = eval(expr, globals_d, locals_d)
                     except Exception as e:
-                        raise ValueError("Error evaluating %r: %s" % (expr, e))
+                        raise ValueError(f"Error evaluating {expr!r}: {e}") from e
                     if isinstance(ob, tuple):
                         # We got more than one argument
                         types += list(ob)
@@ -168,15 +169,15 @@ def make_annotations(f, globals_d=None):
                     try:
                         ob = eval(parts[2], globals_d, locals_d)
                     except Exception as e:
-                        raise ValueError("Error evaluating %r: %s" % (parts[2], e))
+                        raise ValueError(f"Error evaluating {parts[2]!r}: {e}") from e
                     if args and args[0] in ["self", "cls"]:
                         # Allow the first argument to be inferred
                         if len(args) == len(types) + 1:
                             args = args[1:]
                     assert len(args) == len(types), (
-                        "Args %r Types %r length mismatch" % (args, types)
+                        f"Args {args!r} Types {types!r} length mismatch"
                     )
-                    ret = dict(zip(args, types))
+                    ret = dict(zip(args, types, strict=True))
                     ret["return"] = ob
                     return ret
     if found:

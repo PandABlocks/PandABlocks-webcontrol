@@ -1,6 +1,5 @@
-import unittest
-
 import asyncio
+import unittest
 
 from malcolm.core import Process, Put, Subscribe
 from malcolm.modules.builtin.controllers import BasicController

@@ -1,4 +1,4 @@
-from xml.etree import cElementTree as ET
+from xml.etree import ElementTree as ET
 
 try:
     # ruamel exists, use this OrderedDict as it is faster
