@@ -1,11 +1,9 @@
+import asyncio
 import shutil
 import tempfile
 import unittest
 from collections import OrderedDict
-
-from mock import ANY, patch
-
-import asyncio
+from unittest.mock import ANY, patch
 
 from malcolm.core import AlarmSeverity, Process, Subscribe
 from malcolm.modules.pandablocks.controllers import PandAManagerController

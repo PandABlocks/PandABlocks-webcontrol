@@ -1,10 +1,9 @@
 import unittest
 from collections import OrderedDict
+from unittest.mock import Mock
 
 import numpy as np
 from annotypes import Serializable
-from mock import Mock
-
 from malcolm.core import (
     Alarm,
     AlarmSeverity,

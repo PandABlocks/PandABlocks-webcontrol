@@ -1,8 +1,7 @@
 import unittest
+from unittest.mock import AsyncMock, Mock
 
 from annotypes import Anno, add_call_types
-from mock import AsyncMock, Mock
-
 from malcolm.core import (
     Attribute,
     BlockModel,

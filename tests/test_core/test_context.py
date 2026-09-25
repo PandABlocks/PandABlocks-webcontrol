@@ -1,9 +1,8 @@
 import time
 import unittest
+from unittest.mock import ANY, MagicMock
 
 import pytest
-from mock import ANY, MagicMock
-
 from malcolm.core import Process
 from malcolm.core.context import Context
 from malcolm.core.errors import (

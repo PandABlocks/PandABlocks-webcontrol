@@ -4,8 +4,7 @@ import shutil
 import tempfile
 import time
 import unittest
-
-from mock import MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 from malcolm.compat import OrderedDict
 from malcolm.core import (

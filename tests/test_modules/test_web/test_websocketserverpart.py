@@ -1,12 +1,12 @@
 import asyncio
 import os
 import unittest
+from unittest.mock import AsyncMock, Mock, patch
 
 from malcolm.annotypes import json_decode
 from malcolm.core import Error, Return, Subscribe, Unsubscribe
 from malcolm.modules.web.parts import WebsocketServerPart
 from malcolm.modules.web.parts.websocketserverpart import MalcWebSocketHandler
-from mock import AsyncMock, Mock, patch
 
 from ...loop import on_loop
 

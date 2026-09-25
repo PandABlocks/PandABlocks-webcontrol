@@ -1,6 +1,5 @@
 import unittest
-
-from mock import patch
+from unittest.mock import patch
 
 from malcolm.core.loggable import Loggable
 

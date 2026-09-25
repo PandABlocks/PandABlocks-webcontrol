@@ -292,7 +292,8 @@ setting `design` runs `LoadHook`. Read-only template designs live in
   belong to the loop they were first used on, so the test would hand work to
   coroutines waiting on a different one and hang. For the same reason, a test on
   the loop must never block on a threading `Queue`: use an `asyncio.Queue` and
-  `await` it, or you stall the loop that has to deliver the response. Mock a
+  `await` it, or you stall the loop that has to deliver the response. Mocks come
+  from the standard library's `unittest.mock`, not the `mock` backport. Mock a
   coroutine with `AsyncMock`, or patch a whole class with `autospec=True`, which
   picks `AsyncMock` for its coroutine methods automatically.
 - **`Context.sleep` is a pump, not a sleep.** A `Context` routes its responses
@@ -325,9 +326,10 @@ Python tests are not run in CI**, so run them locally.
   the abandoned `pytest-black`/`pytest-mypy` plugins. Without them pytest aborts
   with "unrecognized arguments"; override with
   `pytest -o addopts="--tb=native" …`.
-- Runtime deps in `pyproject.toml` are `numpy` + `tornado`, which is now accurate
-  for the package itself; the tests additionally import `mock`, which is only
-  listed under the `dev` extra.
+- Runtime deps in `pyproject.toml` are `numpy` + `tornado`, which is accurate
+  for the package itself. The tests need only `pytest` on top of those: they
+  use `unittest.mock` from the standard library, so there is no `mock`
+  dependency to install.
 - Six test modules (`test_controller`, `test_models`, `test_notifier`,
   `test_table`, `test_views`, `test_statefulcontroller`) do
   `from annotypes import …` — the *top-level* package, not the vendored

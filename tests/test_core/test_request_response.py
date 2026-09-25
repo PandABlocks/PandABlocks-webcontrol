@@ -8,11 +8,11 @@ serialized shapes stay covered without depending on files outside the tests.
 """
 
 import unittest
+from unittest.mock import ANY, MagicMock
 
 from malcolm.compat import OrderedDict
 from malcolm.core.request import Get, Post, Put, Request, Subscribe, Unsubscribe
 from malcolm.core.response import Delta, Error, Response, Return, Update
-from mock import ANY, MagicMock
 
 
 class TestRequest(unittest.TestCase):

@@ -3,8 +3,7 @@ import inspect
 import socket
 import unittest
 from collections import OrderedDict
-
-from mock import call, patch
+from unittest.mock import call, patch
 
 from malcolm.core import Spawned
 from malcolm.modules.pandablocks.pandablocksclient import (

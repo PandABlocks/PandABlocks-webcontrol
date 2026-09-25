@@ -1,8 +1,6 @@
 import unittest
-
-from mock import MagicMock
-
 from typing import List
+from unittest.mock import MagicMock
 
 from malcolm.annotypes import add_call_types
 from malcolm.core import (

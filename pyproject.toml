@@ -36,7 +36,6 @@ dev = [
     "doc8",
     "flake8",
     "isort",
-    "mock",
     "mypy",
     "nose",
     "pylint",
@@ -49,7 +48,6 @@ dev = [
     "sphinx",
     "sphinx-rtd-theme-github-versions",
     "typing",
-    "types-mock",
 ]
 
 [project.scripts]

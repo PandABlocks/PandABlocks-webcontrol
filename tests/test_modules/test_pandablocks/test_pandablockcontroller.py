@@ -1,9 +1,7 @@
+import asyncio
 import unittest
 from collections import OrderedDict
-
-from mock import ANY, AsyncMock, Mock
-
-import asyncio
+from unittest.mock import ANY, AsyncMock, Mock
 
 from malcolm.core import (
     Alarm,
