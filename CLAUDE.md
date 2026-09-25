@@ -321,21 +321,27 @@ Python tests are not run in CI**, so run them locally.
 - Runtime deps in `pyproject.toml` are `numpy` + `tornado`, which is now accurate
   for the package itself; the tests additionally import `mock`, which is only
   listed under the `dev` extra.
-- Seven test modules (`test_controller`, `test_models`, `test_notifier`,
-  `test_request_response`, `test_table`, `test_views`,
-  `test_statefulcontroller`) do `from annotypes import …` — the *top-level*
-  package, not the vendored `malcolm.annotypes`. `annotypes` is not a declared
-  dependency, so unless a real one is installed those seven fail at collection,
-  which aborts the whole run. A shim module doing
-  `sys.modules[__name__] = malcolm.annotypes` is enough to get the suite going.
-- 13 tests fail out of the box, all for pre-existing reasons: 11 in
-  `test_request_response.py` read JSON fixtures from `docs/reference/json/`,
-  which no longer exists; `test_models.py::test_unsigned_validates` expects
-  numpy 1 wrap-around where numpy 2 raises `OverflowError` (so it is 12 failures
-  on numpy 1.x, where that one passes); and
-  `test_pandablockcontroller.py::test_block_fields_pulse` still expects the old
-  help-URL format (`/docs/build/pulse_doc.html`) that commit 5941a9d5 replaced
-  with `/docs/pulse-doc/`.
+- Six test modules (`test_controller`, `test_models`, `test_notifier`,
+  `test_table`, `test_views`, `test_statefulcontroller`) do
+  `from annotypes import …` — the *top-level* package, not the vendored
+  `malcolm.annotypes`. `annotypes` is not a declared dependency, so unless a
+  real one is installed those six fail at collection, which aborts the whole
+  run. A shim module doing `sys.modules[__name__] = malcolm.annotypes` is enough
+  to get the suite going.
+- 2 tests fail out of the box, both for pre-existing reasons:
+  `test_models.py::test_unsigned_validates` expects numpy 1 wrap-around where
+  numpy 2 raises `OverflowError` (so it is 1 failure on numpy 1.x, where that
+  one passes); and `test_pandablockcontroller.py::test_block_fields_pulse`
+  still expects the old help-URL format (`/docs/build/pulse_doc.html`) that
+  commit 5941a9d5 replaced with `/docs/pulse-doc/`.
+- `test_managercontroller.py` tears down with `self.p.stop(timeout=1)`, tight
+  enough that `test_save` fails intermittently on a loaded machine and passes in
+  isolation. Re-run before believing a failure there.
+- `test_request_response.py` asserts the serialized `to_dict()` shapes the
+  browser parses. Those expected dicts were read from `docs/reference/json/`
+  until the docs restructure deleted it; they are now inlined, copied from the
+  same examples in pymalcolm upstream. Keep them inline — there is no fixture
+  directory to go back to.
 - **`.gitignore` line 20 is `parts/`**, a buildout-era pattern that matches
   `malcolm/modules/{builtin,pandablocks,web}/parts/`. The files already in there
   are tracked, so nothing is actually excluded today — but a **new** file in a

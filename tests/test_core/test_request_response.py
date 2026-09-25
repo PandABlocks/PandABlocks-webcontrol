@@ -1,21 +1,18 @@
-import os
-import unittest
+"""Requests and Responses, including the wire format the browser parses.
 
-from annotypes import json_decode
-from mock import ANY, MagicMock
+The expected dicts below used to be read from docs/reference/json/, which the
+docs restructure removed - the tests had been failing on the missing files ever
+since. They are the same examples, taken from pymalcolm upstream
+(DiamondLightSource/pymalcolm, docs/reference/json), inlined so that the
+serialized shapes stay covered without depending on files outside the tests.
+"""
+
+import unittest
 
 from malcolm.compat import OrderedDict
 from malcolm.core.request import Get, Post, Put, Request, Subscribe, Unsubscribe
 from malcolm.core.response import Delta, Error, Response, Return, Update
-
-
-def get_doc_json(fname):
-    malcolm_root = os.path.join(os.path.dirname(__file__), "..", "..")
-    json_root = os.path.join(malcolm_root, "docs", "reference", "json")
-    with open(os.path.join(json_root, fname)) as f:
-        lines = f.readlines()
-    text = "\n".join(lines[1:])
-    return json_decode(text)
+from mock import ANY, MagicMock
 
 
 class TestRequest(unittest.TestCase):
@@ -60,10 +57,18 @@ class TestGet(unittest.TestCase):
 
     def test_setters(self):
         self.o.path = ["BL18I:XSPRESS3"]
-        assert get_doc_json("get_xspress3") == self.o.to_dict()
+        assert self.o.to_dict() == {
+            "typeid": "malcolm:core/Get:1.0",
+            "id": 32,
+            "path": ["BL18I:XSPRESS3"],
+        }
 
     def test_doc_state(self):
-        assert get_doc_json("get_xspress3_state_value") == self.o.to_dict()
+        assert self.o.to_dict() == {
+            "typeid": "malcolm:core/Get:1.0",
+            "id": 32,
+            "path": ["BL18I:XSPRESS3", "state", "value"],
+        }
 
 
 class TestPut(unittest.TestCase):
@@ -82,7 +87,13 @@ class TestPut(unittest.TestCase):
         assert self.value == self.o.value
 
     def test_doc(self):
-        assert get_doc_json("put_hdf_file_path") == self.o.to_dict()
+        assert self.o.to_dict() == {
+            "typeid": "malcolm:core/Put:1.0",
+            "id": 35,
+            "path": ["BL18I:XSPRESS3:HDF", "filePath", "value"],
+            "value": "/path/to/file.h5",
+            "get": False,
+        }
 
 
 class TestPost(unittest.TestCase):
@@ -103,7 +114,12 @@ class TestPost(unittest.TestCase):
         assert self.parameters == self.o.parameters
 
     def test_doc(self):
-        assert get_doc_json("post_xspress3_configure") == self.o.to_dict()
+        assert self.o.to_dict() == {
+            "typeid": "malcolm:core/Post:1.0",
+            "id": 2,
+            "path": ["BL18I:XSPRESS3", "configure"],
+            "parameters": {"filePath": "/path/to/file.h5", "exposure": 0.1},
+        }
 
 
 class TestSubscribe(unittest.TestCase):
@@ -135,12 +151,21 @@ class TestSubscribe(unittest.TestCase):
     def test_setters(self):
         self.o.path = ["BL18I:XSPRESS3", "state", "value"]
         self.o.id = 19
-        d = self.o.to_dict(dict_cls=OrderedDict)
-        del d["delta"]
-        assert get_doc_json("subscribe_xspress3_state_value") == d
+        # The docs example left "delta" out, being the default; assert it
+        assert self.o.to_dict() == {
+            "typeid": "malcolm:core/Subscribe:1.0",
+            "id": 19,
+            "path": ["BL18I:XSPRESS3", "state", "value"],
+            "delta": True,
+        }
 
     def test_doc(self):
-        assert get_doc_json("subscribe_xspress3") == self.o.to_dict()
+        assert self.o.to_dict() == {
+            "typeid": "malcolm:core/Subscribe:1.0",
+            "id": 11,
+            "path": ["BL18I:XSPRESS3"],
+            "delta": True,
+        }
 
 
 class TestUnsubscribe(unittest.TestCase):
@@ -160,7 +185,10 @@ class TestUnsubscribe(unittest.TestCase):
         assert self.subscribes[self.o.generate_key()] == self.subscribe
 
     def test_doc(self):
-        assert get_doc_json("unsubscribe") == self.o.to_dict()
+        assert self.o.to_dict() == {
+            "typeid": "malcolm:core/Unsubscribe:1.0",
+            "id": 32,
+        }
 
 
 class TestResponse(unittest.TestCase):
@@ -173,28 +201,44 @@ class TestResponse(unittest.TestCase):
         assert r.typeid == "malcolm:core/Return:1.0"
         assert r.id == 35
         assert r.value is None
-        assert get_doc_json("return") == r.to_dict()
+        assert r.to_dict() == {
+            "typeid": "malcolm:core/Return:1.0",
+            "id": 35,
+            "value": None,
+        }
 
     def test_Return_value(self):
         r = Return(32, "Running")
         assert r.typeid == "malcolm:core/Return:1.0"
         assert r.id == 32
         assert r.value == "Running"
-        assert get_doc_json("return_state_value") == r.to_dict()
+        assert r.to_dict() == {
+            "typeid": "malcolm:core/Return:1.0",
+            "id": 32,
+            "value": "Running",
+        }
 
     def test_Error(self):
         r = Error(2, "Non-existant block 'foo'")
         assert r.typeid == "malcolm:core/Error:1.0"
         assert r.id == 2
         assert r.message == "Non-existant block 'foo'"
-        assert get_doc_json("error") == r.to_dict()
+        assert r.to_dict() == {
+            "typeid": "malcolm:core/Error:1.0",
+            "id": 2,
+            "message": "Non-existant block 'foo'",
+        }
 
     def test_Update(self):
         r = Update(19, "Running")
         assert r.typeid == "malcolm:core/Update:1.0"
         assert r.id == 19
         assert r.value == "Running"
-        assert get_doc_json("update_state_value") == r.to_dict()
+        assert r.to_dict() == {
+            "typeid": "malcolm:core/Update:1.0",
+            "id": 19,
+            "value": "Running",
+        }
 
     def test_Delta(self):
         changes = [[["state", "value"], "Running"]]
