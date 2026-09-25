@@ -30,22 +30,13 @@ Homepage = "https://github.com/PandABlocks/PandABlocks-webcontrol"
 [project.optional-dependencies]
 # For development tests/docs
 dev = [
-    "atomicwrites",
-    "black",
-    "coverage",
-    "doc8",
-    "flake8",
-    "isort",
     "mypy",
-    "nose",
-    "pylint",
     "pytest",
     "pytest-cov",
-    "pytest-flake8",
+    # test_context.py marks a test with @pytest.mark.timeout
     "pytest-timeout",
-    "sphinx",
-    "sphinx-rtd-theme-github-versions",
-    "typing",
+    # Formatter and linter both, replacing black, flake8 and isort
+    "ruff",
 ]
 
 [project.scripts]
@@ -72,11 +63,6 @@ malcolm = [
 [tool.mypy]
 # Ignore missing stubs for modules we use
 ignore_missing_imports = true
-
-[tool.isort]
-profile = "black"
-float_to_top = true
-skip = ["setup.py", "conf.py", "build"]
 
 [tool.pytest.ini_options]
 # Don't spam us with massive tracebacks on error. The --black and --mypy

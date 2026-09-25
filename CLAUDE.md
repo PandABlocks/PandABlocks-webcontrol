@@ -308,17 +308,24 @@ setting `design` runs `LoadHook`. Read-only template designs live in
 
 ```bash
 python -m pytest tests                 # test suite (needs the dev extras)
+ruff check . && ruff format --check .  # lint and formatting
+mypy malcolm                           # type check
 make docs                              # MyST build into docs/_build/html (npx mystmd)
 make docs-dev                          # live docs server
 panda-webcontrol --hostname <panda> --configdir <dir>   # run against a real box
 ```
 
-Formatting/lint config lives in `pyproject.toml`: ruff (line length 88, rules
-B/C4/E/F/W/I/UP), isort with the black profile, mypy with
-`ignore_missing_imports`. CI (`.github/workflows/ci.yml`) currently only builds,
-releases and publishes the docs via the shared
-`DiamondLightSource/myst-version-switcher-plugin` reusable workflows — **the
-Python tests are not run in CI**, so run them locally.
+The `dev` extra is deliberately short — `mypy`, `pytest`, `pytest-cov`,
+`pytest-timeout`, `ruff`. Ruff is the formatter *and* the linter, having
+replaced black, flake8 and isort, so there is no `[tool.isort]` section and no
+`[tool.black]`: its config all lives under `[tool.ruff]` (line length 88, rules
+B/C4/E/F/W/I/UP). Mypy keeps `[tool.mypy]` with `ignore_missing_imports`. Docs
+need no Python packages at all, `make docs` runs mystmd through npx.
+
+CI (`.github/workflows/ci.yml`) currently only builds, releases and publishes
+the docs via the shared `DiamondLightSource/myst-version-switcher-plugin`
+reusable workflows — **the Python tests are not run in CI**, so run them
+locally.
 
 ## Rough edges (verified, as of this writing)
 
