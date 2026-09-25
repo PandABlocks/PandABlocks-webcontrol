@@ -187,7 +187,9 @@ class PandABoxBlockMakerTest(unittest.TestCase):
         self.client.set_field.assert_not_called()
 
         help = b.help
-        assert help.value == "/docs/build/pulse_doc.html"
+        # <doc-url-base>/<blocktype>-doc/, the layout of the docs site that
+        # 5941a9d5 moved to; the controller was given "/docs" as the base
+        assert help.value == "/docs/pulse-doc/"
 
         delay = b.delay
         assert delay.meta.writeable is True

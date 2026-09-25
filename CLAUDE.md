@@ -330,12 +330,10 @@ Python tests are not run in CI**, so run them locally.
   `annotypes`. The latter is a different, undeclared package; where it was used
   (six test modules and the `py3_examples`) those files failed at *collection*,
   which aborts the whole pytest run rather than failing one test.
-- 2 tests fail out of the box, both for pre-existing reasons:
-  `test_models.py::test_unsigned_validates` expects numpy 1 wrap-around where
-  numpy 2 raises `OverflowError` (so it is 1 failure on numpy 1.x, where that
-  one passes); and `test_pandablockcontroller.py::test_block_fields_pulse`
-  still expects the old help-URL format (`/docs/build/pulse_doc.html`) that
-  commit 5941a9d5 replaced with `/docs/pulse-doc/`.
+- One test fails out of the box, and only on numpy 2:
+  `test_models.py::test_unsigned_validates` expects numpy 1's silent
+  wrap-around where numpy 2 raises `OverflowError`. Measured on 2.5.3 (fails)
+  and 1.26.4 (passes, so the suite is green there).
 - Don't wait for a subscription with a fixed sleep. `test_managercontroller.py`
   used to `await context.sleep(0.1)` and then assert the callback had fired,
   which failed intermittently on a loaded machine; it now polls with a
