@@ -53,6 +53,7 @@ project:
     - file: explanations.md
       children:
         - file: explanations/web-control-ui-overview.md
+        - file: explanations/understanding-attribute-state.md
     - file: reference.md
       children:
         - file: reference/glossary.md
