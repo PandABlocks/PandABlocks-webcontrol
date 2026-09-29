@@ -40,14 +40,3 @@ jobs:
     uses: DiamondLightSource/myst-version-switcher-plugin/.github/workflows/release.yml@v0.28.0
     permissions:
       contents: write
-
-  publish:
-    needs: [docs]
-    if: github.ref_type == 'tag' || github.ref == 'refs/heads/main' || github.event_name == 'pull_request'
-    uses: DiamondLightSource/myst-version-switcher-plugin/.github/workflows/publish-gh-pages.yml@v0.28.0
-    permissions:
-      contents: read
-      actions: read
-      pages: write
-      id-token: write
-      statuses: write
